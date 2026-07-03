@@ -49,10 +49,12 @@ def generate_engine(engine_id, catalog, H, channels, baseline, rng):
     x = x[:life]
     egtm = egtm[:life]
     events = [e for e in events if e['cycle'] < life]
+    contributions = {m: c[:life] for m, c in contributions.items()}
 
     return {'engine_id': engine_id, 'config': cfg, 'x': x, 'egtm_C': egtm,
             'events': events, 'life_cycles': life,
-            'censored': bool(life == max_cycles)}
+            'censored': bool(life == max_cycles),
+            'contributions': contributions}
 
 
 def assign_splits(engine_ids, split_spec, rng):

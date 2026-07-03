@@ -49,3 +49,8 @@ paper/report/build/
 paper/report/build/
 *-blx.bib
 paper/**/*.log
+
+# Versioned model artifacts (small, needed to reproduce F2 without rerunning F1)
+!data/processed/
+data/processed/*
+!data/processed/icm/
