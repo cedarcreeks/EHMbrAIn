@@ -199,14 +199,23 @@ the commanded fraction (\code{OD\_pt}) ---the same two-point pattern used by the
 reference example.
 
 Two engineering lessons from WP1.2 shaped the sweep. First, the walk is ordered for warm
-starting (nearest condition first, thrust descending). Second ---the lesson learned the hard
-way--- a failed Newton attempt corrupts the point's internal states beyond re-seeding, so the
-sweep's recovery action on any failure is to \emph{rebuild} the problem cold with
-altitude-appropriate guesses; a first version of the sweep without this recovery lost every
-point downstream of the first divergence. The result is stored as a table plus a scattered
-linear interpolator in the four operating coordinates, and its quality is measured by
-leave-one-out cross-validation (each grid point predicted from all the others), reported per
-channel in \cref{tab:deck-loo}.
+starting within each block (thrust descending), and the independent (altitude, Mach) blocks run
+in \emph{parallel processes}, one Problem per worker (project norm N1: long decomposable
+computations are parallelized; the sweep takes $3.5$ minutes on all cores versus $10$ minutes
+serial). Second ---the lesson learned the hard way--- a failed Newton attempt corrupts the
+point's internal states beyond re-seeding, so the recovery action on any failure is to
+\emph{rebuild} the problem cold with altitude-appropriate guesses (norm N2); a first version of
+the sweep without this recovery lost every point downstream of the first divergence.
+
+The result is stored as a table plus a scattered linear interpolator in the four operating
+coordinates, and its quality is measured by leave-one-out cross-validation (each grid point
+predicted from all the others), reported per channel in \cref{tab:deck-loo}. Median errors are
+a few tenths of a percent; the tail percentiles are dominated by envelope-corner points whose
+interpolation simplices span across altitude blocks in raw physical coordinates. This is
+expected and temporary: the production baseline of phase F3 interpolates in
+\emph{corrected-parameter} space (\cref{sec:stations}), where the $\theta$/$\delta$
+normalization collapses most of the altitude and temperature dependence and the same grid is
+far denser relative to the remaining variation.
 
 \begin{table}[htbp]
   \centering\small

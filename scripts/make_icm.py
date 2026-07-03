@@ -6,6 +6,7 @@ Usage: uv run python scripts/make_icm.py
 """
 
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -33,7 +34,8 @@ def main():
 
     for name, op in POINTS.items():
         print(f'== {name} ==', flush=True)
-        H, base = compute_icm(**op, verbose=True)
+        H, base = compute_icm(**op, verbose=True,
+                              n_workers=max(1, (os.cpu_count() or 2) - 1))
         np.savez(OUT_DIR / f'icm_{name}.npz', H=H, params=HEALTH_PARAMS,
                  channels=EXTENDED, baseline=json.dumps(base), op=json.dumps(
                      {k: v for k, v in op.items() if k != 'guesses'}))

@@ -82,6 +82,12 @@ Three concrete decisions illustrate the intended standard of rigor:
     produced by a script (\code{scripts/make\_report\_assets.py}) that solves the model and
     writes the PDFs, the \LaTeX{} table files (\code{paper/report/tables/*.tex}) and a
     provenance file (\code{assets.json}). No result number is ever copied by hand.
+  \item \textbf{Compute-efficiency norms.} The repository carries binding engineering norms
+    (\code{docs/engineering-norms.md}): long decomposable computations run in parallel across
+    CPU cores (thermodynamic sweeps and ICM columns use one worker process per core --- these
+    are scalar Newton solves that gain nothing from a GPU), while the tensor workloads of phase
+    F4 (network training, SHAP) run on the GPU (Apple-silicon MPS backend on the development
+    machine).
 \end{itemize}
 
 \section{Comparison metrics}

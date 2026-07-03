@@ -25,21 +25,54 @@ COCKPIT = ['N2_rpm', 'WF_kgps', 'EGT_degK']
 EXTENDED = COCKPIT + ['P25_bar', 'T25_degK', 'PS3_bar', 'T3_degK']
 
 
-def compute_icm(mn=0.78, alt_ft=35000.0, dTs=0.0, n1_rpm=4666.0, step=0.005,
-                channels=EXTENDED, guesses=None, verbose=False):
-    """Central-difference ICM at one operating point.
-
-    Returns (H, baseline) where H[i, j] = % change of channels[i] per +1 % of
-    HEALTH_PARAMS[j], and baseline is the healthy snapshot dict.
-    """
-    prob = build_study_problem(mn=mn, alt_ft=alt_ft, dTs=dTs, n1_rpm=n1_rpm,
-                               guesses=guesses)
+def _icm_column(args):
+    """Worker: one health parameter's central-difference column (norm N1:
+    each process builds its own Problem; OpenMDAO objects don't cross
+    process boundaries)."""
+    param, op, step, channels = args
+    prob = build_study_problem(**op)
     prob.set_solver_print(level=-1)
     prob.run_model()
     base = snapshot(prob, 'OD')
     z0 = np.array([base[c] for c in channels])
+    zs = {}
+    for sign in (+1, -1):
+        set_health(prob, {param: sign * step})
+        prob.run_model()
+        s = snapshot(prob, 'OD')
+        zs[sign] = np.array([s[c] for c in channels])
+    col = (zs[+1] - zs[-1]) / z0 * 100.0 / (2 * step * 100.0)
+    return param, col, base
 
+
+def compute_icm(mn=0.78, alt_ft=35000.0, dTs=0.0, n1_rpm=4666.0, step=0.005,
+                channels=EXTENDED, guesses=None, verbose=False, n_workers=None):
+    """Central-difference ICM at one operating point.
+
+    Returns (H, baseline) where H[i, j] = % change of channels[i] per +1 % of
+    HEALTH_PARAMS[j], and baseline is the healthy snapshot dict.
+    n_workers > 1 computes the columns in parallel processes (norm N1).
+    """
+    op = dict(mn=mn, alt_ft=alt_ft, dTs=dTs, n1_rpm=n1_rpm, guesses=guesses)
     H = np.zeros((len(channels), len(HEALTH_PARAMS)))
+
+    if n_workers and n_workers > 1:
+        from concurrent.futures import ProcessPoolExecutor
+        base = None
+        jobs = [(p, op, step, channels) for p in HEALTH_PARAMS]
+        with ProcessPoolExecutor(max_workers=n_workers) as pool:
+            for param, col, b in pool.map(_icm_column, jobs):
+                H[:, HEALTH_PARAMS.index(param)] = col
+                base = b
+                if verbose:
+                    print(f'  {param:10s} done', flush=True)
+        return H, base
+
+    prob = build_study_problem(**op)
+    prob.set_solver_print(level=-1)
+    prob.run_model()
+    base = snapshot(prob, 'OD')
+    z0 = np.array([base[c] for c in channels])
     for j, param in enumerate(HEALTH_PARAMS):
         zs = {}
         for sign in (+1, -1):
@@ -49,7 +82,6 @@ def compute_icm(mn=0.78, alt_ft=35000.0, dTs=0.0, n1_rpm=4666.0, step=0.005,
             zs[sign] = np.array([s[c] for c in channels])
         set_health(prob, {})  # back to healthy (also re-warms the solution)
         prob.run_model()
-        # % change in z per +1 % change in x
         H[:, j] = (zs[+1] - zs[-1]) / z0 * 100.0 / (2 * step * 100.0)
         if verbose:
             print(f'  {param:10s} done')

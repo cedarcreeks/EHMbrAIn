@@ -1,0 +1,41 @@
+# Engineering norms
+
+Binding rules for all code in this repository. Cite the norm number in review
+comments and commit messages when relevant.
+
+## N1 — Parallelize long computations
+
+Any computation expected to run longer than ~1 minute that decomposes into
+independent units MUST run those units in parallel:
+
+- **pyCycle / OpenMDAO sweeps** (decks, ICM columns, fleet generation): these
+  are scalar Newton solves — GPU does not help. Use `ProcessPoolExecutor`
+  (one worker per core; each worker builds its own Problem — OpenMDAO objects
+  are not shareable across processes). Keep warm-start continuation *within*
+  a worker's task; never split a continuation chain across workers.
+- **Tensor / ML workloads** (phase F4 training and inference, SHAP): run on
+  the GPU. On Apple silicon use the PyTorch MPS backend:
+  `device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')`.
+  XGBoost: `tree_method='hist'` (multicore CPU; no MPS support).
+- Emit per-task progress so a stalled worker is visible.
+
+## N2 — Rebuild, never re-seed, after a failed Newton solve
+
+A failed solve corrupts a pyCycle point's internal states beyond repair.
+Recovery is always: rebuild the Problem cold with condition-appropriate
+guesses. Re-seeding only the balance variables does not work (learned twice:
+idle anchor, deck sweep).
+
+## N3 — Insertion order in multi-point models
+
+An `MPCycle` group has no top-level solver: children execute in insertion
+order. Any component feeding an off-design point (e.g. health multipliers)
+must be added *before* that point, or the point silently consumes stale
+values. Guard with a self-consistency test (healthy OD at design condition
+must reproduce the design point).
+
+## N4 — Evidence is generated, never copied
+
+Every number, table or figure in the report comes from a script reading the
+model or its artifacts (`scripts/make_report_assets.py` and the
+`data/processed/*` reports). Hand-copied results are forbidden.
