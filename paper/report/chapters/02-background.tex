@@ -199,7 +199,12 @@ where $\mathbf{H}$ is the \emph{influence coefficient matrix} (ICM) ---the Jacob
 $\partial\mathbf{z}/\partial\mathbf{x}$, i.e.\ a table of ``if the HPT loses 1\,\% efficiency,
 EGT rises by this much and fuel flow by that much''--- computed by finite differences on the
 thermodynamic model at the operating condition $\mathbf{u}$; $\mathbf{b}$ collects sensor
-biases; and $\mathbf{v}$ is measurement noise with covariance $\mathbf{R}$.
+biases and $\mathbf{S}$ is the \emph{selection matrix} that routes each bias to its own
+measurement row --- one column per biased sensor, all zeros except a single one, so that a
+bias on the EGT probe shifts only the EGT equation. Estimating $\mathbf{b}$ alongside
+$\mathbf{x}$ is optional and costs observability; an undetected drift therefore fools the
+estimator, which is exactly the sensor fault \cref{ch:fleet} injects. Finally $\mathbf{v}$ is
+measurement noise with covariance $\mathbf{R}$.
 
 \subsection{Estimation, and why it is hard}
 
