@@ -41,6 +41,16 @@ def generate_engine(engine_id, catalog, H, channels, baseline, rng):
     """
     max_cycles = catalog['fleet']['max_cycles']
     cfg = sample_engine_config(engine_id, catalog, max_cycles, rng)
+
+    # Two passes: the acute-episode onset is a fraction of the engine's actual
+    # life, which is only known after a chronic-only pass.
+    if cfg.acute is not None:
+        x0, _, _ = health_series(cfg, catalog, max_cycles)   # acute inactive (no onset)
+        egtm0 = egt_margin_series(x0, H, channels, baseline, cfg.egtm_new_C)
+        below0 = np.nonzero(egtm0 <= 0.0)[0]
+        prov_life = int(below0[0]) + 1 if len(below0) else max_cycles
+        cfg.acute['onset'] = cfg.acute['onset_frac'] * prov_life
+
     x, contributions, events = health_series(cfg, catalog, max_cycles)
     egtm = egt_margin_series(x, H, channels, baseline, cfg.egtm_new_C)
 

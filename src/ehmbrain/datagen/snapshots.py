@@ -122,8 +122,17 @@ def engine_snapshots(engine, contributions, catalog, rng):
         df[f'x_{name.replace(".", "_")}'] = x[:, idx].astype(np.float32)
     df['egtm_C'] = engine['egtm_C'].astype(np.float32)
     df['rul'] = (life - 1 - df['cycle']).astype(np.int32)
-    df['label'] = [dominant_label(x[i], {m: c[i] for m, c in contributions.items()})
-                   for i in range(life)]
+    chronic_contrib = {m: c for m, c in contributions.items() if m != 'acute'}
+    chronic = [dominant_label(x[i], {m: c[i] for m, c in chronic_contrib.items()})
+               for i in range(life)]
+    df['label_chronic'] = chronic
+    # Isolation label: during an acute episode the target is the faulted
+    # health parameter (the H2 task); otherwise the chronic dominant mechanism.
+    if cfg.acute is not None and cfg.acute['onset'] < life:
+        active = df.cycle.to_numpy() >= cfg.acute['onset']
+        df['label'] = np.where(active, 'acute_' + cfg.acute['param'], chronic)
+    else:
+        df['label'] = chronic
     drift_ch = next(iter(cfg.drifts), '')
     df['drift_channel'] = drift_ch
     if drift_ch:
