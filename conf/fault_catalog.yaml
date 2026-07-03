@@ -1,0 +1,81 @@
+# SynCFM56 fault & degradation catalog (phase F2). Single source of truth for
+# the fleet generator. Magnitudes from the literature ranges documented in the
+# report (Diakunchak; Kurz & Brun) — see chapter 2, degradation table.
+#
+# Conventions: health deviations in PERCENT (negative eta = less efficient).
+# Rates are per 1000 flight cycles. Each engine draws a log-normal severity
+# multiplier per mechanism (hierarchical fleet model).
+
+engine_variability:
+  rate_multiplier_sigma: 0.30      # sigma of LogNormal(0, sigma) per mechanism per engine
+  egtm_new_mean_C: 85.0            # new-engine EGT margin at the hot-day takeoff reference
+  egtm_new_sigma_C: 6.0
+
+mechanisms:
+  fouling:                         # recoverable by washing
+    profile: saturating_exponential
+    tau_cycles: 3000.0
+    asymptote_pct:                 # component: [eta, flow]
+      fan: [-0.5, -1.0]
+      lpc: [-0.6, -1.2]
+      hpc: [-1.2, -2.5]
+  erosion:
+    profile: linear
+    rate_pct_per_kcycle:
+      fan: [-0.020, -0.015]
+      lpc: [-0.025, -0.020]
+      hpc: [-0.045, -0.030]
+  clearance:                       # break-in: fast early, then slow
+    profile: bilinear
+    breakin_cycles: 800.0
+    breakin_pct:                   # step achieved during break-in (eta only)
+      hpc: [-0.35, 0.0]
+      hpt: [-0.40, 0.0]
+    late_rate_pct_per_kcycle:
+      hpc: [-0.015, 0.0]
+      hpt: [-0.020, 0.0]
+  hot_section:                     # HPT erosion/creep: eta down, flow capacity UP
+    profile: linear_accelerating
+    rate_pct_per_kcycle:
+      hpt: [-0.090, +0.060]
+    acceleration: 1.6              # exponent on (n/10000): late-life speed-up
+  lpt_wear:
+    profile: linear
+    rate_pct_per_kcycle:
+      lpt: [-0.030, +0.010]
+
+events:
+  wash:                            # compressor water wash: sawtooth recovery of fouling
+    interval_cycles: [800, 1600]   # uniform draw per engine, then jittered +-10 %
+    recovery_frac: [0.30, 0.70]    # uniform draw per wash event
+  fod:                             # foreign-object damage: instantaneous step
+    poisson_rate_per_kcycle: 0.03
+    step_eta_pct: [-2.0, -0.5]     # uniform; applied to one of:
+    components: [fan, hpc]
+
+sensor_faults:
+  drift:                           # slow additive bias ramp on one sensor
+    prob_per_engine: {EGT_degK: 0.15, WF_kgps: 0.08, T25_degK: 0.08, PS3_bar: 0.05}
+    onset_frac_of_life: [0.2, 0.8]
+    rate_per_kcycle: {EGT_degK: [1.0, 5.0], WF_kgps: [0.002, 0.006],
+                      T25_degK: [0.5, 2.0], PS3_bar: [0.02, 0.06]}
+
+sensors:                           # measurement model (applied to every snapshot)
+  N1_rpm:   {sigma: 2.5,    quant: 2.5}     # ~0.05 % of 5000 rpm
+  N2_rpm:   {sigma: 7.0,    quant: 7.0}
+  WF_kgps:  {sigma_pct: 0.5, quant: 0.002}
+  EGT_degK: {sigma: 2.5,    quant: 1.0}
+  P25_bar:  {sigma_pct: 0.4, quant: 0.001}
+  T25_degK: {sigma: 1.5,    quant: 0.5}
+  PS3_bar:  {sigma_pct: 0.4, quant: 0.01}
+  T3_degK:  {sigma: 2.0,    quant: 0.5}
+  dropout:
+    mcar_frac: 0.03                # isolated missing snapshots
+    burst_prob_per_kcycle: 0.5     # ACARS outage bursts
+    burst_len_cycles: [5, 40]
+
+fleet:
+  n_engines: 100
+  split: {train: 70, val: 10, test: 20}
+  max_cycles: 30000
+  seed: 20260703
