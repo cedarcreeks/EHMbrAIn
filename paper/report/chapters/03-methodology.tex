@@ -90,6 +90,104 @@ Three concrete decisions illustrate the intended standard of rigor:
     machine).
 \end{itemize}
 
+\section{Software architecture and computational pipeline}
+\label{sec:software}
+
+This section is the complete inventory of the project's code: what each program does, how it
+does it, and what flows between them. It is updated whenever code lands.
+
+\subsection{Library modules (\code{src/ehmbrain/})}
+
+\begin{description}
+  \item[\code{perf/cycle.py} --- the engine model.] Defines four model classes and their
+    builders.
+    \begin{itemize}
+      \item \code{CFM56(pyc.Cycle)}: one thermodynamic point. Builds the component graph
+        (inlet, fan, splitter, booster, HPC with three bleed ports, post-compressor bleed,
+        combustor, cooled HPT/LPT, ducts, two convergent nozzles, two shafts, performance
+        block) and its balance system. In \emph{design} mode the four balances solve mass flow
+        for thrust, fuel--air ratio for $T_{t4}$, and both turbine expansion ratios for zero
+        net shaft power. In \emph{off-design} mode they solve mass flow and bypass ratio to
+        hold the design nozzle throat areas, both spool speeds for shaft power balance, and
+        fuel--air ratio according to the throttle mode: \code{T4} (rating temperature),
+        \code{percent\_thrust} (a fraction of a reference thrust) or \code{N1} (hold fan
+        speed, the CFM56 rating parameter, implemented through a passthrough component because
+        the speed is itself another balance's output). Each point carries its own Newton
+        solver (tolerance $10^{-8}$, Armijo--Goldstein line search, subsystem solves enabled).
+      \item \code{MPCFM56(pyc.MPCycle)}: DESIGN + the four SLS anchors A2--A5 as
+        thrust-matched \code{percent\_thrust} points. Used for calibration
+        (\cref{sec:calibration}).
+      \item \code{MPCFM56Study}: DESIGN + one off-design point whose five turbomachine map
+        scalars (efficiency and flow) pass through multiplier components
+        (\code{health\_<comp>.eta\_fac/flow\_fac}); setting a factor to $1+\Delta$ imposes a
+        health deviation. Used for the ICM and, in F2, for degraded-fleet snapshots.
+      \item \code{MPCFM56Deck}: DESIGN + \code{OD\_max} (maximum thrust at the rating $T_4$)
+        + \code{OD\_pt} (a commanded fraction of that maximum). Used for the baseline decks.
+      \item Builders (\code{build\_problem}, \code{build\_study\_problem},
+        \code{build\_deck\_problem}) return solver-ready problems with all design inputs and
+        balance initial guesses set; \code{solve\_anchors()} encapsulates the idle power
+        continuation ($0.30\rightarrow0.07$); \code{snapshot()} reads the full sensor set at a
+        point; \code{set\_health()} imposes a health-deviation dictionary.
+    \end{itemize}
+  \item[\code{perf/icm.py} --- GPA sensitivity analysis.] \code{compute\_icm()} builds a Study
+    problem per health parameter (in parallel worker processes, norm N1), perturbs it
+    $\pm0.5\,\%$ at constant N1 and forms the central-difference column in \%-per-\%;
+    \code{svd\_report()} returns rank, singular values and condition number;
+    \code{signature\_angles()} the pairwise angles between fault signatures; and
+    \code{confusable\_pairs()} the sub-$15^{\circ}$ subset that instantiates hypothesis H2.
+  \item[\code{common/corrections.py} --- corrected parameters.] ISA atmosphere
+    (\code{isa\_static}), ram-corrected $\theta/\delta$ at the fan face
+    (\code{theta\_delta}), the exponent regression \code{fit\_correction\_exponents()}
+    ($\log Y$ against a cubic polynomial in log corrected speed plus $a\log\theta + b\log
+    \delta$, solved by least squares) and \code{correct()} to apply the fitted law.
+\end{description}
+
+\subsection{Executable scripts (\code{scripts/})}
+
+Each script is a pipeline stage writing versioned artifacts under \code{data/processed/}:
+
+\begin{center}\small
+\begin{tabular}{p{4.3cm}p{9.2cm}}
+  \toprule
+  Script & Function and outputs \\
+  \midrule
+  \code{run\_design\_point.py} & Solves the design point, checks the five WP1.1 acceptance
+    windows against the contract; nonzero exit on failure. \\
+  \code{run\_anchors.py} & Solves DESIGN + A2--A5 with the idle continuation and compares
+    fuel-flow/OPR predictions to the EEDB (gated tolerances); prints the verdict table. \\
+  \code{make\_decks.py} & Envelope sweep for the baseline decks: independent (altitude, Mach)
+    blocks in parallel processes, warm continuation inside a block, cold-rebuild recovery
+    (norm N2), then a per-channel parallel leave-one-out audit.
+    $\rightarrow$ \code{baseline\_deck.parquet}, \code{deck\_report.json}. \\
+  \code{make\_corrected\_baseline.py} & Fits the correction exponents on the deck and re-runs
+    the leave-one-out audit in corrected space. $\rightarrow$
+    \code{corrected\_baseline.json}. \\
+  \code{make\_icm.py} & ICM at the six-point operating grid (columns in parallel), SVD and
+    confusability analysis. $\rightarrow$ \code{icm\_<point>.npz}, \code{icm\_report.json}. \\
+  \code{cea\_crosscheck.py} & Re-solves the design point with CEA thermodynamics and reports
+    deltas against tabular. $\rightarrow$ \code{cea\_crosscheck.json}. \\
+  \code{make\_report\_assets.py} & Regenerates every figure and table of this document from
+    the model and the artifacts above (norm N4). $\rightarrow$
+    \code{paper/report/figures/*.pdf}, \code{paper/report/tables/*.tex},
+    \code{assets.json}. \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+The data flow is linear: \code{conf/cfm56\_7b\_targets.yaml} (the contract) feeds the model
+classes; runners and \code{make\_*} scripts solve them and write \code{data/processed/*}
+artifacts; \code{make\_report\_assets.py} turns artifacts into report evidence; the tests
+gate every stage.
+
+\subsection{Test suite (\code{tests/})}
+
+Sixteen tests, all run in CI on every change: environment smoke (the vendored pyCycle example
+end-to-end); design-point convergence and acceptance windows; anchor convergence, fuel-flow
+and OPR tolerances, and N1/N2 redlines; the Study self-consistency property (healthy
+off-design at design N1 reproduces the design point); ICM physical signs and rank-3 cockpit
+underdetermination; and the corrections module (ISA values, $\theta/\delta$, exponent-fit
+recovery on synthetic data with known truth).
+
 \section{Comparison metrics}
 
 Both families are scored with identical metrics. For detection: lead time (how many flights

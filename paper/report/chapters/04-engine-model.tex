@@ -211,11 +211,37 @@ The result is stored as a table plus a scattered linear interpolator in the four
 coordinates, and its quality is measured by leave-one-out cross-validation (each grid point
 predicted from all the others), reported per channel in \cref{tab:deck-loo}. Median errors are
 a few tenths of a percent; the tail percentiles are dominated by envelope-corner points whose
-interpolation simplices span across altitude blocks in raw physical coordinates. This is
-expected and temporary: the production baseline of phase F3 interpolates in
-\emph{corrected-parameter} space (\cref{sec:stations}), where the $\theta$/$\delta$
-normalization collapses most of the altitude and temperature dependence and the same grid is
-far denser relative to the remaining variation.
+interpolation simplices span across altitude blocks in raw physical coordinates.
+
+\subsection{Corrected-parameter exponents and the corrected-space baseline}
+\label{sec:corrected-baseline}
+
+The fix for those tails is the one anticipated in \cref{sec:stations}: build the baseline in
+\emph{corrected-parameter} space. The correction exponents are fitted on the deck itself
+---per channel, a regression of $\log Y$ on a polynomial in the log corrected speed plus
+$a\log\theta + b\log\delta$--- rather than copied from generic tables. The fitted exponents
+land squarely on their textbook values without having been told them (\cref{tab:corrected}):
+fuel flow $a=0.63$, $b=1.02$ (handbooks quote $\theta^{0.5\text{--}0.7}\delta$); N2
+$a=0.49$, $b\approx0$ (the $\sqrt{\theta}$ corrected-speed law); EGT $a=0.95$, $b\approx0$
+(temperature ratio). This is a further independent consistency check of the model physics.
+
+Re-running the leave-one-out audit on the corrected channels over (corrected N1, Mach)
+collapses the tails by an order of magnitude (\cref{tab:corrected}): worst-case N2 error drops
+from 9.7\,\% to 0.5\,\%, EGT from 24\,\% to 2.0\,\%, fuel flow from 91\,\% to 6.6\,\%. Two
+remarks for honesty: net thrust is excluded ---it is not an EHM sensor channel (it comes from
+the thrust-setting definition), and it does not collapse under a $\theta$/$\delta$ law at fixed
+N1c because of its strong direct Mach dependence; and the residual corrected-space errors are
+comparable to the sensor noise floor that phase F2 will inject ($\sigma_{\mathrm{EGT}}
+\approx 0.3\,\%$, $\sigma_{W_f} \approx 0.5\,\%$). Baseline error is also common-mode: both EHM
+pipelines consume the same baseline, so it does not bias the comparison.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Fitted correction exponents per channel and the leave-one-out error before (raw
+  4-D coordinates) versus after (corrected space). Auto-generated.}
+  \label{tab:corrected}
+  \input{tables/table_corrected}
+\end{table}
 
 \begin{table}[htbp]
   \centering\small
@@ -279,6 +305,21 @@ estimator: this is the smearing mechanism measured, and it defines the ``confusa
 which hypothesis H2 will compare the AI's isolation ability against WLS-GPA. The extended
 sensor set (adding P25/T25/PS3/T3) raises the rank to 7 and multiplies the minimum angle by
 roughly five ---the quantitative basis for the sensor-set ablation of contribution C6.
+
+The analysis is repeated over a six-point grid spanning the envelope ---both snapshot
+conditions plus power, altitude, climb and hot-day variations (\cref{tab:icm-grid}). The
+observability structure barely moves: the minimum cockpit signature angle stays between 1.2 and
+1.4\,degrees and the confusable-pair count is constant at seven. The smearing problem is
+therefore \emph{intrinsic to the cockpit sensor set}, not an artifact of one flight condition
+---which both justifies interpolating the ICM over this grid in phase F3 and forecloses the
+easy escape of ``diagnose somewhere else in the envelope''.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Observability of the cockpit ICM across the operating-point grid. Auto-generated.}
+  \label{tab:icm-grid}
+  \input{tables/table_icm_grid}
+\end{table}
 
 \begin{table}[htbp]
   \centering\small
