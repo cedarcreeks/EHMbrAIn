@@ -184,18 +184,18 @@ hypothesis H2: fault pairs whose signatures are less than $15^{\circ}$ apart.
 \label{sec:degradation}
 
 \begin{table}[htbp]
-  \centering\small
+  \centering\footnotesize
   \caption{Degradation mechanisms modeled in this project and their typical effects, per the
   literature~\cite{Diakunchak1992,Kurz2012}.}
   \label{tab:degradation}
-  \begin{tabular}{p{3.0cm}p{2.2cm}p{3.8cm}p{2.6cm}p{1.6cm}}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.12\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}>{\raggedright\arraybackslash}p{0.12\textwidth}}
     \toprule
     Mechanism & Component & Typical effect & Time profile & Recoverable \\
     \midrule
-    Fouling (dirt buildup) & fan/LPC/HPC & $\Delta\Gamma$ $-1$\ldots$-4$\,\%; $\Delta\eta$ $-0.5$\ldots$-2.5$\,\% & saturating exponential & wash recovers 30--70\,\% \\
+    Fouling (dirt buildup) & fan, LPC, HPC & $\Delta\Gamma$ $-1$\ldots$-4$\,\%; $\Delta\eta$ $-0.5$\ldots$-2.5$\,\% & saturating exponential & wash recovers 30--70\,\% \\
     Erosion & compressors & $\Delta\eta$ $-0.5$\ldots$-1.5$\,\% & slow linear & no \\
     Tip-clearance opening & HPC/HPT & $\Delta\eta$ $-0.5$\ldots$-1.5$\,\% & fast initially, then slow & no \\
-    Hot-section deterioration & HPT & $\Delta\eta$ $-1$\ldots$-3$\,\%; $\Delta\Gamma$ $+1$\ldots$+2$\,\% & linear/accelerating & no \\
+    Hot-section deterioration & HPT & $\Delta\eta$ $-1$\ldots$-3$\,\%; $\Delta\Gamma$ $+1$\ldots$+2$\,\% & linear, accelerating & no \\
     Foreign-object damage (FOD) & fan/HPC & step $\Delta\eta$ $-0.5$\ldots$-2$\,\% & step (Poisson arrivals) & no \\
     Sensor drift & any probe & e.g.\ EGT $+1$\ldots$+5$~\si{\degreeCelsius} per 1000 cycles & ramp & recalibration \\
     \bottomrule

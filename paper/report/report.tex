@@ -7,6 +7,7 @@
 
 \documentclass[11pt,a4paper,oneside]{report}
 
+\usepackage[a4paper,margin=2.5cm]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[english]{babel}
@@ -14,6 +15,7 @@
 \usepackage{microtype}
 \usepackage{amsmath,amssymb}
 \usepackage{siunitx}
+\usepackage{array}
 \usepackage{booktabs}
 \usepackage{graphicx}
 \graphicspath{{figures/}}
@@ -23,7 +25,9 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage[capitalise]{cleveref}
 
-\newcommand{\code}[1]{\texttt{#1}}
+% Breakable inline code: url-style so long paths/identifiers wrap at / _ . -
+\DeclareUrlCommand\code{\urlstyle{tt}\def\UrlBreaks{\do\/\do\_\do\.\do\-\do\:\do\(\do\)}}
+\emergencystretch=2em
 
 \title{\textbf{EHMbrAIn}\\[2mm]
   \large AI-based versus traditional Engine Health Monitoring:\\

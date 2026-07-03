@@ -34,7 +34,7 @@ below.
 \label{sec:morph}
 
 pyCycle ships a validated example of a two-spool, separate-flow, cooled high-bypass turbofan
-(\code{high\_bypass\_turbofan.py}) with the full component graph, the turbine-cooling bleed
+(\code{high_bypass_turbofan.py}) with the full component graph, the turbine-cooling bleed
 network, shaft balances and off-design solver wiring already working. Building the CFM56 from a
 blank file would re-derive all of that plumbing and typically dies in Newton divergence.
 Instead, a \emph{morphing} protocol is adopted: the example is vendored into the repository as
@@ -177,7 +177,7 @@ setting. The cure ---anticipated as a generic countermeasure in the specificatio
 cold, just like the approach anchor) and walks down warm through
 $0.30 \rightarrow 0.20 \rightarrow 0.14 \rightarrow 0.10 \rightarrow 0.08 \rightarrow 0.07$,
 re-solving at each step. The logic is encapsulated in the library
-(\code{solve\_anchors()}) and covered by the tests.
+(\code{solve_anchors()}) and covered by the tests.
 
 With continuation, idle converges and predicts fuel flow with $+10.6$\,\% error. This is deep
 map-extrapolation territory ---the generic map's speed-flow shape at very low power is not the
@@ -197,8 +197,8 @@ available maximum. The 50\,\% floor is deliberate: airline EHM trending consumes
 climb and stable-cruise reports, all high-power conditions; approach and idle are neither
 trending conditions nor reliable model territory (\cref{sec:idle}). At each condition the
 model first finds the maximum thrust available at the rating temperature (point
-\code{OD\_max}, throttled by $T_4$), then solves the part-power point at the commanded
-fraction (\code{OD\_pt}) ---the same two-point pattern used by the pyCycle reference example.
+\code{OD_max}, throttled by $T_4$), then solves the part-power point at the commanded
+fraction (\code{OD_pt}) ---the same two-point pattern used by the pyCycle reference example.
 The rating temperature is fixed at $T_{4,\max} = \SI{3200}{\degree R}$, a rounded envelope
 constant chosen from the calibrated takeoff anchor (imposing the certified rated thrust at SLS
 required $T_4 \approx \SI{3175}{\degree R}$, \cref{tab:anchors}); a real FADEC modulates
