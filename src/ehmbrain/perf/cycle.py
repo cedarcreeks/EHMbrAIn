@@ -175,9 +175,27 @@ class CFM56(pyc.Cycle):
 
 
 class MPCFM56(pyc.MPCycle):
-    """Multi-point wrapper. WP1.1: DESIGN only; WP1.2 adds the A2–A5 anchors."""
+    """Multi-point model: DESIGN (A1 cruise) + SLS anchors A2–A5 (WP1.2).
+
+    Anchors are thrust-matched (percent_thrust throttle against the rated
+    26 302 lbf takeoff thrust) so that fuel flow is a *prediction* to compare
+    against the ICAO EEDB measurements in conf/cfm56_7b_targets.yaml.
+    """
 
     THERMO = 'TABULAR'  # D2: tabular for speed; CEA cross-check at end of WP1.2
+
+    FN_TAKEOFF_LBF = 26302.0            # TCDS: 11699 daN
+    OD_ANCHORS = {                      # name -> fraction of takeoff thrust (EEDB settings)
+        'A2_takeoff': 1.00,
+        'A3_climbout': 0.85,
+        'A4_approach': 0.30,
+        'A5_idle': 0.07,
+    }
+
+    def initialize(self):
+        self.options.declare('od', default=True, types=bool,
+                             desc='include the off-design SLS anchor points')
+        super().initialize()
 
     def setup(self):
         self.pyc_add_pnt('DESIGN', CFM56(thermo_method=self.THERMO))
@@ -200,10 +218,13 @@ class MPCFM56(pyc.MPCycle):
         self.set_input_defaults('DESIGN.duct13.MN', 0.4463)
         self.set_input_defaults('DESIGN.byp_bld.MN', 0.4489)
         self.set_input_defaults('DESIGN.duct15.MN', 0.4589)
-        # Map-scaling reference speeds: ~90 % N1max / ~99 % N2max at max cruise
-        # (N1max 5175 rpm, N2max 14 460 rpm per TCDS).
+        # Map-scaling reference speeds. HP value chosen so that the predicted N2 at
+        # rated SLS takeoff thrust stays below the TCDS redline (15 183 rpm = 105 %)
+        # given the generic HPCMap speed-flow shape; with 13 940 rpm at design the
+        # model gives ~14 900 rpm (103 %) at A2. Speed labels are approximate by
+        # construction (generic maps) — documented limitation.
         self.set_input_defaults('DESIGN.LP_Nmech', 4666.0, units='rpm')
-        self.set_input_defaults('DESIGN.HP_Nmech', 14324.0, units='rpm')
+        self.set_input_defaults('DESIGN.HP_Nmech', 13940.0, units='rpm')
 
         # Pressure losses, nozzle coefficients and the secondary-air network (D5).
         self.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
@@ -233,6 +254,21 @@ class MPCFM56(pyc.MPCycle):
         self.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
         self.pyc_add_cycle_param('hp_shaft.HPX', 250.0, units='hp')  # accessory power extraction
 
+        if self.options['od']:
+            for name, pc in self.OD_ANCHORS.items():
+                self.pyc_add_pnt(name, CFM56(design=False, thermo_method=self.THERMO,
+                                             throttle_mode='percent_thrust'))
+                self.set_input_defaults(f'{name}.fc.MN', 1e-3)  # SLS static
+                self.set_input_defaults(f'{name}.fc.alt', 0.0, units='ft')
+                self.set_input_defaults(f'{name}.fc.dTs', 0.0, units='degR')
+                self.set_input_defaults(f'{name}.Fn_max', self.FN_TAKEOFF_LBF, units='lbf')
+                self.set_input_defaults(f'{name}.PC', pc)
+
+            self.od_pts = list(self.OD_ANCHORS)
+            self.pyc_use_default_des_od_conns()
+            self.pyc_connect_des_od('core_nozz.Throat:stat:area', 'balance.rhs:W')
+            self.pyc_connect_des_od('byp_nozz.Throat:stat:area', 'balance.rhs:BPR')
+
         super().setup()
 
 
@@ -246,17 +282,47 @@ DESIGN_INPUTS = {
     'DESIGN.fan.eff': (0.8948, None),
     'DESIGN.lpc.PR': (1.935, None),
     'DESIGN.lpc.eff': (0.9243, None),
-    'DESIGN.hpc.PR': (9.81, None),   # OPR = 1.685 * 1.935 * 9.81 ~ 32
+    # Calibrated so the SLS-takeoff OPR matches the measured EEDB value (27.61);
+    # the resulting cruise OPR is ~30 (design OPR = 1.685 * 1.935 * PR_hpc).
+    'DESIGN.hpc.PR': (9.35, None),
     'DESIGN.hpc.eff': (0.8707, None),
     'DESIGN.hpt.eff': (0.8888, None),
     'DESIGN.lpt.eff': (0.8996, None),
 }
 
 
-def build_design_problem(overrides=None):
-    """Design-point problem, ready to run. `overrides` replaces DESIGN_INPUTS entries."""
+# Off-design balance initial guesses per anchor. Idle values reflect the real
+# engine's ~60 % N2 / ~20 % N1 ground idle; poor guesses here are the main
+# cause of Newton divergence at low power.
+OD_GUESSES = {
+    'A2_takeoff':  dict(FAR=0.030, W=750.0, BPR=5.3, lp_Nmech=5100.0, hp_Nmech=14400.0),
+    'A3_climbout': dict(FAR=0.026, W=680.0, BPR=5.4, lp_Nmech=4700.0, hp_Nmech=14000.0),
+    'A4_approach': dict(FAR=0.016, W=380.0, BPR=5.9, lp_Nmech=2900.0, hp_Nmech=11800.0),
+    'A5_idle':     dict(FAR=0.010, W=160.0, BPR=6.5, lp_Nmech=1500.0, hp_Nmech=9200.0),
+}
+
+
+def apply_od_guesses(prob, name, guesses=None):
+    g = guesses or OD_GUESSES[name]
+    prob[f'{name}.balance.FAR'] = g['FAR']
+    prob[f'{name}.balance.W'] = g['W']
+    prob[f'{name}.balance.BPR'] = g['BPR']
+    prob[f'{name}.balance.lp_Nmech'] = g['lp_Nmech']
+    prob[f'{name}.balance.hp_Nmech'] = g['hp_Nmech']
+    prob[f'{name}.hpt.PR'] = 3.7
+    prob[f'{name}.lpt.PR'] = 4.3
+    for comp in ('fan', 'lpc', 'hpc'):
+        prob[f'{name}.{comp}.map.RlineMap'] = 2.0
+
+
+def build_problem(od=True, overrides=None):
+    """Full problem (design + anchors), ready to run.
+
+    `overrides` replaces DESIGN_INPUTS entries. od=False gives the fast
+    design-point-only problem used by the WP1.1 tests.
+    """
     prob = om.Problem()
-    prob.model = MPCFM56()
+    prob.model = MPCFM56(od=od)
     prob.setup()
 
     inputs = dict(DESIGN_INPUTS)
@@ -273,7 +339,59 @@ def build_design_problem(overrides=None):
     prob['DESIGN.fc.balance.Pt'] = 5.2
     prob['DESIGN.fc.balance.Tt'] = 440.0
 
+    if od:
+        for name in MPCFM56.OD_ANCHORS:
+            apply_od_guesses(prob, name)
+
     return prob
+
+
+def build_design_problem(overrides=None):
+    """Design-point-only problem (WP1.1 gate)."""
+    return build_problem(od=False, overrides=overrides)
+
+
+def anchor_converged(prob, name, pc, fn_takeoff=None):
+    """Converged iff the thrust balance is actually met (Newton can quit on maxiter)."""
+    fn_takeoff = fn_takeoff or MPCFM56.FN_TAKEOFF_LBF
+    fn = float(prob.get_val(f'{name}.perf.Fn', units='lbf')[0])
+    return abs(fn - pc * fn_takeoff) < 0.01 * pc * fn_takeoff
+
+
+def solve_anchors(prob):
+    """Solve DESIGN + A2-A5 with the idle continuation strategy.
+
+    Nozzle pressure ratios near 1.0 make PC=0.07 unreachable from a cold start,
+    and a failed attempt leaves the point's internal states corrupted. So A5
+    never starts cold at 0.07: it begins at PC=0.30 (which converges from cold,
+    same as A4) and walks down, warm, to the target.
+
+    Returns {point_name: converged_bool}.
+    """
+    apply_od_guesses(prob, 'A5_idle', OD_GUESSES['A4_approach'])
+    for pc in (0.30, 0.20, 0.14, 0.10, 0.08, 0.07):
+        prob.set_val('A5_idle.PC', pc)
+        prob.run_model()
+        if not anchor_converged(prob, 'A5_idle', pc):
+            break
+    prob.set_val('A5_idle.PC', MPCFM56.OD_ANCHORS['A5_idle'])
+
+    return {name: anchor_converged(prob, name, pc)
+            for name, pc in MPCFM56.OD_ANCHORS.items()}
+
+
+def anchor_summary(prob, name):
+    """Key off-design results for one SLS anchor point."""
+    return {
+        'Fn_lbf': float(prob.get_val(f'{name}.perf.Fn', units='lbf')[0]),
+        'WF_kgps': float(prob.get_val(f'{name}.burner.Wfuel', units='kg/s')[0]),
+        'OPR': float(prob.get_val(f'{name}.perf.OPR')[0]),
+        'N1_rpm': float(prob.get_val(f'{name}.balance.lp_Nmech', units='rpm')[0]),
+        'N2_rpm': float(prob.get_val(f'{name}.balance.hp_Nmech', units='rpm')[0]),
+        'T4_degR': float(prob.get_val(f'{name}.burner.Fl_O:tot:T', units='degR')[0]),
+        'T45_degR': float(prob.get_val(f'{name}.hpt.Fl_O:tot:T', units='degR')[0]),
+        'BPR': float(prob.get_val(f'{name}.balance.BPR')[0]),
+    }
 
 
 def design_summary(prob):

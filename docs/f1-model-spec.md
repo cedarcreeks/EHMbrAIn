@@ -58,6 +58,26 @@ ICAO Emissions Databank gives **measured SLS fuel flows at 4 thrust settings** f
 |error| ≤ 3 % on WF, N2, EGT, Fn at A1–A3; ≤ 5 % at A4–A5 (low-power points are map-extrapolation
 territory; documented if missed).
 
+**Calibration status (2026-07-03, WP1.2 first pass — targets VERIFIED against TCDS Issue 07 and
+EEDB 03/2026, UID 3CM033):**
+
+| Anchor | WF error | Other checks | Verdict |
+|--------|---------:|--------------|---------|
+| A2 takeoff | −1.40 % | OPR 27.70 vs 27.61 measured (+0.3 %); N1 4813 ≤ 5382; N2 14915 ≤ 15183 | PASS |
+| A3 climb-out | −2.23 % | — | PASS |
+| A4 approach | −3.08 % | — | PASS |
+| A5 idle | +10.57 % | converges via PC continuation 0.30→0.07 | reported, **not gated** (generic-map shape at deep part power) |
+
+Design point: BPR 5.10, cruise OPR ~30 (consequence of matching measured SLS OPR), T4 2857 °R,
+TSFC 0.62. Speed labels (N1/N2 rpm) are approximate by construction — generic map speed-flow
+shapes — with the HP map reference chosen so rated-thrust N2 respects the TCDS redline.
+
+**EGT station note (TCDS finding):** the certified EGT is measured at **T49.5** (stage 2 LPT
+nozzle) and the *displayed* value adds a +30 °C "shunt" (SAC engines, above 8500 rpm N2) plus a
+model-specific trim (0 for -7B26). The model uses station 45 (HPT exit) as its EGT proxy,
+consistently for ground truth and for both EHM pipelines; absolute displayed-EGT comparisons are
+out of scope (declared limitation).
+
 **Design-point windows (WP1.1 DoD):** BPR 5.1 ± 0.2 · cruise OPR 30–34 · T4 within 2800–3000 °R ·
 total cooling+leakage 18–25 % of core flow · fan corrected flow consistent with 61 in fan
 (~1550 lbm/s class at takeoff). Cycle must converge with all bleed flows > 0 and all map operating

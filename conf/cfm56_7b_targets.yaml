@@ -1,16 +1,31 @@
 # Calibration contract for the CFM56-7B26 performance model (see docs/f1-model-spec.md §3).
-# Single source of truth: loaded by the model runner AND by tests/test_od_anchors.py.
+# Single source of truth: loaded by the model runner AND by tests.
 # status: VERIFIED = checked against the cited source document; TO_VERIFY = public-domain
 # ballpark pending verification (do NOT gate H1 on TO_VERIFY values).
+#
+# Sources:
+#   TCDS  = EASA TCDS E.004 Issue 07 (9 Jan 2023), CFM56-7B series
+#   EEDB  = ICAO Engine Emissions Databank 03/2026, UID 3CM033 / 8CM051 (CFM56-7B26, SAC)
 
 engine:
-  variant: CFM56-7B26
-  application: Boeing 737-800
-  n1_100pct_rpm: {value: 5175, source: "EASA TCDS E.004", status: TO_VERIFY}
-  n2_100pct_rpm: {value: 14460, source: "EASA TCDS E.004", status: TO_VERIFY}
-  egt_redline_C: {value: 950, source: "EASA TCDS E.004", status: TO_VERIFY}
+  variant: CFM56-7B26 (SAC)
+  application: Boeing 737-600/-700/-800
+  takeoff_thrust_daN:  {value: 11699, source: TCDS, status: VERIFIED}   # = 116.99 kN = 26302 lbf
+  max_continuous_daN:  {value: 11521, source: TCDS, status: VERIFIED}   # = 115.21 kN = 25902 lbf
+  n1_redline_rpm:      {value: 5382,  pct: 104, source: TCDS, status: VERIFIED}
+  n1_100pct_rpm:       {value: 5175,  source: "TCDS (5382 rpm = 104 %)", status: VERIFIED}
+  n2_redline_rpm:      {value: 15183, pct: 105, source: TCDS, status: VERIFIED}
+  n2_100pct_rpm:       {value: 14460, source: "TCDS (15183 rpm = 105 %)", status: VERIFIED}
+  egt_max_takeoff_C:   {value: 950, source: TCDS, status: VERIFIED}     # displayed
+  egt_max_continuous_C: {value: 925, source: TCDS, status: VERIFIED}    # displayed
+  egt_station: "T49.5 (stage 2 LPT nozzle). Displayed EGT = measured + shunt (+30 C for SAC,
+    active above 8500 rpm N2) + trim (0 for -7B26). Model uses station 45 (HPT exit) as EGT
+    proxy consistently for truth and methods; declared limitation vs displayed EGT."
+  dry_weight_kg:       {value: 2386, source: TCDS, status: VERIFIED}
+  dimensions_mm:       {length: 2508, width: 2118, height: 1829, source: TCDS, status: VERIFIED}
+  stages: {fan: 1, lpc: 3, hpc: 9, hpt: 1, lpt: 4}   # TCDS description, VERIFIED
   fan_diameter_in: {value: 61, source: "type data", status: TO_VERIFY}
-  stages: {fan: 1, booster: 3, hpc: 9, hpt: 1, lpt: 4}
+  max_bleed_hpc9_pct_primary: {value: 7, condition: "above 82.5 % N1K", source: TCDS, status: VERIFIED}
 
 design_point:            # A1 — aero design point (cruise)
   mach: 0.78
@@ -19,23 +34,34 @@ design_point:            # A1 — aero design point (cruise)
   targets:
     fn_lbf:    {value: 5480,  tol_pct: 3.0, source: "public type data", status: TO_VERIFY}
     tsfc:      {value: 0.627, tol_pct: 3.0, units: "lbm/(h*lbf)", source: "public type data", status: TO_VERIFY}
-    bpr:       {value: 5.1,   tol_abs: 0.2, source: "public type data", status: TO_VERIFY}
-    opr:       {value: 32.0,  window: [30, 34], source: "public type data", status: TO_VERIFY}
+    bpr:       {value: 5.1,   tol_abs: 0.2, source: "EEDB (B/P ratio 5.1)", status: VERIFIED}
+    # Cruise OPR is a consequence of calibrating the SLS takeoff OPR to the measured
+    # EEDB value (27.61): the model then gives ~30 at cruise (factor ~1.09).
+    opr:       {value: 30.0,  window: [29, 34], source: "derived from EEDB SLS PR 27.61", status: TO_VERIFY}
   windows:               # WP1.1 DoD sanity windows (not calibration targets)
     t4_degR: [2800, 3000]
     cooling_total_frac: [0.18, 0.25]
 
-anchors_offdesign:       # SLS anchors; WF values from ICAO Emissions Databank (EEDB)
+anchors_offdesign:       # SLS static anchors; measured data from ICAO EEDB (VERIFIED)
+  # EEDB thrust settings: T/O 100 % F00, C/O 85 %, App 30 %, Idle 7 %.
   A2_takeoff:
     condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 100}
-    fn_lbf:  {value: 26300, tol_pct: 3.0, source: "EASA TCDS E.004", status: TO_VERIFY}
-    wf_kgps: {value: null,  tol_pct: 3.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+    fn_lbf:  {value: 26302, tol_pct: 0.5, source: TCDS, status: VERIFIED}   # imposed, not predicted
+    wf_kgps: {value: 1.221, tol_pct: 3.0, source: EEDB, status: VERIFIED}
+    opr:     {value: 27.61, tol_pct: 3.0, source: "EEDB pressure ratio at rated output", status: VERIFIED}
+    limits:  # model must respect these at the rated point
+      n1_rpm_max: 5382
+      n2_rpm_max: 15183
   A3_climbout:
     condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 85}
-    wf_kgps: {value: null, tol_pct: 3.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+    wf_kgps: {value: 0.999, tol_pct: 3.0, source: EEDB, status: VERIFIED}
   A4_approach:
     condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 30}
-    wf_kgps: {value: null, tol_pct: 5.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+    wf_kgps: {value: 0.338, tol_pct: 5.0, source: EEDB, status: VERIFIED}
   A5_idle:
     condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 7}
-    wf_kgps: {value: null, tol_pct: 5.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+    wf_kgps: {value: 0.113, tol_pct: 5.0, source: EEDB, status: VERIFIED}
+    # Deep part power is generic-map-shape territory (docs/f1-model-spec.md §6):
+    # the model converges via PC continuation but over-predicts idle WF (~+11 %).
+    # Reported for transparency, NOT part of the H1 gate.
+    gated: false
