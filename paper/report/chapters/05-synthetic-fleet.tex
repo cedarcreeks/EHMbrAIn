@@ -1,0 +1,201 @@
+\chapter{The synthetic fleet: SynCFM56}
+\label{ch:fleet}
+
+This chapter documents phase F2: the generator that turns the F1 twin into a 100-engine
+run-to-failure fleet with complete ground truth, the audits that gate it (one of which failed
+on first pass and forced a design change --- documented in full in \cref{sec:audits}), and the
+declaration of milestone H2.
+
+\section{Generator architecture: linearize, then audit}
+\label{sec:fleet-arch}
+
+A fleet of 100 engines flying $\sim$16\,000 cycles each, two snapshots per flight, would
+require over three million full pyCycle solves per fleet realization --- unusable for
+iteration. Instead, the generator exploits exactly what F1 built: every snapshot is produced by
+the linearization
+\begin{equation}
+  z(u, \mathbf{x}) \;=\; z_0(u)\,\bigl(1 + \mathbf{H}(u)\,\mathbf{x}/100\bigr),
+  \label{eq:generator}
+\end{equation}
+where $z_0(u)$ is the healthy baseline and $\mathbf{H}(u)$ the influence coefficient matrix,
+both linearly interpolated between the ICM grid points that bracket the sampled operating
+condition (takeoff snapshots: in $\Delta T_{\mathrm{ISA}}$; cruise snapshots: in commanded N1).
+N1 itself carries zero deviation by construction --- it is the held power-setting parameter,
+not a health channel. The whole fleet generates in 37 seconds on all cores (one worker process
+per engine, norm N1), with per-engine deterministic random seeds so the output is reproducible
+regardless of process scheduling.
+
+Two properties of this choice must be kept distinct. First, the dataset is
+\emph{self-consistent by construction}: the recorded ground truth $\mathbf{x}$ is exactly the
+state that generated the measurements, so estimator evaluations against truth are exact
+regardless of any linearization error. Second, \emph{fidelity to the full nonlinear physics} is
+an empirical question --- which is why the first gate audit re-solves full pyCycle at states
+sampled from the generated fleet (\cref{sec:audit-nonlin}).
+
+\section{Ground-truth trajectories}
+\label{sec:trajectories}
+
+Each engine draws a degradation ``personality'' from the fault catalog
+(\code{conf/fault_catalog.yaml}, the versioned contract): a log-normal severity multiplier per
+mechanism, a wash schedule, Poisson-arriving foreign-object damage, optional sensor drifts, and
+---in roughly half the fleet--- one \emph{acute fault episode} (\cref{sec:audit-difficulty}
+explains why these exist). The mechanisms follow the physical profiles of
+\cref{tab:degradation}: saturating-exponential fouling, slow linear erosion, bilinear
+break-in of tip clearances, linearly accelerating hot-section deterioration.
+
+Two implementation details worth recording:
+\begin{itemize}
+  \item \textbf{Wash sawtooth, exact.} Between washes the fouling level relaxes exponentially
+    toward its asymptote; each wash multiplies the current level by $(1-r)$ with recovery $r$
+    drawn per event. The trajectory is computed segment-wise with the exact exponential
+    solution. A tempting shortcut --- permanently subtracting the removed amount --- was
+    implemented first and rejected: it makes the trajectory approach
+    $\mathrm{asymptote} - \mathrm{removed}$ and under-predicts late-life fouling.
+  \item \textbf{Composability of truth.} The generator stores not only the total
+    $\mathbf{x}(n)$ but each mechanism's separate contribution, so any later analysis can ask
+    not just ``how degraded'' but ``degraded by \emph{what}''.
+\end{itemize}
+
+End of life is declared when the EGT margin at the hot-day takeoff reference reaches zero,
+with the margin computed by projecting $\mathbf{x}(n)$ through the takeoff-hot ICM's EGT row
+--- the same linearization as the snapshots. New-engine margins are drawn per engine
+($85\pm6$\,\si{\degreeCelsius}). \Cref{fig:egtm} shows the resulting fleet behavior: the
+canonical fast-early / slow-late erosion with wash sawtooth, and lives spanning
+10\,500--20\,700 cycles.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{egtm_sawtooth}
+  \caption{EGT-margin trajectories of five engines. Wash events produce the sawtooth
+  recoveries; engine-to-engine spread comes from the hierarchical severity multipliers and the
+  drawn new-engine margins. End of life is the zero crossing. Auto-generated from the fleet.}
+  \label{fig:egtm}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.85\textwidth]{health_trajectory}
+  \caption{Ground-truth health parameters of one engine with an acute fault episode (dashed
+  marker). Vertical gray lines are washes (visible as sawtooth in the HPC traces); the
+  hot-section traces show the monotone efficiency loss and flow-capacity opening.
+  Auto-generated.}
+  \label{fig:trajectory}
+\end{figure}
+
+\section{Snapshots and the measurement model}
+\label{sec:snapshot-model}
+
+Each flight cycle emits two reports, mimicking airline ACARS practice: a takeoff snapshot (sea
+level, ambient offset drawn from a climate distribution) and a cruise snapshot
+(FL350/M0.78, commanded N1 drawn per flight). Truth channels pass through the sensor model of
+the catalog: per-channel Gaussian noise (absolute or percentage $\sigma$), quantization to the
+recording resolution, additive drift ramps on the affected engines (37 of 100 --- matching the
+catalog's per-sensor probabilities summing to 0.36), and missing data as isolated losses plus
+ACARS outage bursts (4.1\,\% of snapshots). Every row carries, alongside the measured values:
+the true channel values, the full ground-truth health vector, the EGT margin, the remaining
+useful life, the isolation label, and drift flags. \Cref{tab:fleet} summarizes the frozen
+dataset.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{SynCFM56 v1.0 at a glance. Auto-generated from the fleet artifacts.}
+  \label{tab:fleet}
+  \input{tables/table_fleet}
+\end{table}
+
+\section{Gate audits --- including the one that failed}
+\label{sec:audits}
+
+\subsection{Nonlinearity of the generator}
+\label{sec:audit-nonlin}
+
+Eighty health states were sampled from the generated fleet (stratified by life fraction,
+half from the last 30\,\% of life where deviations are largest) and re-solved with full
+pyCycle at the exact ICM grid conditions, so the comparison isolates nonlinearity from
+interpolation. \Cref{tab:nonlin} reports the per-channel error of \cref{eq:generator} against
+the full solution, next to the sensor noise it must be judged against: medians of
+0.01--0.33\,\%, tails (P95) at or below 1\,\%, concentrated at end of life. Combined with the
+self-consistency property of \cref{sec:fleet-arch}, the linearization is adequate: the residual
+infidelity to full physics is at the noise floor, identical for both EHM pipelines, and
+irrelevant to truth-referenced scoring.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Nonlinearity audit: linear generator versus full pyCycle solves at fleet-sampled
+  health states. Auto-generated.}
+  \label{tab:nonlin}
+  \input{tables/table_nonlinearity}
+\end{table}
+
+\subsection{Difficulty: the audit that failed, and what it taught}
+\label{sec:audit-difficulty}
+
+The difficulty gate is designed to prevent a trivially easy dataset from flattering the AI: a
+deliberately weak classifier (multinomial logistic regression on the 16 raw measured channels)
+must \emph{not} solve the isolation task; the pre-set threshold is 60\,\% accuracy.
+
+\textbf{First pass: failed.} With the original labeling --- the dominant \emph{chronic}
+mechanism per snapshot --- the trivial classifier scored \textbf{81.6\,\%} (majority-class
+baseline 54.6\,\%). Root-cause analysis: chronic mechanisms co-evolve with age in \emph{every}
+engine (fouling saturates early, hot-section deterioration accumulates late), so the chronic
+label is largely an \emph{age proxy}, and raw absolute channel levels encode age directly. The
+task the label defined was not fault isolation at all. Two responses were possible: relax the
+threshold (cosmetic) or fix the design (structural). The structural fix was taken.
+
+\textbf{Design change: acute fault episodes.} What hypothesis H2 actually tests is the
+isolation of \emph{localized faults with overlapping signatures} --- the regime where the ICM
+observability analysis proved cockpit sensors nearly blind (minimum signature angle
+1.3$^{\circ}$, \cref{tab:confusable}). The catalog therefore gained discrete
+\emph{single-parameter} fault episodes: a fast ramp (50--500 cycles) to a sustained magnitude
+on one health parameter, drawn from six targets that deliberately include the confusable pairs
+($\eta_{\mathrm{HPC}}$ vs.\ $\eta_{\mathrm{HPT}}$, $\eta_{\mathrm{HPT}}$ vs.\
+$\Gamma_{\mathrm{HPT}}$), injected in $\sim$50\,\% of engines at a random point of their lives.
+The gated task became: classify each snapshot as \emph{no acute fault} or by the faulted
+parameter --- a 7-class isolation problem.
+
+\textbf{The audit also caught a generator bug.} The first acute implementation drew the episode
+onset as a fraction of the \emph{maximum simulation horizon} (30\,000 cycles) rather than of
+the engine's actual life ($\sim$16\,000): most episodes landed beyond end of life and only
+15/100 engines showed one. The fix computes a chronic-only provisional life first, then places
+the onset as a fraction of it (two-pass generation); the final fleet has 49/100 acute engines
+with all six target parameters represented.
+
+\textbf{Second pass: passed.} On the corrected fleet the trivial classifier achieves
+\textbf{54.0\,\%} accuracy (macro-F1 0.30) on the gated isolation task --- under the 60\,\%
+threshold, exactly as the signature-angle physics predicts (\cref{tab:difficulty-audit}). The
+chronic-mechanism label is retained in the dataset and reported as a secondary,
+explicitly-not-gated metric (81.6\,\% accuracy --- high, expected, and uninformative about
+isolation ability). The episode is recorded here in full because it is evidence the gates are
+real: a pre-registered criterion failed, the failure was diagnosed to a design flaw rather than
+argued away, and the fix strengthened the benchmark.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Difficulty audit on the final fleet (trivial classifier: multinomial logistic on
+  raw measured channels). Auto-generated.}
+  \label{tab:difficulty-audit}
+  \input{tables/table_difficulty}
+\end{table}
+
+\subsection{Realism}
+\label{sec:audit-realism}
+
+Quantitative checks of macroscopic behavior, all in \cref{tab:fleet}: the wash sawtooth is
+visible (mean EGTM recovery $+2.8$\,\si{\degreeCelsius}, positive at 99.75\,\% of the 400
+sampled wash events); end-of-life deviations carry the physical deterioration signature in
+100\,\% of engines ($\Delta$EGT $+68$\,K, $\Delta W_f$ $+5.7$\,\%); the measured-noise
+residual on drift-free engines reproduces the catalog $\sigma$ (2.51 vs.\ 2.50\,K); lives
+center on 15\,400 cycles with a realistic severe-degrader tail and no censored engines.
+
+\section{Milestone H2: declared closed}
+\label{sec:h2}
+
+All gate criteria are met: realism and difficulty audits passed (the latter after the
+documented design change), nonlinearity quantified at the noise floor, split-by-engine
+leakage checks automated in CI, and the dataset datasheet written
+(\code{docs/syncfm56-datasheet.md}). SynCFM56 v1.0 is frozen: regeneration is deterministic
+from the catalog and seed, so the dataset is fully specified by the repository state. Known
+limitations, declared for downstream chapters: linearized generation (audited,
+\cref{tab:nonlin}); two fixed snapshot conditions with ambient/power scatter rather than a
+full mission mix; chronic labels are age-correlated by nature; and one acute episode per
+engine at most.

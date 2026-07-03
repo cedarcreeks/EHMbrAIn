@@ -14,6 +14,12 @@ sensor-noise floor injected in phase F2 and are common-mode to both EHM pipeline
 intent ---a baseline whose error does not distort the comparison--- is met. Optional
 refinement (grid densification near block boundaries) is queued as non-blocking.
 
+\section{Phase F2: closed}
+
+Documented in \cref{ch:fleet}: generator architecture, ground-truth trajectory library,
+snapshot and sensor models, the three gate audits (including the failed-then-fixed difficulty
+gate and the onset bug both audits surfaced) and the H2 declaration.
+
 \section{Remaining phases}
 
 \begin{table}[htbp]
@@ -24,10 +30,6 @@ refinement (grid densification near block boundaries) is queued as non-blocking.
     \toprule
     Phase & Key deliverable & Closing criterion (gate) \\
     \midrule
-    F2 & SynCFM56 v1.0: synthetic fleet of $\sim$100 engines with ground truth and ACARS-style
-         snapshots &
-         H2: realism and difficulty audit passed; no leakage between splits; dataset datasheet
-         written \\
     F3 & Complete traditional pipeline (baseline, trending, WLS, Kalman, rules, extrapolation
          RUL) &
          H3: full metrics on test; smearing measured against ground truth \\
@@ -39,6 +41,11 @@ refinement (grid densification near block boundaries) is queued as non-blocking.
          command \\
     F6 & Case studies, dashboard, final report &
          H6: full reproduction from raw data; defensible document \\
+    \textbf{H2 closed} & 2026-07-03 & SynCFM56 v1.0 frozen (\cref{tab:fleet}): 100 engines,
+      1.58M snapshot rows, deterministic regeneration. Nonlinearity at the noise floor
+      (\cref{tab:nonlin}); difficulty gate failed at 81.6\,\% with chronic labels, passed at
+      54.0\,\% after the acute-episode design change (\cref{sec:audit-difficulty}); realism
+      checks all positive; onset bug found and fixed by the audits; 25 automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -71,6 +78,11 @@ refinement (grid densification near block boundaries) is queued as non-blocking.
       an order of magnitude; ICM extended to a six-point envelope grid with stable
       observability (\cref{tab:icm-grid}); computations parallelized per norm N1 (decks
       $2.9\times$, ICM $6\times$ faster); sixteen automated tests green. \\
+    \textbf{H2 closed} & 2026-07-03 & SynCFM56 v1.0 frozen (\cref{tab:fleet}): 100 engines,
+      1.58M snapshot rows, deterministic regeneration. Nonlinearity at the noise floor
+      (\cref{tab:nonlin}); difficulty gate failed at 81.6\,\% with chronic labels, passed at
+      54.0\,\% after the acute-episode design change (\cref{sec:audit-difficulty}); realism
+      checks all positive; onset bug found and fixed by the audits; 25 automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
