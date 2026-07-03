@@ -193,10 +193,18 @@ condition, so that measured values can be turned into deviations. The baseline i
 sweeping the healthy model over a realistic flight envelope ---altitude blocks with their
 plausible Mach ranges (no Mach~0.8 at sea level), ambient temperature offsets of 0, $+15$ and
 $+30$\,\si{\degreeCelsius} above ISA, and six thrust settings from 50 to 100\,\% of the locally
-available maximum. At each condition the model first finds the maximum thrust at the rating
-temperature (point \code{OD\_max}, throttled by $T_{4}$), then solves the part-power point at
-the commanded fraction (\code{OD\_pt}) ---the same two-point pattern used by the pyCycle
-reference example.
+available maximum. The 50\,\% floor is deliberate: airline EHM trending consumes takeoff,
+climb and stable-cruise reports, all high-power conditions; approach and idle are neither
+trending conditions nor reliable model territory (\cref{sec:idle}). At each condition the
+model first finds the maximum thrust available at the rating temperature (point
+\code{OD\_max}, throttled by $T_4$), then solves the part-power point at the commanded
+fraction (\code{OD\_pt}) ---the same two-point pattern used by the pyCycle reference example.
+The rating temperature is fixed at $T_{4,\max} = \SI{3200}{\degree R}$, a rounded envelope
+constant chosen from the calibrated takeoff anchor (imposing the certified rated thrust at SLS
+required $T_4 \approx \SI{3175}{\degree R}$, \cref{tab:anchors}); a real FADEC modulates
+its rating limits across the envelope, so this constant is a declared simplification ---
+adequate here because the baseline uses \emph{fractions} of the local maximum, not its
+absolute value.
 
 Two engineering lessons from WP1.2 shaped the sweep. First, the walk is ordered for warm
 starting within each block (thrust descending), and the independent (altitude, Mach) blocks run
@@ -207,19 +215,28 @@ point's internal states beyond re-seeding, so the recovery action on any failure
 \emph{rebuild} the problem cold with altitude-appropriate guesses (norm N2); a first version of
 the sweep without this recovery lost every point downstream of the first divergence.
 
-The result is stored as a table plus a scattered linear interpolator in the four operating
-coordinates, and its quality is measured by leave-one-out cross-validation (each grid point
-predicted from all the others), reported per channel in \cref{tab:deck-loo}. Median errors are
-a few tenths of a percent; the tail percentiles are dominated by envelope-corner points whose
-interpolation simplices span across altitude blocks in raw physical coordinates.
+The result is stored as a table plus a scattered linear interpolator (Delaunay triangulation
+with barycentric interpolation, SciPy's \code{LinearNDInterpolator}) in the four operating
+coordinates, and its quality is measured by leave-one-out cross-validation: each grid point is
+removed, predicted from all the others, and the relative error recorded ---
+\cref{tab:deck-loo} reports the per-channel median, 95th percentile and maximum. Median errors
+are a few tenths of a percent; the tail percentiles are dominated by envelope-corner points
+whose interpolation simplices span across altitude blocks in raw physical coordinates.
 
 \subsection{Corrected-parameter exponents and the corrected-space baseline}
 \label{sec:corrected-baseline}
 
 The fix for those tails is the one anticipated in \cref{sec:stations}: build the baseline in
 \emph{corrected-parameter} space. The correction exponents are fitted on the deck itself
----per channel, a regression of $\log Y$ on a polynomial in the log corrected speed plus
-$a\log\theta + b\log\delta$--- rather than copied from generic tables. The fitted exponents
+rather than copied from generic tables: per channel $Y$, a linear least-squares fit of
+\begin{equation}
+  \log Y \;=\; \underbrace{\textstyle\sum_{k=0}^{3} c_k \left(\log N1_c\right)^{k}}_{\text{power line}}
+  \;+\; a\,\log\theta \;+\; b\,\log\delta,
+  \label{eq:exponent-fit}
+\end{equation}
+where the cubic polynomial absorbs the dependence on the corrected speed (the ``power line'')
+and the exponents $(a, b)$ capture whatever ambient dependence remains --- exactly the
+quantities the correction $Y_{\mathrm{corr}} = Y/(\theta^a \delta^b)$ then removes. The fitted exponents
 land squarely on their textbook values without having been told them (\cref{tab:corrected}):
 fuel flow $a=0.63$, $b=1.02$ (handbooks quote $\theta^{0.5\text{--}0.7}\delta$); N2
 $a=0.49$, $b\approx0$ (the $\sqrt{\theta}$ corrected-speed law); EGT $a=0.95$, $b\approx0$

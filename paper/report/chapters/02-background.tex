@@ -143,13 +143,18 @@ biases; and $\mathbf{v}$ is measurement noise with covariance $\mathbf{R}$.
 Inverting \cref{eq:gpa-linear} is an ill-posed problem. With 4 cockpit measurements and 10
 unknowns the system is underdetermined ($\operatorname{rank}(\mathbf{H})\leq 4$): infinitely
 many health states explain the same measurements. The weighted-least-squares (WLS) answer
-regularizes the inversion with prior knowledge $\mathbf{P}_0$ of plausible deterioration
-magnitudes:
+regularizes the inversion with prior knowledge of plausible deterioration:
 \begin{equation}
   \hat{\mathbf{x}} = \left(\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\mathbf{H}
-  + \lambda\,\mathbf{P}_0^{-1}\right)^{-1}\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\Delta\mathbf{z}.
+  + \lambda\,\mathbf{P}_0^{-1}\right)^{-1}\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\Delta\mathbf{z},
   \label{eq:wls}
 \end{equation}
+where the two regularization pieces play distinct roles: $\mathbf{P}_0$ (a diagonal matrix of
+expected deterioration magnitudes squared) sets the \emph{shape} of the prior --- which
+parameters are allowed to move more --- while the scalar $\lambda$ sets its \emph{strength},
+trading fidelity to the measurements against fidelity to the prior. $\lambda$ is a tuning knob
+of the traditional pipeline and receives the same optimization budget as the AI's
+hyperparameters (\cref{sec:safeguards}).
 
 Because deterioration evolves slowly over thousands of flights, tracking it as a
 \emph{random walk} with a Kalman filter improves on flight-by-flight estimation. The Kalman

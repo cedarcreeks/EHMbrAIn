@@ -1,0 +1,57 @@
+\chapter*{Notation and acronyms}
+\addcontentsline{toc}{chapter}{Notation and acronyms}
+
+\section*{Acronyms}
+
+\begin{center}\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{1.5cm}p{4.6cm}p{1.2cm}p{4.6cm}@{}}
+  \toprule
+  BPR & bypass ratio & LOO & leave-one-out (cross-validation) \\
+  CEA & NASA Chemical Equilibrium with Applications & LPC & low-pressure compressor (booster) \\
+  CI & continuous integration & LPT & low-pressure turbine \\
+  C-MAPSS & NASA turbofan simulation benchmark & MAE & mean absolute error \\
+  EEDB & ICAO Engine Emissions Databank & OPR & overall pressure ratio \\
+  EGT(M) & exhaust gas temperature (margin) & PC & power code: fraction of reference thrust \\
+  EHM & engine health monitoring & PCS & Physics-Consistency Score (ours, C5) \\
+  FADEC & full-authority digital engine control & PHM & prognostics and health management \\
+  FAR & fuel--air ratio & RMSE & root-mean-square error \\
+  FOD & foreign-object damage & RUL & remaining useful life \\
+  FPR & false-positive rate & SAC & single annular combustor \\
+  GPA & gas path analysis & SHAP & Shapley additive explanations \\
+  HPC & high-pressure compressor & SLS & sea-level static \\
+  HPT & high-pressure turbine & SVD & singular value decomposition \\
+  ICM & influence coefficient matrix & TCDS & type-certificate data sheet \\
+  ISA & international standard atmosphere & TSFC & thrust-specific fuel consumption \\
+  N1, N2 & low-/high-pressure spool speeds & WLS & weighted least squares \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Symbols}
+
+\begin{center}\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}p{1.6cm}p{4.5cm}p{1.5cm}p{4.3cm}@{}}
+  \toprule
+  $\theta,\ \delta$ & inlet total temperature / pressure ratios to ISA sea level &
+    $\mathbf{H}$ & influence coefficient matrix \\
+  $\Delta\eta$ & component efficiency deviation [\%] &
+    $\mathbf{Q},\ \mathbf{R}$ & process / measurement noise covariance \\
+  $\Delta\Gamma$ & component flow-capacity deviation [\%] &
+    $\mathbf{P}_0,\ \lambda$ & prior shape / strength of the WLS regularization \\
+  $\mathbf{x}$ & health-parameter vector (10 components) &
+    $N1_c$ & corrected fan speed $N1/\sqrt{\theta}$ \\
+  $\Delta\mathbf{z}$ & measurement deviations from baseline &
+    $T_{t4}$ & combustor-exit total temperature \\
+  $W_f,\ F_n$ & fuel flow, net thrust &
+    $\Delta T_{\mathrm{ISA}}$ (dTs) & ambient offset from the ISA day \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Reading order.} Every technical term is defined at first use;
+\cref{ch:background} builds the engine and GPA foundations,
+\cref{sec:ai-toolbox} the machine-learning toolbox. The hypotheses table
+(\cref{tab:hypotheses}) can be read superficially on a first pass and revisited
+after those two stops.

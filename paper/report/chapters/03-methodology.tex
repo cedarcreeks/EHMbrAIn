@@ -29,6 +29,37 @@ measurable acceptance criterion:
   \item[\textbf{F6.}] Case studies, interactive dashboard, and final writing. Gate H6.
 \end{enumerate}
 
+\section{The machine-learning toolbox, briefly}
+\label{sec:ai-toolbox}
+
+For self-containedness, the AI techniques named above in one paragraph each:
+
+\begin{description}
+  \item[Autoencoder (anomaly detection).] A neural network trained to compress and then
+    reconstruct \emph{healthy} data. Fed a degraded snapshot, it reconstructs it poorly; the
+    reconstruction error is the anomaly score. No fault labels needed.
+  \item[Isolation Forest (anomaly detection).] An ensemble of random trees; anomalous points
+    are isolated in fewer random splits than normal ones. A classical non-neural baseline.
+  \item[Gradient boosting / XGBoost (diagnosis).] An ensemble of small decision trees, each
+    correcting the errors of the previous ones. State of the art on tabular data; predicts the
+    fault class of a snapshot window.
+  \item[LSTM, TCN, Transformer (RUL prognosis).] Three sequence-model families ---recurrent,
+    convolutional and attention-based--- that consume a sliding window of past snapshots and
+    regress the remaining useful life. Compared against each other in F4.
+  \item[Conformal prediction (uncertainty).] A distribution-free wrapper: from the model's
+    errors on a calibration set it builds prediction intervals with a mathematically
+    guaranteed coverage rate (e.g.\ 90\,\%), regardless of the underlying model.
+  \item[SHAP (explainability).] Assigns each input feature its contribution to one specific
+    prediction (a game-theoretic attribution). The PCS (contribution C5) projects these
+    attributions through the ICM into health-parameter space to test their physical coherence.
+  \item[Optuna (tuning).] An automated hyperparameter search library; a ``trial'' is one
+    training run with a candidate configuration. Both EHM families get the same trial budget.
+\end{description}
+
+Supporting infrastructure named later: \emph{DVC} versions datasets the way git versions code;
+\emph{MLflow} records every training run (configuration, metrics, artifacts) so experiments
+are traceable and repeatable.
+
 \section{Methodological safeguards}
 \label{sec:safeguards}
 
@@ -202,6 +233,13 @@ RMSE, MAE, the NASA PHM08 score
   \qquad d_i = \widehat{\mathrm{RUL}}_i - \mathrm{RUL}_i,
 \end{equation}
 which penalizes late predictions more than early ones (a late removal risks an in-flight
-shutdown; an early one merely wastes some life), plus $\alpha$--$\lambda$ accuracy and the
-prognostic horizon. For uncertainty: empirical versus nominal interval coverage and mean
-interval width.
+shutdown; an early one merely wastes some life). Two further prognostic metrics need
+definitions: \emph{$\alpha$--$\lambda$ accuracy} is the fraction of predictions falling within
+$\pm\alpha$ (here 20\,\%) of the true RUL when evaluated at specified life fractions
+$\lambda$ (here 50, 70 and 90\,\% of the way to failure) --- it asks ``was the prediction
+acceptable at mid-life? near the end?''; the \emph{prognostic horizon} is the earliest moment
+from which the prediction stays within the $\pm\alpha$ band for the rest of the engine's life
+--- longer horizons mean earlier trustworthy warnings. For uncertainty: empirical versus
+nominal interval coverage (does the ``90\,\%'' interval actually contain the truth 90\,\% of
+the time?) and mean interval width (narrow honest intervals are the goal; wide intervals are
+trivially calibrated but useless).
