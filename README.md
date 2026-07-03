@@ -1,4 +1,7 @@
-# EHMAI — AI-based vs Traditional Engine Health Monitoring on the CFM56-7B
+# EHMbrAIn — AI-based vs Traditional Engine Health Monitoring on the CFM56-7B
+
+**EHM + brAIn**: the EHM brain. Engine Health Monitoring re-thought with AI, benchmarked
+head-to-head against the traditional approach.
 
 Reproducible testbed comparing **traditional Engine Health Monitoring** (linear Gas Path
 Analysis, Kalman tracking, expert rules, trend monitoring) against **AI-based EHM**
@@ -23,7 +26,7 @@ uv run pytest                            # smoke tests
 
 ```
 conf/          Hydra configs (engine, datagen, models, eval)
-src/ehmai/
+src/ehmbrain/
   perf/        F1: pyCycle CFM56-7B model, calibration, ICM, baseline decks
   datagen/     F2: degradation, fleet simulation, sensor model, ACARS snapshots
   trad/        F3: traditional EHM (baselines, trending, WLS/Kalman GPA, rules)

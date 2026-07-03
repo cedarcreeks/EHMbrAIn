@@ -1,4 +1,4 @@
-# EHM-AI vs EHM Tradicional — Gas Path Analysis en CFM56-7B
+# EHMbrAIn — EHM con IA vs EHM Tradicional — Gas Path Analysis en CFM56-7B
 
 **Plan maestro v2 (detalle extremo) — 2026-07-03**
 
@@ -232,11 +232,11 @@ done, verificable). Duraciones para 1 persona a dedicación alta. Total ~30 sema
 Estructura:
 
 ```
-EHMAI/
+EHMbrAIn/
 ├── PLAN.md  README.md  LICENSE(MIT código)  CITATION.cff
 ├── pyproject.toml  uv.lock            # Python 3.11, uv
 ├── conf/                              # configs Hydra (motor, datagen, modelos, eval)
-├── src/ehmai/
+├── src/ehmbrain/
 │   ├── perf/        # F1: modelo pyCycle, calibración, ICM, decks
 │   ├── datagen/     # F2: degradación, flota, sensores, snapshots
 │   ├── trad/        # F3: baseline, trending, WLS, Kalman, reglas, RUL clásico

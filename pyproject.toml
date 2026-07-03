@@ -1,5 +1,5 @@
 [project]
-name = "ehmai"
+name = "ehmbrain"
 version = "0.1.0"
 description = "AI-based vs traditional Engine Health Monitoring (gas path analysis) on a synthetic CFM56-7B fleet"
 requires-python = ">=3.11"
@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ehmai = "ehmai:main"
+ehmbrain = "ehmbrain:main"
 
 [build-system]
 requires = ["uv_build>=0.10.12,<0.11.0"]
