@@ -1,0 +1,109 @@
+\chapter{Introducción}
+\label{cap:introduccion}
+
+\section{Motivación}
+
+La monitorización de la salud de motores aeronáuticos (\emph{Engine Health Monitoring}, EHM)
+sostiene hoy decisiones de mantenimiento que mueven cifras enormes: un \emph{shop visit} de un
+turbofan comercial cuesta del orden de millones de dólares, y una retirada no programada
+multiplica ese coste por la disrupción operativa. La técnica de referencia desde los años setenta
+es el \emph{Gas Path Analysis} (GPA)~\cite{Urban1975}: inferir el estado de salud de los
+componentes del camino de gas (fan, compresores, turbinas) a partir de las medidas disponibles a
+bordo (velocidades de rotor, temperatura de gases de escape, flujo de combustible, presiones).
+Sobre el GPA se construyó toda una generación de sistemas industriales ---filtros de Kalman,
+líneas base termodinámicas, reglas expertas de aislamiento~\cite{Volponi2014}--- que aquí
+llamamos \emph{EHM tradicional}.
+
+En la última década, el aprendizaje automático ha producido resultados llamativos en pronóstico
+de vida útil remanente (RUL) sobre bancos de datos sintéticos como
+C-MAPSS~\cite{Saxena2008} y N-CMAPSS~\cite{AriasChao2021}. Sin embargo, la literatura adolece de
+un problema estructural: \textbf{casi nunca se compara la IA contra un enfoque tradicional
+implementado con rigor}, sobre los mismos datos, con las mismas métricas y con el mismo esfuerzo
+de ajuste. El resultado son comparaciones contra ``hombres de paja'' que impiden saber qué aporta
+realmente la IA, cuándo y a qué coste.
+
+\section{Objetivo}
+
+Este trabajo construye un banco de pruebas reproducible en el que ambas familias de EHM
+---tradicional y basada en IA--- observan \emph{exactamente los mismos datos} de una flota
+sintética del turbofan CFM56-7B26 y se evalúan con \emph{exactamente las mismas métricas}. La
+clave metodológica es que los datos sintéticos incorporan \textbf{verdad-terreno completa}: el
+estado real de salud de cada componente (desviaciones de eficiencia y capacidad de flujo) en cada
+vuelo. Esto, imposible con datos reales de aerolínea, permite medir no solo si un método detecta
+o pronostica bien, sino si \emph{atribuye el daño al componente correcto} ---el talón de Aquiles
+del GPA clásico (el fenómeno de \emph{smearing}) y la caja negra de la IA.
+
+Al no existir ni un modelo de prestaciones del motor ni datos de degradación disponibles, el
+proyecto construye ambos: un gemelo termodinámico del CFM56-7B26 en
+pyCycle~\cite{Hendricks2019} calibrado contra datos públicos certificados
+(\cref{cap:modelo}), y un generador de flota degradada con firmas de fallo físicas.
+
+\section{Hipótesis}
+\label{sec:hipotesis}
+
+Las hipótesis se formalizan con umbrales cuantitativos \emph{antes} de ver los resultados del
+conjunto de test (protocolo pre-registrado, \cref{sec:protocolo}). Todas se contrastan con test
+de Wilcoxon pareado por motor, corrección de Holm ($\alpha = 0{,}05$) e intervalos bootstrap BCa.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Hipótesis del proyecto y criterios de confirmación.}
+  \label{tab:hipotesis}
+  \begin{tabular}{p{0.6cm}p{5.4cm}p{7.6cm}}
+    \toprule
+    ID & Hipótesis & Criterio de confirmación \\
+    \midrule
+    H1 & La IA detecta antes y con menos falsas alarmas que el \emph{trend monitoring} &
+      \emph{lead time} mediano $\geq +20$\,\% y FPR $\leq 0{,}5\times$ frente al trending, a
+      \emph{recall} fijo $0{,}9$; $p<0{,}05$ \\
+    H2 & La IA aísla mejor fallos con firmas solapadas &
+      $+10$ puntos de exactitud de aislamiento en el subconjunto ``confusable'' (firmas a
+      $<15^{\circ}$ en el espacio de la ICM) frente a GPA-WLS; $p<0{,}05$ \\
+    H3 & La IA pronostica mejor el RUL &
+      mejora simultánea en RMSE y en el \emph{score} asimétrico NASA PHM08; $p<0{,}05$ \\
+    H4 & El híbrido \emph{physics-informed} domina con pocos datos &
+      RMSE de RUL $\leq$ IA pura con el 100\,\% del entrenamiento y estrictamente mejor con el
+      10\,\% y el 25\,\%; $p<0{,}05$ \\
+    H5 & Los intervalos \emph{conformal} calibran mejor que la covarianza del Kalman &
+      menor $|$cobertura empírica $-$ 0{,}9$|$ con anchura media no peor que $+20$\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+La refutación de cualquier hipótesis es también un resultado publicable: el pre-registro la hace
+creíble. Queda prohibido reformular hipótesis tras la etiqueta \codigo{prereg-v1} del
+repositorio.
+
+\section{Contribuciones}
+\label{sec:contribuciones}
+
+\begin{enumerate}
+  \item[\textbf{C1.}] \textbf{SynCFM56}: primer conjunto de datos sintético público de GPA sobre
+    un motor comercial concreto (CFM56-7B26), con verdad-terreno de parámetros de salud por
+    vuelo y formato de \emph{snapshots} tipo ACARS (informe de despegue + informe de crucero por
+    vuelo), más realista que las series continuas de C-MAPSS.
+  \item[\textbf{C2.}] Comparación cabeza a cabeza con \textbf{protocolo pre-registrado} e igual
+    presupuesto de ajuste (mismo número de \emph{trials} de Optuna) para ambas familias.
+  \item[\textbf{C3.}] Híbrido \emph{physics-informed} con tres mecanismos ablacionados por
+    separado: residuos contra el gemelo digital, pérdidas con restricciones físicas y
+    \emph{stacking} GPA$\rightarrow$ML.
+  \item[\textbf{C4.}] Cuantificación de incertidumbre comparada: intervalos de RUL por
+    \emph{conformal prediction} frente a la covarianza del filtro de Kalman.
+  \item[\textbf{C5.}] \textbf{Physics-Consistency Score (PCS)}: métrica nueva de explicabilidad
+    que proyecta las atribuciones SHAP al espacio físico de parámetros de salud vía la matriz de
+    coeficientes de influencia.
+  \item[\textbf{C6.}] Mapa de determinabilidad: ablación sensores $\times$ ruido $\times$ tamaño
+    de datos que muestra \emph{cuándo} gana cada enfoque.
+  \item[\textbf{C7.}] Validación \emph{sim-to-real}: la metodología completa se re-ejecuta sobre
+    N-CMAPSS para comprobar que el \emph{ranking} de métodos no es un artefacto del simulador
+    propio.
+\end{enumerate}
+
+\section{Estructura del documento}
+
+El \cref{cap:fundamentos} fija los fundamentos: el motor, la formulación del GPA y la física de
+la degradación. El \cref{cap:metodologia} describe la arquitectura del banco de pruebas y las
+salvaguardas metodológicas. El \cref{cap:modelo} documenta el gemelo termodinámico del
+CFM56-7B26 y su calibración contra datos certificados ---el trabajo completado hasta la fecha---
+con las evidencias cuantitativas del proceso. El \cref{cap:trabajo-en-curso} resume las fases
+restantes y sus criterios de aceptación.

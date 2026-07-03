@@ -34,9 +34,21 @@ src/ehmbrain/
   eval/        F5: common metrics, statistical tests, ablations
   common/      units, corrections, IO, data schema
 tests/         pytest (physics sign checks, numerics, regression, smoke)
+docs/          engineering specs (F1 model spec with calibration status)
 data/          DVC-tracked datasets (raw/interim/processed)
 dashboard/     Streamlit demo
 paper/         LaTeX sources, generated figures
+```
+
+## Project report (memoria)
+
+`paper/memoria/` holds a living LaTeX report (Spanish) documenting every milestone with
+full detail. All result figures and tables are **generated from the model** — never
+hand-copied:
+
+```bash
+uv run python scripts/make_memoria_assets.py       # regenerate figures + tables
+cd paper/memoria && latexmk -pdf -outdir=build memoria.tex
 ```
 
 ## Status

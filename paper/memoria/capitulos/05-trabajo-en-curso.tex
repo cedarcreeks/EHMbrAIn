@@ -1,0 +1,71 @@
+\chapter{Trabajo en curso y planificación}
+\label{cap:trabajo-en-curso}
+
+\section{Cierre de la fase F1}
+
+Para cerrar el hito H1 restan dos paquetes de trabajo:
+
+\begin{description}
+  \item[WP1.3 — \emph{Decks} de línea base.] Barrido del modelo sobre la envolvente operativa
+    (altitud $\times$ Mach $\times$ reglaje $\times$ $\Delta T_{\mathrm{ISA}}$ $\times$
+    sangrado) y empaquetado de un interpolador validado por \emph{leave-one-out}
+    (error de interpolación $<0{,}1$\,\%). Este interpolador es la línea base contra la que
+    ambos pipelines de EHM calcularán desviaciones.
+  \item[WP1.4 — Matriz de coeficientes de influencia.] Diferencias centrales ($\pm0{,}5$\,\%)
+    sobre los diez parámetros de salud en una sub-rejilla de puntos de operación; análisis SVD
+    (rango, número de condición, ángulos entre firmas) que define el subconjunto ``confusable''
+    de la hipótesis H2; y pruebas físicas automáticas de signos (p.\ ej.\
+    $\Delta\eta_{\mathrm{HPT}}\downarrow \Rightarrow \mathrm{EGT}\uparrow, W_f\uparrow$).
+    Verificación cruzada de la termodinámica tabular contra CEA en los puntos ancla.
+\end{description}
+
+\section{Fases siguientes}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Fases restantes, entregables clave y criterios de cierre.}
+  \label{tab:fases-restantes}
+  \begin{tabular}{p{1.2cm}p{5.6cm}p{6.6cm}}
+    \toprule
+    Fase & Entregable clave & Criterio de cierre (\emph{gate}) \\
+    \midrule
+    F2 & SynCFM56 v1.0: flota sintética de $\sim$100 motores con verdad-terreno y
+         \emph{snapshots} ACARS &
+         H2: auditoría de realismo y dificultad superada; sin fuga entre particiones;
+         ficha de dataset redactada \\
+    F3 & Pipeline tradicional completo (línea base, \emph{trending}, WLS, Kalman, reglas,
+         RUL por extrapolación) &
+         H3: métricas completas sobre test; \emph{smearing} medido contra verdad-terreno \\
+    F4 & Suite de IA (detección, diagnóstico, RUL, híbrido \emph{physics-informed},
+         \emph{conformal}, PCS) &
+         H4: supera al tradicional en $\geq1$ métrica primaria por tarea en validación \\
+    F5 & Evaluación pre-registrada + ablaciones + N-CMAPSS &
+         H5: hipótesis H1--H5 resueltas con contraste estadístico; figuras reproducibles
+         con un comando \\
+    F6 & Casos de estudio, \emph{dashboard}, memoria final &
+         H6: reproducción íntegra desde datos crudos; documento defendible \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Registro de hitos}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Registro de hitos alcanzados (se actualiza con cada \emph{gate}).}
+  \label{tab:registro-hitos}
+  \begin{tabular}{llp{8.6cm}}
+    \toprule
+    Hito & Fecha & Evidencia \\
+    \midrule
+    H0 & 2026-07-03 & Entorno reproducible (uv, Python 3.11, pyCycle 4.4 con
+      \codigo{numpy<2}); ejemplo de ciclo completo convergiendo en local y en CI; esqueleto del
+      repositorio y prueba de humo. \\
+    H1 (parcial) & 2026-07-03 & WP1.1 y WP1.2 completados: punto de diseño dentro de las cinco
+      ventanas (\cref{tab:diseno}); anclas SLS calibradas contra TCDS + EEDB con las tres anclas
+      con \emph{gate} en tolerancia (\cref{tab:anclas}); contrato de calibración con valores
+      verificados; nueve pruebas automatizadas en verde. Pendiente: WP1.3 (\emph{decks}) y
+      WP1.4 (ICM + SVD + verificación CEA). \\
+    \bottomrule
+  \end{tabular}
+\end{table}

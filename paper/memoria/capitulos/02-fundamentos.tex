@@ -1,0 +1,152 @@
+\chapter{Fundamentos}
+\label{cap:fundamentos}
+
+\section{El motor: CFM56-7B26}
+\label{sec:motor}
+
+El CFM56-7B (CFM International, consorcio Safran--GE) propulsa la familia Boeing 737NG y es uno
+de los motores comerciales más extendidos de la historia, lo que garantiza abundancia de datos
+públicos de tipo. Se elige la variante \textbf{-7B26} (\SI{117}{\kilo\newton} de empuje de
+despegue, Boeing 737-800) por ser la más común. Según su hoja de datos de certificado de tipo
+(TCDS EASA E.004, ed.~07~\cite{EASA2023}), es un turbofan de doble rotor y alta relación de
+derivación: fan de una etapa, compresor de baja (\emph{booster}) de 3 etapas, compresor de alta
+(HPC) de 9 etapas, cámara de combustión anular, turbina de alta (HPT) de 1 etapa y turbina de
+baja (LPT) de 4 etapas, con control digital FADEC de doble canal. El parámetro primario de
+empuje es N1 (velocidad del rotor de baja), no EPR.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Datos certificados del CFM56-7B26 empleados como contrato de calibración. Fuentes:
+  TCDS EASA E.004 ed.~07~\cite{EASA2023} y banco de datos de emisiones OACI, ed.~03/2026, UID
+  3CM033~\cite{ICAO2026}.}
+  \label{tab:tcds}
+  \begin{tabular}{llll}
+    \toprule
+    Magnitud & Valor & Fuente & Estado \\
+    \midrule
+    Empuje de despegue & \SI{11699}{\deca\newton} (= \SI{116.99}{\kilo\newton}) & TCDS & verificado \\
+    Empuje máximo continuo & \SI{11521}{\deca\newton} & TCDS & verificado \\
+    N1 límite (104\,\%) & \SI{5382}{rpm} $\Rightarrow$ 100\,\% = \SI{5175}{rpm} & TCDS & verificado \\
+    N2 límite (105\,\%) & \SI{15183}{rpm} $\Rightarrow$ 100\,\% = \SI{14460}{rpm} & TCDS & verificado \\
+    EGT máx.\ despegue / continuo & \SI{950}{\degreeCelsius} / \SI{925}{\degreeCelsius} (mostrada) & TCDS & verificado \\
+    Peso en seco & \SI{2386}{\kilo\gram} & TCDS & verificado \\
+    Relación de derivación & 5{,}1 & EEDB & verificado \\
+    Relación de presiones (SLS, nominal) & 27{,}61 & EEDB & verificado \\
+    $W_f$ a 100/85/30/7\,\% $F_{00}$ & 1{,}221 / 0{,}999 / 0{,}338 / 0{,}113 \si{\kilo\gram\per\second} & EEDB & verificado \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Dos matices del TCDS resultan relevantes para el modelado y suelen pasarse por alto:
+\begin{itemize}
+  \item La EGT certificada se mide en la estación \textbf{T49.5} (tobera de la segunda etapa de
+    la LPT), no en la salida de la HPT; y el valor \emph{mostrado} en cabina añade una función
+    \emph{shunt} de $+\SI{30}{\degreeCelsius}$ (motores SAC, activa por encima de \SI{8500}{rpm} de
+    N2) más un \emph{trim} dependiente del modelo (nulo para el -7B26).
+  \item Los límites de sangrado están tabulados por estación de extracción (5.ª y 9.ª etapa del
+    HPC) y régimen; a régimen nominal el sangrado de 9.ª etapa se limita al 7\,\% del flujo
+    primario.
+\end{itemize}
+
+\section{Estaciones y parámetros corregidos}
+\label{sec:estaciones}
+
+Se adopta la numeración SAE ARP755A~\cite{SAE755}: 2 entrada del fan; 21 salida del fan; 25
+entrada del HPC; 3 salida del HPC; 4 salida de cámara; 45 salida de la HPT; 5 salida de la LPT.
+El rotor de baja (N1) une fan, \emph{booster} y LPT; el de alta (N2), HPC y HPT.
+
+Para comparar vuelos en condiciones distintas, las medidas se corrigen a condiciones ISA a nivel
+del mar con $\theta = T_{t2}/\SI{288.15}{\kelvin}$ y $\delta = P_{t2}/\SI{101.325}{\kilo\pascal}$:
+\begin{equation}
+  N_{\mathrm{corr}} = \frac{N}{\sqrt{\theta}}, \qquad
+  W_{f,\mathrm{corr}} = \frac{W_f}{\delta\,\theta^{a}}, \qquad
+  \mathrm{EGT}_{\mathrm{corr}} = \frac{\mathrm{EGT}}{\theta},
+\end{equation}
+donde el exponente $a$ (habitualmente $0{,}5$--$0{,}7$) no se toma de tablas genéricas sino que
+se ajustará por regresión sobre barridos del propio modelo termodinámico, eliminando una fuente
+clásica de error sistemático en las líneas base.
+
+\section{Formulación del \emph{Gas Path Analysis}}
+\label{sec:gpa}
+
+El estado de salud del camino de gas se describe con el vector de desviaciones respecto a motor
+nuevo
+\begin{equation}
+  \mathbf{x} = \left[\Delta\eta_{\mathrm{fan}}, \Delta\Gamma_{\mathrm{fan}},
+  \Delta\eta_{\mathrm{LPC}}, \Delta\Gamma_{\mathrm{LPC}},
+  \Delta\eta_{\mathrm{HPC}}, \Delta\Gamma_{\mathrm{HPC}},
+  \Delta\eta_{\mathrm{HPT}}, \Delta\Gamma_{\mathrm{HPT}},
+  \Delta\eta_{\mathrm{LPT}}, \Delta\Gamma_{\mathrm{LPT}}\right]^{\mathsf T},
+\end{equation}
+donde $\Delta\eta$ es la desviación relativa de eficiencia isentrópica y $\Delta\Gamma$ la de
+capacidad de flujo corregida de cada turbomáquina. Las medidas disponibles se expresan como
+desviaciones $\Delta\mathbf{z}$ de los parámetros corregidos respecto a la línea base en el
+mismo punto de operación $\mathbf{u}$ (altitud, Mach, N1, $\Delta T_{\mathrm{ISA}}$, sangrado).
+El modelo lineal local es
+\begin{equation}
+  \Delta\mathbf{z} = \mathbf{H}(\mathbf{u})\,\mathbf{x} + \mathbf{S}\,\mathbf{b} + \mathbf{v},
+  \qquad \mathbf{v}\sim\mathcal{N}(\mathbf{0},\mathbf{R}),
+  \label{eq:gpa-lineal}
+\end{equation}
+con $\mathbf{H}$ la \emph{matriz de coeficientes de influencia} (ICM), jacobiano
+$\partial\mathbf{z}/\partial\mathbf{x}$ evaluado en $\mathbf{u}$ y obtenido por diferencias
+centrales sobre el modelo termodinámico; $\mathbf{b}$ los sesgos de sensor y $\mathbf{R}$ la
+covarianza del ruido de medida.
+
+\paragraph{Estimación WLS.} Con 4 medidas de cabina (N1, N2, EGT, $W_f$) y 10 incógnitas el
+sistema es infra-determinado ($\operatorname{rango}(\mathbf{H})\leq 4$), por lo que la solución
+de mínimos cuadrados ponderados exige regularización con una prior $\mathbf{P}_0$ de magnitudes
+de deterioro esperables:
+\begin{equation}
+  \hat{\mathbf{x}} = \left(\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\mathbf{H}
+  + \lambda\,\mathbf{P}_0^{-1}\right)^{-1}\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\Delta\mathbf{z}.
+  \label{eq:wls}
+\end{equation}
+
+\paragraph{Seguimiento con filtro de Kalman.} El deterioro evoluciona lentamente, lo que
+justifica un modelo de paseo aleatorio:
+\begin{equation}
+  \mathbf{x}_k = \mathbf{x}_{k-1} + \mathbf{w}_k, \quad \mathbf{w}\sim\mathcal{N}(\mathbf{0},\mathbf{Q});
+  \qquad
+  \mathbf{z}_k = \mathbf{H}(\mathbf{u}_k)\,\mathbf{x}_k + \mathbf{v}_k,
+  \label{eq:kalman}
+\end{equation}
+con $\mathbf{Q}$ calibrada a las tasas de degradación y estado aumentable con sesgos de sensor
+\cite{Volponi2014}. En los eventos registrados de lavado de compresor se reinicia la parte
+recuperable del estado.
+
+\paragraph{\emph{Smearing} y observabilidad.} Cuando $\mathbf{H}$ está mal condicionada, el
+ruido proyecta un fallo concentrado en un solo componente sobre varios: es el fenómeno de
+\emph{smearing}, debilidad clásica del GPA lineal~\cite{Li2002}. El análisis SVD de la ICM
+(rango, número de condición, ángulos entre firmas de fallo) cuantifica esta debilidad y define
+el subconjunto ``confusable'' usado por la hipótesis H2: pares de fallos cuyas firmas forman un
+ángulo inferior a $15^{\circ}$.
+
+\section{Física de la degradación}
+\label{sec:degradacion}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Mecanismos de degradación modelados y efectos típicos según la
+  literatura~\cite{Diakunchak1992,Kurz2012}.}
+  \label{tab:degradacion}
+  \begin{tabular}{p{3.2cm}p{2.2cm}p{3.6cm}p{2.6cm}p{1.6cm}}
+    \toprule
+    Mecanismo & Componente & Efecto típico & Perfil temporal & Recuperable \\
+    \midrule
+    \emph{Fouling} & fan/LPC/HPC & $\Delta\Gamma$ $-1$\ldots$-4$\,\%; $\Delta\eta$ $-0{,}5$\ldots$-2{,}5$\,\% & exponencial saturante & lavado (30--70\,\%) \\
+    Erosión & compresores & $\Delta\eta$ $-0{,}5$\ldots$-1{,}5$\,\% & lineal lento & no \\
+    Holgura de punta & HPC/HPT & $\Delta\eta$ $-0{,}5$\ldots$-1{,}5$\,\% & rápido inicial, luego lento & no \\
+    Deterioro sección caliente & HPT & $\Delta\eta$ $-1$\ldots$-3$\,\%; $\Delta\Gamma$ $+1$\ldots$+2$\,\% & lineal/acelerado & no \\
+    FOD & fan/HPC & escalón $\Delta\eta$ $-0{,}5$\ldots$-2$\,\% & escalón (Poisson) & no \\
+    Deriva de sensor & cualquier sonda & p.\ ej.\ EGT $+1$\ldots$+5$~\si{\degreeCelsius}/1000 ciclos & rampa & recalibración \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+El efecto agregado observable es la erosión del \emph{margen de EGT} (distancia entre la EGT en
+despegue de día caliente y su límite certificado), desde \SI{70}{}--\SI{100}{\degreeCelsius} en motor
+nuevo hasta cero al final de la vida útil en ala, con el patrón característico ``rápido al
+principio, lento después, dientes de sierra por lavados''. La \cref{tab:degradacion} resume los
+mecanismos, sus firmas y sus perfiles temporales; sus magnitudes parametrizan el generador de
+flota sintética de la fase F2.

@@ -1,0 +1,48 @@
+% Memoria del proyecto EHMbrAIn
+% Compilar:  latexmk -pdf -outdir=build memoria.tex   (desde paper/memoria/)
+%
+% NOTA (repo público): el autor se mantiene anónimo en el repositorio.
+% Rellenar \author localmente para la entrega académica; no commitear el nombre.
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\sisetup{output-decimal-marker={,},group-separator={\,}}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\graphicspath{{figuras/}}
+\usepackage{csquotes}
+\usepackage[style=numeric-comp,sorting=none,backend=biber]{biblatex}
+\addbibresource{referencias.bib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[spanish,capitalise]{cleveref}
+
+\newcommand{\codigo}[1]{\texttt{#1}}
+
+\title{\textbf{EHMbrAIn}\\[2mm]
+  \large Monitorización de la salud de motores (EHM) basada en IA frente al
+  enfoque tradicional: un banco de pruebas de \emph{Gas Path Analysis}
+  sobre el CFM56-7B con verdad-terreno sintética}
+\author{--- (anónimo en el repositorio público) ---}
+\date{\today\\[2mm]\small Documento vivo: se actualiza con cada hito del proyecto.}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\input{capitulos/01-introduccion}
+\input{capitulos/02-fundamentos}
+\input{capitulos/03-metodologia}
+\input{capitulos/04-modelo-cfm56}
+\input{capitulos/05-trabajo-en-curso}
+
+\printbibliography[heading=bibintoc,title={Referencias}]
+
+\end{document}

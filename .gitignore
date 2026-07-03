@@ -31,3 +31,6 @@ multirun/
 
 # Notebooks checkpoints
 .ipynb_checkpoints/
+
+# LaTeX build
+paper/memoria/build/

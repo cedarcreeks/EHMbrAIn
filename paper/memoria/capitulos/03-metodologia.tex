@@ -1,0 +1,96 @@
+\chapter{Metodología y arquitectura del banco de pruebas}
+\label{cap:metodologia}
+
+\section{Arquitectura general}
+
+El banco de pruebas se organiza en seis fases encadenadas, cada una cerrada por un hito
+(\emph{gate}) con criterio de aceptación medible:
+
+\begin{enumerate}
+  \item[\textbf{F1.}] \textbf{Gemelo termodinámico} del CFM56-7B26 en pyCycle: ciclo de diseño,
+    fuera de diseño, \emph{decks} de línea base sobre la envolvente y matriz de coeficientes de
+    influencia (ICM). \emph{Gate} H1: error $\leq 3$\,\% frente a los datos certificados en los
+    puntos ancla.
+  \item[\textbf{F2.}] \textbf{Generador de flota sintética} (SynCFM56): trayectorias de salud por
+    mecanismo, flota jerárquica de $\sim$100 motores \emph{run-to-failure}, modelo de sensores
+    (ruido, sesgo, cuantización, huecos) y \emph{snapshots} tipo ACARS con verdad-terreno.
+    \emph{Gate} H2: dataset auditado, sin fuga entre particiones, con dificultad verificada.
+  \item[\textbf{F3.}] \textbf{EHM tradicional} de referencia: línea base y desviaciones
+    suavizadas, \emph{trending} con reglas de persistencia, GPA-WLS
+    (\cref{eq:wls}), Kalman-GPA (\cref{eq:kalman}), aislamiento por reglas expertas y RUL por
+    extrapolación robusta del margen de EGT. \emph{Gate} H3: métricas completas sobre test.
+  \item[\textbf{F4.}] \textbf{EHM con IA}: detección de anomalías (autoencoder, Isolation
+    Forest), diagnóstico multiclase (XGBoost, redes), pronóstico de RUL (LSTM/TCN/Transformer),
+    híbrido \emph{physics-informed}, incertidumbre \emph{conformal} y explicabilidad
+    física (PCS). \emph{Gate} H4.
+  \item[\textbf{F5.}] \textbf{Evaluación comparativa pre-registrada}: métricas comunes,
+    contrastes estadísticos, ablaciones y validación \emph{sim-to-real} en N-CMAPSS.
+    \emph{Gate} H5.
+  \item[\textbf{F6.}] Casos de estudio, \emph{dashboard} y redacción. \emph{Gate} H6.
+\end{enumerate}
+
+\section{Salvaguardas metodológicas}
+\label{sec:protocolo}
+
+La credibilidad de una comparación IA-contra-tradicional depende de eliminar los sesgos que
+plagan la literatura. Se adoptan cuatro salvaguardas:
+
+\begin{description}
+  \item[Pre-registro.] Hipótesis (\cref{tab:hipotesis}), métricas, particiones (con \emph{hash}
+    de los ficheros), contrastes y regla de parada se congelan en el repositorio con una
+    etiqueta de git (\codigo{prereg-v1}) \emph{antes} de evaluar sobre el conjunto de test.
+  \item[Presupuesto de ajuste simétrico.] Los hiperparámetros del pipeline tradicional
+    (umbrales, $\lambda$, $\mathbf{Q}$, ventanas) y de cada familia de IA se ajustan con el
+    mismo número de \emph{trials} de Optuna, usando solo entrenamiento y validación.
+  \item[Partición por motor.] Ningún motor aparece en más de una partición
+    (70/10/20 motores en train/val/test), con auditoría automática anti-fuga en integración
+    continua.
+  \item[Baseline fuerte.] El pipeline tradicional se implementa con el mismo cuidado que la IA,
+    documentando cada regla con su justificación física; el \emph{smearing} se mide contra la
+    verdad-terreno, no se asume.
+\end{description}
+
+\section{Reproducibilidad e infraestructura}
+\label{sec:reproducibilidad}
+
+Todo el proyecto es un repositorio público\footnote{\url{https://github.com/cedarcreeks/EHMbrAIn}}
+con entorno reproducible: Python~3.11 gestionado con \codigo{uv} y versiones bloqueadas
+(\codigo{uv.lock}); pyCycle~4.4 sobre OpenMDAO~\cite{Gray2019}; configuraciones declarativas en
+YAML; y pruebas automatizadas (pytest) ejecutadas en integración continua en cada cambio. Los
+datos y experimentos de fases posteriores se versionarán con DVC y MLflow respectivamente.
+
+Dos decisiones concretas ilustran el estándar de rigor perseguido:
+
+\begin{itemize}
+  \item \textbf{Contrato de calibración versionado.} Los objetivos numéricos del modelo
+    (\cref{tab:tcds}) viven en un único fichero
+    (\codigo{conf/cfm56\_7b\_targets.yaml}) con valor, tolerancia, fuente y estado
+    (\codigo{VERIFIED}/\codigo{TO\_VERIFY}) por entrada. Ese fichero lo leen tanto los
+    ejecutores del modelo como las pruebas: un cambio de objetivo es un cambio visible en el
+    control de versiones, nunca una edición silenciosa.
+  \item \textbf{Pruebas canario de dependencias.} Durante la puesta en marcha se detectó una
+    incompatibilidad entre pyCycle~4.4 y numpy~$\geq 2$ (error en el cálculo termodinámico
+    tabular). Se fijó \codigo{numpy<2} y se dejó una prueba de humo que ejecuta un ciclo
+    completo en cada ejecución de CI, de modo que cualquier actualización de dependencias que
+    rompa el solver falle de forma visible e inmediata.
+  \item \textbf{Cifras autogeneradas.} Todas las figuras y tablas de resultados de este
+    documento las genera un script (\codigo{scripts/make\_memoria\_assets.py}) que resuelve el
+    modelo y escribe directamente los PDF y los ficheros \LaTeX{}
+    (\codigo{paper/memoria/tablas/*.tex}), junto con un \codigo{assets.json} de
+    trazabilidad. Ningún número de resultados se copia a mano.
+\end{itemize}
+
+\section{Métricas de comparación}
+
+Ambas familias se evalúan con métricas idénticas: para detección, \emph{lead time}, tasa de
+falsas alarmas por mil vuelos, F1 y PR-AUC; para aislamiento, exactitud top-1/top-2, macro-F1,
+índice de \emph{smearing} (fracción de $\|\hat{\mathbf{x}}\|_1$ asignada a componentes sanos) y
+PCS; para la estimación de salud, RMSE de $\hat{\mathbf{x}}$ frente a la verdad-terreno; para el
+RUL, RMSE, MAE, \emph{score} NASA PHM08
+\begin{equation}
+  S=\sum_i s_i,\qquad
+  s_i = \begin{cases} e^{-d_i/13}-1 & d_i<0\\ e^{d_i/10}-1 & d_i\geq 0\end{cases},
+  \qquad d_i = \widehat{\mathrm{RUL}}_i - \mathrm{RUL}_i,
+\end{equation}
+exactitud $\alpha$--$\lambda$ y horizonte de pronóstico; y para la incertidumbre, cobertura
+empírica frente a nominal y anchura media de los intervalos.
