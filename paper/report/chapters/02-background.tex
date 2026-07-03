@@ -1,0 +1,207 @@
+\chapter{Background}
+\label{ch:background}
+
+This chapter assumes no prior knowledge of gas turbines. It introduces the engine, the
+measurements available in service, the mathematics of gas path diagnosis, and the physics of
+degradation ---everything needed to follow the rest of the document.
+
+\section{How a two-spool turbofan works}
+\label{sec:turbofan}
+
+A turbofan produces thrust by accelerating air backwards. Air enters through the \emph{fan} (the
+large visible rotor); most of it ---the \emph{bypass} stream--- goes around the core and exits
+through the bypass nozzle, producing the majority of the thrust. The rest enters the \emph{core}:
+it is compressed by a low-pressure compressor (the \emph{booster}) and a high-pressure
+compressor (HPC), heated by burning fuel in the \emph{combustor}, and expanded through a
+high-pressure turbine (HPT) and a low-pressure turbine (LPT) that extract the work needed to
+drive the compressors, before leaving through the core nozzle.
+
+The machine is arranged in two mechanically independent \emph{spools} (concentric shafts):
+\begin{itemize}
+  \item the \textbf{low-pressure (LP) spool}: fan + booster driven by the LPT, rotating at speed
+    \textbf{N1};
+  \item the \textbf{high-pressure (HP) spool}: HPC driven by the HPT, rotating at speed
+    \textbf{N2}.
+\end{itemize}
+The ratio of bypass to core mass flow is the \emph{bypass ratio} (BPR); the ratio of compressor
+exit pressure to inlet pressure is the \emph{overall pressure ratio} (OPR). Higher BPR and OPR
+generally mean better fuel efficiency, measured as \emph{thrust-specific fuel consumption}
+(TSFC): fuel flow per unit of thrust.
+
+\section{The subject engine: CFM56-7B26}
+\label{sec:engine}
+
+The CFM56-7B (CFM International, a Safran--GE joint venture) powers the Boeing 737NG family and
+is one of the most widely operated commercial engines in history, which guarantees abundant
+public type data. The \textbf{-7B26} variant (\SI{117}{\kilo\newton} takeoff thrust, Boeing
+737-800) is chosen as the most common one. Its type-certificate data sheet (TCDS EASA E.004,
+issue~07~\cite{EASA2023}) describes: a single-stage fan, 3-stage booster, 9-stage HPC, annular
+combustor, single-stage HPT and 4-stage LPT, governed by a dual-channel FADEC (a full-authority
+digital engine control ---the computer that meters fuel). The pilot-facing thrust-setting
+parameter is N1, not engine pressure ratio.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Certified CFM56-7B26 data used as the calibration contract. Sources: TCDS EASA E.004
+  issue~07~\cite{EASA2023} and the ICAO Engine Emissions Databank, edition 03/2026, UID
+  3CM033~\cite{ICAO2026}.}
+  \label{tab:tcds}
+  \begin{tabular}{llll}
+    \toprule
+    Quantity & Value & Source & Status \\
+    \midrule
+    Takeoff thrust & \SI{11699}{\deca\newton} (= \SI{116.99}{\kilo\newton}) & TCDS & verified \\
+    Maximum continuous thrust & \SI{11521}{\deca\newton} & TCDS & verified \\
+    N1 redline (104\,\%) & \SI{5382}{rpm} $\Rightarrow$ 100\,\% = \SI{5175}{rpm} & TCDS & verified \\
+    N2 redline (105\,\%) & \SI{15183}{rpm} $\Rightarrow$ 100\,\% = \SI{14460}{rpm} & TCDS & verified \\
+    Max.\ EGT, takeoff / continuous & \SI{950}{\degreeCelsius} / \SI{925}{\degreeCelsius} (displayed) & TCDS & verified \\
+    Dry weight & \SI{2386}{\kilo\gram} & TCDS & verified \\
+    Bypass ratio & 5.1 & EEDB & verified \\
+    Pressure ratio (sea-level static, rated) & 27.61 & EEDB & verified \\
+    Fuel flow at 100/85/30/7\,\% $F_{00}$ & 1.221 / 0.999 / 0.338 / 0.113 \si{\kilo\gram\per\second} & EEDB & verified \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Two subtleties from the TCDS matter for modeling and are frequently overlooked:
+\begin{itemize}
+  \item The certified \emph{exhaust gas temperature} (EGT) ---the single most important health
+    indicator, because it rises as the engine deteriorates--- is measured at station
+    \textbf{T49.5} (the stage-2 LPT nozzle), \emph{not} at the HPT exit. Moreover, the
+    \emph{displayed} cockpit value adds a ``shunt'' function of $+\SI{30}{\degreeCelsius}$ (for
+    single-annular-combustor engines, active above \SI{8500}{rpm} N2) plus a model-dependent
+    ``trim'' (zero for the -7B26).
+  \item Air bleed limits (air extracted from the compressor for the aircraft's cabin and
+    anti-ice systems) are tabulated per extraction stage and shaft speed; at rated speed the
+    9th-stage bleed is capped at 7\,\% of core flow.
+\end{itemize}
+
+\section{What is measured, and why parameters must be corrected}
+\label{sec:stations}
+
+Engine locations are numbered per the SAE ARP755A standard~\cite{SAE755}: station 2 is the fan
+inlet, 21 the fan exit, 25 the HPC inlet, 3 the HPC exit, 4 the combustor exit, 45 the HPT
+exit, and 5 the LPT exit. The measurements available in airline service (the ``cockpit set'')
+are N1, N2, EGT and fuel flow $W_f$; some installations add pressures and temperatures at
+stations 25 and 3.
+
+A raw measurement is meaningless on its own because it depends on the day: the same healthy
+engine reads a higher EGT on a hot day at a high-altitude airport than on a cold day at sea
+level. To compare flights, measurements are \emph{corrected} to standard sea-level conditions
+using $\theta = T_{t2}/\SI{288.15}{\kelvin}$ and $\delta = P_{t2}/\SI{101.325}{\kilo\pascal}$
+(the ratios of inlet total temperature and pressure to their standard-day values):
+\begin{equation}
+  N_{\mathrm{corr}} = \frac{N}{\sqrt{\theta}}, \qquad
+  W_{f,\mathrm{corr}} = \frac{W_f}{\delta\,\theta^{a}}, \qquad
+  \mathrm{EGT}_{\mathrm{corr}} = \frac{\mathrm{EGT}}{\theta}.
+\end{equation}
+The exponent $a$ (typically 0.5--0.7) is often copied from generic tables; here it will instead
+be fitted by regression on sweeps of our own thermodynamic model, removing a classical source
+of systematic baseline error.
+
+\section{Gas Path Analysis}
+\label{sec:gpa}
+
+\subsection{Health parameters}
+
+GPA describes the internal state of the engine with two numbers per turbomachine: the deviation
+of its \emph{isentropic efficiency} $\Delta\eta$ (how much of the ideal work it actually
+achieves ---dirt and wear reduce it) and the deviation of its \emph{flow capacity}
+$\Delta\Gamma$ (how much corrected flow it swallows at a given speed ---fouling reduces it in
+compressors; turbine erosion, which opens the effective nozzle area, increases it). With five
+turbomachines (fan, booster, HPC, HPT, LPT) the health state is the 10-component vector
+\begin{equation}
+  \mathbf{x} = \left[\Delta\eta_{\mathrm{fan}}, \Delta\Gamma_{\mathrm{fan}},
+  \Delta\eta_{\mathrm{LPC}}, \Delta\Gamma_{\mathrm{LPC}},
+  \Delta\eta_{\mathrm{HPC}}, \Delta\Gamma_{\mathrm{HPC}},
+  \Delta\eta_{\mathrm{HPT}}, \Delta\Gamma_{\mathrm{HPT}},
+  \Delta\eta_{\mathrm{LPT}}, \Delta\Gamma_{\mathrm{LPT}}\right]^{\mathsf T},
+\end{equation}
+expressed in percent relative to a new engine. $\mathbf{x}$ is what maintenance actually wants
+to know, and it is not directly measurable on the wing.
+
+\subsection{The linear model}
+
+What \emph{is} measurable are deviations $\Delta\mathbf{z}$ of the corrected parameters from a
+\emph{baseline} (the value a new engine would show at the same operating condition
+$\mathbf{u}$: altitude, Mach number, N1 setting, ambient temperature deviation, bleed status).
+For the small deviations typical of in-service deterioration, measurement and health deviations
+are related linearly:
+\begin{equation}
+  \Delta\mathbf{z} = \mathbf{H}(\mathbf{u})\,\mathbf{x} + \mathbf{S}\,\mathbf{b} + \mathbf{v},
+  \qquad \mathbf{v}\sim\mathcal{N}(\mathbf{0},\mathbf{R}),
+  \label{eq:gpa-linear}
+\end{equation}
+where $\mathbf{H}$ is the \emph{influence coefficient matrix} (ICM) ---the Jacobian
+$\partial\mathbf{z}/\partial\mathbf{x}$, i.e.\ a table of ``if the HPT loses 1\,\% efficiency,
+EGT rises by this much and fuel flow by that much''--- computed by finite differences on the
+thermodynamic model at the operating condition $\mathbf{u}$; $\mathbf{b}$ collects sensor
+biases; and $\mathbf{v}$ is measurement noise with covariance $\mathbf{R}$.
+
+\subsection{Estimation, and why it is hard}
+
+Inverting \cref{eq:gpa-linear} is an ill-posed problem. With 4 cockpit measurements and 10
+unknowns the system is underdetermined ($\operatorname{rank}(\mathbf{H})\leq 4$): infinitely
+many health states explain the same measurements. The weighted-least-squares (WLS) answer
+regularizes the inversion with prior knowledge $\mathbf{P}_0$ of plausible deterioration
+magnitudes:
+\begin{equation}
+  \hat{\mathbf{x}} = \left(\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\mathbf{H}
+  + \lambda\,\mathbf{P}_0^{-1}\right)^{-1}\mathbf{H}^{\mathsf T}\mathbf{R}^{-1}\Delta\mathbf{z}.
+  \label{eq:wls}
+\end{equation}
+
+Because deterioration evolves slowly over thousands of flights, tracking it as a
+\emph{random walk} with a Kalman filter improves on flight-by-flight estimation. The Kalman
+filter is a recursive estimator that blends the previous health estimate with each new
+measurement, weighting each by its uncertainty:
+\begin{equation}
+  \mathbf{x}_k = \mathbf{x}_{k-1} + \mathbf{w}_k, \quad
+  \mathbf{w}\sim\mathcal{N}(\mathbf{0},\mathbf{Q});
+  \qquad
+  \mathbf{z}_k = \mathbf{H}(\mathbf{u}_k)\,\mathbf{x}_k + \mathbf{v}_k,
+  \label{eq:kalman}
+\end{equation}
+with process noise $\mathbf{Q}$ calibrated to realistic degradation rates and the state
+optionally augmented with sensor biases~\cite{Volponi2014}. At recorded compressor-wash events
+the recoverable part of the state is reset.
+
+\subsection{Smearing}
+
+When $\mathbf{H}$ is ill-conditioned ---some fault signatures are nearly parallel--- noise makes
+the estimator distribute a fault that is physically concentrated in one component across
+several: the \emph{smearing} phenomenon, the classical weakness of linear GPA~\cite{Li2002}.
+A singular-value decomposition (SVD) of the ICM quantifies this weakness (rank, condition
+number, angles between fault signatures) and defines the ``confusable'' subset used by
+hypothesis H2: fault pairs whose signatures are less than $15^{\circ}$ apart.
+
+\section{The physics of degradation}
+\label{sec:degradation}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Degradation mechanisms modeled in this project and their typical effects, per the
+  literature~\cite{Diakunchak1992,Kurz2012}.}
+  \label{tab:degradation}
+  \begin{tabular}{p{3.0cm}p{2.2cm}p{3.8cm}p{2.6cm}p{1.6cm}}
+    \toprule
+    Mechanism & Component & Typical effect & Time profile & Recoverable \\
+    \midrule
+    Fouling (dirt buildup) & fan/LPC/HPC & $\Delta\Gamma$ $-1$\ldots$-4$\,\%; $\Delta\eta$ $-0.5$\ldots$-2.5$\,\% & saturating exponential & wash recovers 30--70\,\% \\
+    Erosion & compressors & $\Delta\eta$ $-0.5$\ldots$-1.5$\,\% & slow linear & no \\
+    Tip-clearance opening & HPC/HPT & $\Delta\eta$ $-0.5$\ldots$-1.5$\,\% & fast initially, then slow & no \\
+    Hot-section deterioration & HPT & $\Delta\eta$ $-1$\ldots$-3$\,\%; $\Delta\Gamma$ $+1$\ldots$+2$\,\% & linear/accelerating & no \\
+    Foreign-object damage (FOD) & fan/HPC & step $\Delta\eta$ $-0.5$\ldots$-2$\,\% & step (Poisson arrivals) & no \\
+    Sensor drift & any probe & e.g.\ EGT $+1$\ldots$+5$~\si{\degreeCelsius} per 1000 cycles & ramp & recalibration \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+The aggregate observable effect is the erosion of the \emph{EGT margin}: the distance between
+the EGT reached on a hot-day takeoff and its certified limit. A new engine has
+\SI{70}{}--\SI{100}{\degreeCelsius} of margin; when the margin reaches zero the engine can no
+longer legally produce rated takeoff thrust on a hot day and must come off the wing. Its
+characteristic pattern over an engine's life ---fast early loss, slower steady erosion, sawtooth
+recoveries at each compressor wash--- is what the fleet generator of phase F2 must reproduce.
+\Cref{tab:degradation} summarizes the mechanisms, their signatures and their time profiles; its
+magnitudes parameterize that generator.

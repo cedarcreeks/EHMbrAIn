@@ -40,16 +40,18 @@ dashboard/     Streamlit demo
 paper/         LaTeX sources, generated figures
 ```
 
-## Project report (memoria)
+## Project report
 
-`paper/memoria/` holds a living LaTeX report (Spanish) documenting every milestone with
-full detail. All result figures and tables are **generated from the model** — never
-hand-copied:
+`paper/report/` holds a living LaTeX report documenting every milestone in full detail,
+written to be self-contained (no gas-turbine background assumed). All result figures and
+tables are **generated from the model** — never hand-copied:
 
 ```bash
-uv run python scripts/make_memoria_assets.py       # regenerate figures + tables
-cd paper/memoria && latexmk -pdf -outdir=build memoria.tex
+uv run python scripts/make_report_assets.py        # regenerate figures + tables
+cd paper/report && latexmk -pdf -outdir=build report.tex
 ```
+
+TeXstudio users: set the bibliography tool to Biber (Options → Configure → Build).
 
 ## Status
 

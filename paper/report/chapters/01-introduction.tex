@@ -1,0 +1,122 @@
+\chapter{Introduction}
+\label{ch:introduction}
+
+\section{Motivation}
+
+A commercial jet engine degrades from its very first flight. Dust and pollution stick to
+compressor blades, hot-section parts creep and oxidize, tip clearances open up, seals wear.
+The airline cannot see any of this directly ---the engine stays on the wing for years--- so it
+watches the engine's \emph{symptoms} instead: the temperatures, pressures, shaft speeds and fuel
+flow recorded on every flight. The discipline that turns those symptoms into maintenance
+decisions is called \emph{Engine Health Monitoring} (EHM). The stakes are large: a single shop
+visit for an engine overhaul costs millions of dollars, and an unscheduled engine removal
+disrupts an entire fleet schedule.
+
+The classical analytical core of EHM, in use since the 1970s, is \emph{Gas Path Analysis}
+(GPA)~\cite{Urban1975}. The idea: each physical fault (a dirty compressor, an eroded turbine)
+leaves a characteristic fingerprint on the measured parameters; by inverting a thermodynamic
+model of the engine, one can estimate \emph{which} component has deteriorated and \emph{by how
+much} from the measurements alone. Around GPA the industry built a mature toolbox ---baseline
+models, exponential trend smoothing, Kalman filters, expert fault-isolation rules%
+~\cite{Volponi2014}--- which this project collectively calls \emph{traditional EHM}.
+
+Over the last decade, machine learning has produced striking results in the adjacent research
+field of prognostics: predicting the \emph{Remaining Useful Life} (RUL) of an engine, i.e.\ how
+many flights remain before it must come off the wing, mostly on synthetic benchmark datasets
+such as NASA's C-MAPSS~\cite{Saxena2008} and N-CMAPSS~\cite{AriasChao2021}. Yet the literature
+has a structural weakness: \textbf{AI methods are almost never compared against a traditional
+pipeline implemented with equal care}, on the same data, with the same metrics and the same
+tuning effort. The result is a stream of comparisons against straw men, which makes it
+impossible to know what AI actually contributes, under which conditions, and at what cost.
+
+\section{Objective}
+
+This project builds a reproducible testbed in which both EHM families ---traditional and
+AI-based--- observe \emph{exactly the same data} from a synthetic fleet of CFM56-7B26 turbofans
+and are scored with \emph{exactly the same metrics}. The methodological key is that the
+synthetic data carries \textbf{complete ground truth}: the true health state of every engine
+component (its efficiency and flow-capacity deviations, defined in \cref{sec:gpa}) at every
+flight. With real airline data this is impossible ---nobody knows the true internal state of an
+engine on the wing--- but with synthetic data one can measure not only whether a method detects
+or predicts well, but whether it \emph{attributes the damage to the correct component}. That
+attribution question is precisely where traditional GPA is weakest (the \emph{smearing}
+phenomenon, \cref{sec:gpa}) and where AI is least transparent (the black-box problem).
+
+Since neither a performance model of the engine nor degradation data were available to the
+project, both are built from scratch: a thermodynamic ``digital twin'' of the CFM56-7B26 in
+pyCycle~\cite{Hendricks2019}, calibrated against certified public data (\cref{ch:model}), and a
+fleet degradation generator with physically derived fault signatures (planned, \cref{ch:wip}).
+
+\section{Hypotheses}
+\label{sec:hypotheses}
+
+Each hypothesis is formalized with quantitative thresholds \emph{before} any test-set result is
+seen (the pre-registration protocol of \cref{sec:safeguards}). All are tested with a Wilcoxon
+signed-rank test paired by engine, Holm correction for multiple comparisons
+($\alpha = 0.05$), and BCa bootstrap confidence intervals. In plain words: for every comparison
+we check that the improvement is statistically significant, not a fluke of one lucky engine.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Project hypotheses and their confirmation criteria.}
+  \label{tab:hypotheses}
+  \begin{tabular}{p{0.6cm}p{5.4cm}p{7.6cm}}
+    \toprule
+    ID & Hypothesis & Confirmation criterion \\
+    \midrule
+    H1 & AI detects faults earlier and with fewer false alarms than trend monitoring &
+      median lead time $\geq +20$\,\% and false-positive rate $\leq 0.5\times$ versus
+      trending, at a fixed recall of $0.9$; $p<0.05$ \\
+    H2 & AI isolates faults with overlapping signatures better &
+      $+10$ percentage points of isolation accuracy on the ``confusable'' subset (fault
+      signatures less than $15^{\circ}$ apart in the influence-matrix space) versus
+      weighted-least-squares GPA; $p<0.05$ \\
+    H3 & AI predicts RUL better &
+      simultaneous improvement in RMSE and in the asymmetric NASA PHM08 score; $p<0.05$ \\
+    H4 & The physics-informed hybrid dominates when data is scarce &
+      RUL RMSE $\leq$ pure AI with 100\,\% of the training data and strictly better with
+      10\,\% and 25\,\%; $p<0.05$ \\
+    H5 & Conformal intervals are better calibrated than the Kalman covariance &
+      smaller $|$empirical coverage $-$ 0.9$|$ with mean interval width no worse than
+      $+20$\,\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Refuting any hypothesis is itself a publishable result: pre-registration is what makes the
+refutation credible. Reformulating hypotheses after the repository tag \code{prereg-v1} is
+forbidden.
+
+\section{Contributions}
+\label{sec:contributions}
+
+\begin{enumerate}
+  \item[\textbf{C1.}] \textbf{SynCFM56}: the first public synthetic GPA dataset for a specific
+    commercial engine (CFM56-7B26), with per-flight health-parameter ground truth and an
+    ACARS-style snapshot format (one takeoff report and one cruise report per flight, the way
+    real airline EHM data actually arrives), more realistic than the continuous time series of
+    C-MAPSS.
+  \item[\textbf{C2.}] A head-to-head comparison under a \textbf{pre-registered protocol} with a
+    symmetric tuning budget (the same number of Optuna trials) for both families.
+  \item[\textbf{C3.}] A physics-informed hybrid with three separately ablated mechanisms:
+    residual features against the digital twin, physically constrained loss functions, and
+    GPA$\rightarrow$ML stacking.
+  \item[\textbf{C4.}] Compared uncertainty quantification: conformal-prediction RUL intervals
+    versus the Kalman filter covariance.
+  \item[\textbf{C5.}] The \textbf{Physics-Consistency Score (PCS)}: a new explainability metric
+    that projects SHAP attributions into the physical health-parameter space through the
+    influence coefficient matrix.
+  \item[\textbf{C6.}] A determinability map: a sensors $\times$ noise $\times$ data-size
+    ablation showing \emph{when} each approach wins.
+  \item[\textbf{C7.}] Sim-to-real validation: the full methodology is re-run on N-CMAPSS to
+    check that the method ranking is not an artifact of our own simulator.
+\end{enumerate}
+
+\section{Document structure}
+
+\Cref{ch:background} builds the technical foundations assuming no prior knowledge of jet
+engines or GPA: how a turbofan works, what is measured on the wing, and the mathematics of gas
+path diagnosis. \Cref{ch:methodology} describes the testbed architecture and the methodological
+safeguards. \Cref{ch:model} documents the thermodynamic twin of the CFM56-7B26 and its
+calibration against certified data ---the work completed to date--- with quantitative evidence
+of every step. \Cref{ch:wip} summarizes the remaining phases and their acceptance criteria.

@@ -1,0 +1,47 @@
+% EHMbrAIn project report
+% Build:  latexmk -pdf -outdir=build report.tex   (from paper/report/)
+% TeXstudio: set the bibliography tool to Biber (Options -> Configure TeXstudio -> Build).
+%
+% NOTE (public repository): the author remains anonymous in the repository.
+% Fill in \author locally for the academic submission; do not commit the name.
+
+\documentclass[11pt,a4paper,oneside]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{csquotes}
+\usepackage[style=numeric-comp,sorting=none,backend=biber]{biblatex}
+\addbibresource{references.bib}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise]{cleveref}
+
+\newcommand{\code}[1]{\texttt{#1}}
+
+\title{\textbf{EHMbrAIn}\\[2mm]
+  \large AI-based versus traditional Engine Health Monitoring:\\
+  a gas path analysis testbed on the CFM56-7B with synthetic ground truth}
+\author{--- (anonymous in the public repository) ---}
+\date{\today\\[2mm]\small Living document: updated at every project milestone.}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\input{chapters/01-introduction}
+\input{chapters/02-background}
+\input{chapters/03-methodology}
+\input{chapters/04-engine-model}
+\input{chapters/05-work-in-progress}
+
+\printbibliography[heading=bibintoc,title={References}]
+
+\end{document}

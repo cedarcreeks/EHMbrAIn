@@ -33,4 +33,4 @@ multirun/
 .ipynb_checkpoints/
 
 # LaTeX build
-paper/memoria/build/
+paper/report/build/

@@ -1,0 +1,71 @@
+\chapter{Work in progress and planning}
+\label{ch:wip}
+
+\section{Closing phase F1}
+
+Two work packages remain to close milestone H1:
+
+\begin{description}
+  \item[WP1.3 --- Baseline decks.] Sweep the model over the operating envelope (altitude
+    $\times$ Mach $\times$ thrust setting $\times$ $\Delta T_{\mathrm{ISA}}$ $\times$ bleed)
+    and package a healthy-engine interpolator validated by leave-one-out (interpolation error
+    $<0.1$\,\%). This interpolator is the baseline against which both EHM pipelines will
+    compute measurement deviations.
+  \item[WP1.4 --- Influence coefficient matrix.] Central finite differences ($\pm0.5$\,\%) on
+    the ten health parameters over a sub-grid of operating conditions; an SVD analysis (rank,
+    condition number, angles between fault signatures) that defines the ``confusable'' subset
+    of hypothesis H2; automated physical sign checks (e.g.\
+    $\Delta\eta_{\mathrm{HPT}}\downarrow \Rightarrow \mathrm{EGT}\uparrow, W_f\uparrow$); and
+    the tabular-versus-CEA thermodynamics cross-check at the anchor points.
+\end{description}
+
+\section{Remaining phases}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Remaining phases, key deliverables and closing criteria.}
+  \label{tab:remaining-phases}
+  \begin{tabular}{p{1.2cm}p{5.6cm}p{6.6cm}}
+    \toprule
+    Phase & Key deliverable & Closing criterion (gate) \\
+    \midrule
+    F2 & SynCFM56 v1.0: synthetic fleet of $\sim$100 engines with ground truth and ACARS-style
+         snapshots &
+         H2: realism and difficulty audit passed; no leakage between splits; dataset datasheet
+         written \\
+    F3 & Complete traditional pipeline (baseline, trending, WLS, Kalman, rules, extrapolation
+         RUL) &
+         H3: full metrics on test; smearing measured against ground truth \\
+    F4 & AI suite (detection, diagnosis, RUL, physics-informed hybrid, conformal intervals,
+         PCS) &
+         H4: beats the traditional pipeline on $\geq1$ primary metric per task on validation \\
+    F5 & Pre-registered evaluation + ablations + N-CMAPSS &
+         H5: hypotheses H1--H5 resolved with statistical tests; figures reproducible with one
+         command \\
+    F6 & Case studies, dashboard, final report &
+         H6: full reproduction from raw data; defensible document \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\section{Milestone log}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Milestones reached (updated at every gate).}
+  \label{tab:milestone-log}
+  \begin{tabular}{llp{8.6cm}}
+    \toprule
+    Milestone & Date & Evidence \\
+    \midrule
+    H0 & 2026-07-03 & Reproducible environment (uv, Python 3.11, pyCycle 4.4 with
+      \code{numpy<2}); a complete example cycle converging locally and in CI; repository
+      skeleton and smoke test. \\
+    H1 (partial) & 2026-07-03 & WP1.1 and WP1.2 complete: design point inside all five
+      acceptance windows (\cref{tab:design}); SLS anchors calibrated against TCDS + EEDB with
+      all three gated anchors in tolerance (\cref{tab:anchors}); calibration contract with
+      verified values; nine automated tests green. Pending: WP1.3 (baseline decks) and WP1.4
+      (ICM + SVD + CEA cross-check). \\
+    \bottomrule
+  \end{tabular}
+\end{table}

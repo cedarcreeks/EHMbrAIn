@@ -1,0 +1,103 @@
+\chapter{Methodology and testbed architecture}
+\label{ch:methodology}
+
+\section{Overall architecture}
+
+The testbed is organized in six chained phases, each closed by a milestone (\emph{gate}) with a
+measurable acceptance criterion:
+
+\begin{enumerate}
+  \item[\textbf{F1.}] \textbf{Thermodynamic twin} of the CFM56-7B26 in pyCycle: design point,
+    off-design behavior, baseline decks over the flight envelope (pre-computed tables of what a
+    healthy engine reads at every operating condition) and the influence coefficient matrix.
+    Gate H1: error $\leq 3$\,\% against certified data at the anchor points.
+  \item[\textbf{F2.}] \textbf{Synthetic fleet generator} (SynCFM56): per-mechanism health
+    trajectories, a hierarchical fleet of $\sim$100 engines run to failure, a sensor model
+    (noise, bias, quantization, missing data) and ACARS-style snapshots with ground truth.
+    Gate H2: dataset audited for realism and difficulty, no leakage between data splits, and a
+    written datasheet.
+  \item[\textbf{F3.}] \textbf{Traditional EHM} reference: baselines and smoothed deviations,
+    trend monitoring with persistence rules, WLS GPA (\cref{eq:wls}), Kalman GPA
+    (\cref{eq:kalman}), expert-rule fault isolation, and RUL by robust extrapolation of the EGT
+    margin. Gate H3: full metrics on the test set.
+  \item[\textbf{F4.}] \textbf{AI-based EHM}: anomaly detection (autoencoders, Isolation
+    Forest), multi-class fault diagnosis (gradient boosting, neural networks), RUL prognosis
+    (LSTM/TCN/Transformer sequence models), the physics-informed hybrid, conformal uncertainty
+    and physical explainability (PCS). Gate H4.
+  \item[\textbf{F5.}] \textbf{Pre-registered comparative evaluation}: common metrics,
+    statistical tests, ablations, and sim-to-real validation on N-CMAPSS. Gate H5.
+  \item[\textbf{F6.}] Case studies, interactive dashboard, and final writing. Gate H6.
+\end{enumerate}
+
+\section{Methodological safeguards}
+\label{sec:safeguards}
+
+The credibility of an AI-versus-traditional comparison depends on eliminating the biases that
+plague the literature. Four safeguards are adopted:
+
+\begin{description}
+  \item[Pre-registration.] Hypotheses (\cref{tab:hypotheses}), metrics, data splits (with file
+    hashes), statistical tests and the stopping rule are frozen in the repository under a git
+    tag (\code{prereg-v1}) \emph{before} the test set is evaluated. This borrows a standard
+    practice from medicine: you state what would convince you before looking at the answer, so
+    you cannot move the goalposts afterwards.
+  \item[Symmetric tuning budget.] Every method has knobs. The traditional pipeline's
+    (alert thresholds, regularization $\lambda$, Kalman $\mathbf{Q}$, smoothing windows) and
+    each AI family's hyperparameters are tuned with the \emph{same number} of automated search
+    trials (Optuna), using only the training and validation engines.
+  \item[Split by engine.] The fleet is divided 70/10/20 engines into training, validation and
+    test sets, and no engine ever appears in two sets. Splitting by flight instead of by engine
+    ---a common mistake--- would let a model memorize an engine's individual quirks and score
+    unrealistically well. An automated leakage check runs in continuous integration.
+  \item[A strong baseline.] The traditional pipeline is implemented with the same care as the
+    AI, every expert rule documented with its physical justification; smearing is
+    \emph{measured} against ground truth, not assumed.
+\end{description}
+
+\section{Reproducibility and infrastructure}
+\label{sec:reproducibility}
+
+The entire project is a public
+repository\footnote{\url{https://github.com/cedarcreeks/EHMbrAIn}} with a reproducible
+environment: Python~3.11 managed with \code{uv} and a fully pinned dependency lockfile;
+pyCycle~4.4 on OpenMDAO~\cite{Gray2019}; declarative YAML configuration; and automated tests
+(pytest) executed by continuous integration ---a service that re-runs the whole test suite on
+every change, so a regression cannot land silently. Data and experiments of later phases will
+be versioned with DVC and MLflow respectively.
+
+Three concrete decisions illustrate the intended standard of rigor:
+
+\begin{itemize}
+  \item \textbf{A versioned calibration contract.} The model's numerical targets
+    (\cref{tab:tcds}) live in a single file (\code{conf/cfm56\_7b\_targets.yaml}) carrying
+    value, tolerance, source and status (\code{VERIFIED}/\code{TO\_VERIFY}) per entry. Both the
+    model runners and the tests read that file: changing a target is a visible version-control
+    event, never a silent edit.
+  \item \textbf{Dependency canary tests.} During environment setup, an incompatibility between
+    pyCycle~4.4 and numpy~$\geq 2$ was discovered (a failure inside the tabular thermodynamics
+    package). The fix pins \code{numpy<2}, and a smoke test that runs a complete engine cycle
+    executes on every CI run, so any future dependency upgrade that breaks the solver fails
+    loudly and immediately.
+  \item \textbf{Auto-generated evidence.} Every result figure and table in this document is
+    produced by a script (\code{scripts/make\_report\_assets.py}) that solves the model and
+    writes the PDFs, the \LaTeX{} table files (\code{paper/report/tables/*.tex}) and a
+    provenance file (\code{assets.json}). No result number is ever copied by hand.
+\end{itemize}
+
+\section{Comparison metrics}
+
+Both families are scored with identical metrics. For detection: lead time (how many flights
+before the ground-truth event the method raises a sustained alert), false alarms per thousand
+flights, F1 and precision-recall AUC. For isolation: top-1/top-2 accuracy, macro-F1, a
+\emph{smearing index} (the fraction of $\|\hat{\mathbf{x}}\|_1$ assigned to healthy components)
+and the PCS. For health estimation: RMSE of $\hat{\mathbf{x}}$ against ground truth. For RUL:
+RMSE, MAE, the NASA PHM08 score
+\begin{equation}
+  S=\sum_i s_i,\qquad
+  s_i = \begin{cases} e^{-d_i/13}-1 & d_i<0\\ e^{d_i/10}-1 & d_i\geq 0\end{cases},
+  \qquad d_i = \widehat{\mathrm{RUL}}_i - \mathrm{RUL}_i,
+\end{equation}
+which penalizes late predictions more than early ones (a late removal risks an in-flight
+shutdown; an early one merely wastes some life), plus $\alpha$--$\lambda$ accuracy and the
+prognostic horizon. For uncertainty: empirical versus nominal interval coverage and mean
+interval width.

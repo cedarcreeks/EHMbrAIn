@@ -1,0 +1,207 @@
+\chapter{Thermodynamic twin of the CFM56-7B26}
+\label{ch:model}
+
+This chapter documents the completed part of phase F1: the CFM56-7B26 performance model in
+pyCycle~\cite{Hendricks2019}, its design point (work package WP1.1) and its off-design
+calibration against certified measured data (WP1.2). All result figures and tables are produced
+by the evidence-generation script (\cref{sec:reproducibility}).
+
+\section{What a cycle model is}
+
+A 0-D \emph{cycle model} represents the engine as a chain of thermodynamic components ---inlet,
+fan, compressors, combustor, turbines, nozzles--- each transforming the air's pressure,
+temperature and composition according to its governing equations, without resolving any
+internal geometry. Each turbomachine carries a \emph{component map}: a table, obtained from rig
+tests or scaled from a similar machine, giving its efficiency and flow as a function of
+rotational speed and operating point. The model runs in two modes:
+
+\begin{description}
+  \item[Design mode] sizes the engine: given targets (thrust, component pressure ratios,
+    turbine inlet temperature), it computes the flow areas, map scale factors and shaft-work
+    balance that a machine meeting those targets must have.
+  \item[Off-design mode] answers the service question: given the now-fixed geometry, what does
+    the engine do at any other flight condition and thrust setting? This is the mode the EHM
+    baseline decks and the influence coefficient matrix are built from.
+\end{description}
+
+pyCycle solves both modes with a Newton solver: it iterates on a set of unknowns (mass flow,
+fuel--air ratio, spool speeds, map operating points) until a set of residual equations
+(nozzle-area match, shaft power balance, thrust target) is driven to zero. Newton solvers are
+powerful but fragile far from a good initial guess ---a fragility that shaped several decisions
+below.
+
+\section{Strategy: adapt, don't build from scratch}
+\label{sec:morph}
+
+pyCycle ships a validated example of a two-spool, separate-flow, cooled high-bypass turbofan
+(\code{high\_bypass\_turbofan.py}) with the full component graph, the turbine-cooling bleed
+network, shaft balances and off-design solver wiring already working. Building the CFM56 from a
+blank file would re-derive all of that plumbing and typically dies in Newton divergence.
+Instead, a \emph{morphing} protocol is adopted: the example is vendored into the repository as
+a known-good regression reference, and the model is steered toward the CFM56-7B26 by changing
+\textbf{at most three parameters per step}, requiring convergence at every step before the
+next. Every converged step is a commit; if a step diverges, the change is bisected.
+
+All design decisions were fixed in writing \emph{before} coding (\code{docs/f1-model-spec.md}):
+the -7B26 variant; tabular thermodynamics for speed with a CEA cross-check planned (CEA is
+NASA's chemical-equilibrium code ---more accurate, roughly an order of magnitude slower); the
+design point at cruise, Mach~0.78 / \SI{35000}{ft} / ISA (the ``aerodynamic design point''
+convention: an engine is designed for cruise, where it spends most of its life, and takeoff is
+an off-design condition); pyCycle's generic component maps, scaled ---no public CFM56 maps
+exist, a declared limitation; thrust set through corrected N1 in off-design (the -7B is an
+N1-rated engine); pyCycle-native units inside the model with SI only at the boundary; and a
+table of anticipated solver failure modes, each with a planned countermeasure ---one of which
+proved prophetic (\cref{sec:idle}).
+
+\section{Design point (WP1.1)}
+\label{sec:design}
+
+The cycle graph comprises: flight conditions, inlet, fan, flow splitter, booster, HPC with
+three bleed ports (HPT vane and blade cooling, customer bleed), a post-compressor bleed feeding
+the LPT, combustor, cooled HPT and LPT, ducts with pressure losses, convergent core and bypass
+nozzles, the two shafts, and an accessory power extraction of \SI{250}{hp} on the HP shaft
+(driving the aircraft's generators and pumps). In design mode, four implicit balances close the
+cycle: the inlet mass flow $W$ meets the thrust target; the fuel--air ratio (FAR) meets the
+target turbine inlet temperature $T_{t4}$; and the HPT and LPT expansion ratios zero the net
+power on each shaft (each turbine produces exactly what its compressors and losses consume).
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Design-point results (Mach 0.78, \SI{35000}{ft}, ISA). Auto-generated from the
+  model.}
+  \label{tab:design}
+  \input{tables/table_design}
+\end{table}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Total conditions at each gas-path station at the design point. Auto-generated.}
+  \label{tab:stations}
+  \input{tables/table_stations}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{design_stations}
+  \caption{Total pressure and temperature along the gas path at the design point. Compression
+  peaks at station 3 ($\sim$\SI{11}{bar}, \cref{tab:stations}), heat addition at station 4, and
+  work extraction across stations 45 and 5.}
+  \label{fig:stations}
+\end{figure}
+
+The design point converges with a Newton residual below $10^{-6}$ and satisfies all five
+acceptance windows defined a priori: BPR $5.10\pm0.2$ (the EEDB target), OPR within its window,
+$T_{t4}$ within a plausible band, total cooling-plus-bleed fraction between 18 and 25\,\% of
+core flow, and thrust exactly on target (\cref{tab:design}). The resulting TSFC
+($\approx0.62$~lb/(lbf$\cdot$h)) lands within 2\,\% of the publicly quoted cruise value for
+this engine \emph{without having been used as a calibration target} ---an encouraging
+consistency check.
+
+\section{Calibration against measured data (WP1.2)}
+\label{sec:calibration}
+
+\subsection{Data sources and philosophy}
+
+Off-design calibration uses exclusively \textbf{measured, certified data} (\cref{tab:tcds}).
+The TCDS provides limits and rated thrusts. The ICAO Engine Emissions Databank provides
+something less well known: sea-level test-bed \emph{measured fuel flows} at the four
+landing-takeoff-cycle thrust settings (100, 85, 30 and 7\,\% of rated thrust $F_{00}$), plus
+the engine pressure ratio at rated output (27.61) ---all for the exact -7B26 variant, traceable
+to certification testing, and free. Most academic engine models ignore this source.
+
+The anchor points are solved \emph{thrust-matched}: the fuel--air ratio balance is set to hold
+$F_n = \mathrm{PC}\cdot F_{00}$ (PC being the power fraction). The model's fuel flow at each
+anchor is therefore a genuine \textbf{prediction} confronted with the EEDB measurement ---not a
+quantity fitted to it.
+
+\subsection{Calibration iterations}
+
+The first run (model freshly adapted from the example, not yet calibrated to the SLS data)
+already predicted takeoff fuel flow within $-2.1$\,\%, but showed two quantitative defects:
+
+\begin{enumerate}
+  \item \textbf{N2 above its redline at rated thrust}: \SI{15311}{rpm} against the certified
+    limit of \SI{15183}{rpm}. Cause: the reference speed used to scale the generic HPC map
+    ---the map's speed-versus-flow shape is not the real compressor's, so the speed labels it
+    implies must be anchored deliberately. Fix: HP-shaft design reference from \SI{14324}{} to
+    \SI{13940}{rpm}, placing rated-thrust N2 at \SI{14915}{rpm} ($\approx103$\,\%), inside the
+    limit.
+  \item \textbf{Takeoff pressure ratio 28.99 versus the measured 27.61} ($+5.0$\,\%). Fix: HPC
+    design pressure ratio from 9.81 to 9.35. The measured value takes precedence over the
+    initial derived estimate, and the cruise OPR becomes a consequence ($\approx30$).
+\end{enumerate}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{SLS anchors versus the ICAO databank measurements after calibration. $W_f$~model is
+  the model's prediction at imposed thrust. Auto-generated.}
+  \label{tab:anchors}
+  \input{tables/table_anchors}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{anchor_errors}
+  \caption{Fuel-flow prediction error at each anchor against the EEDB measurement. Gray bands
+  are the contract tolerances ($\pm3$\,\% at takeoff and climb-out, $\pm5$\,\% at approach and
+  idle); the hollow marker (idle) converges but sits outside tolerance and is reported without
+  blocking the milestone (\cref{sec:idle}).}
+  \label{fig:anchor-errors}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.7\textwidth]{sls_working_line}
+  \caption{The model's sea-level-static working line (a continuous sweep of thrust setting)
+  against the four measured ICAO databank points. The curvature at low power reflects the
+  degraded accuracy of generic maps far from their scaling point.}
+  \label{fig:working-line}
+\end{figure}
+
+After both corrections (\cref{tab:anchors,fig:anchor-errors,fig:working-line}), the three gated
+anchors meet their tolerances: takeoff at $-1.40$\,\% fuel-flow error with the pressure ratio
+within $+0.3$\,\% of the measured value and both shaft speeds inside their redlines; climb-out
+at $-2.23$\,\%; approach at $-3.08$\,\%.
+
+\subsection{Idle convergence: diagnosis and cure}
+\label{sec:idle}
+
+The idle point (7\,\% of $F_{00}$, static) systematically diverges from a cold start. At such
+low power the nozzle pressure ratios approach unity ---the exhaust barely pushes--- and the
+nozzles' internal static-pressure sub-solver bounces against its lower bound, leaving the
+global Newton iteration without a descent direction. Worse, the failed attempt leaves the
+point's internal states (flow stations, map positions) corrupted, so re-seeding only the
+balance variables does not rescue it: the idle point must \emph{never} start cold at its final
+setting. The cure ---anticipated as a generic countermeasure in the specification--- is
+\textbf{power continuation}: the point starts at 30\,\% of $F_{00}$ (where it converges from
+cold, just like the approach anchor) and walks down warm through
+$0.30 \rightarrow 0.20 \rightarrow 0.14 \rightarrow 0.10 \rightarrow 0.08 \rightarrow 0.07$,
+re-solving at each step. The logic is encapsulated in the library
+(\code{solve\_anchors()}) and covered by the tests.
+
+With continuation, idle converges and predicts fuel flow with $+10.6$\,\% error. This is deep
+map-extrapolation territory ---the generic map's speed-flow shape at very low power is not the
+real compressor's--- a known limitation of the approach; the anchor is \textbf{reported but not
+gated} for milestone H1, a decision recorded in the calibration contract
+(\code{gated:~false}).
+
+\section{Declared limitations}
+\label{sec:limitations}
+
+The model is \emph{representative}, not certifiable, and its limits are declared for citation
+in the results chapters: (i) no transients ---steady-state points only; (ii) variable geometry
+(bleed valves, variable stators) implicit in the maps, not modeled; (iii) no Reynolds or
+humidity corrections; (iv) absolute N1/N2 labels approximate by construction (generic map
+shapes), though respecting the certified redlines at the rated point; (v) the model's EGT is
+the HPT-exit temperature (station 45), a consistent proxy ---identical for ground truth and for
+both EHM pipelines--- of the certified T49.5, whose displayed value additionally carries the
+shunt and trim functions described in \cref{sec:engine}; and (vi) the idle error quoted above.
+None of these limitations affects the validity of the AI-versus-traditional comparison, which
+rests on the model's sensitivity structure (the ICM), not on its absolute values.
+
+\section{Automated verification}
+
+The chapter's claims are pinned by tests: design-point convergence and acceptance windows;
+convergence of all four anchors including the idle continuation; fuel-flow and pressure-ratio
+tolerances at the gated anchors; N1/N2 redlines at rated thrust; and the pyCycle environment
+smoke test. Nine tests green in continuous integration at the time of writing.
