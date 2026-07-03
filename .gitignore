@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# OpenMDAO / pyCycle run artifacts
+*_out/
+reports/
+*.sql
+*.db
+DESIGN.*.pdf
+OD*.pdf
+
+# Data (DVC-tracked, not git)
+data/raw/
+data/interim/
+data/processed/
+
+# Experiments
+mlruns/
+outputs/
+multirun/
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/
+
+# Notebooks checkpoints
+.ipynb_checkpoints/

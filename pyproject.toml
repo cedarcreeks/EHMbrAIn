@@ -1,0 +1,23 @@
+[project]
+name = "ehmai"
+version = "0.1.0"
+description = "AI-based vs traditional Engine Health Monitoring (gas path analysis) on a synthetic CFM56-7B fleet"
+requires-python = ">=3.11"
+dependencies = [
+    "matplotlib>=3.11.0",
+    "numpy<2",
+    "om-pycycle>=4.4.0",
+    "pandas>=2.3.3",
+]
+
+[project.scripts]
+ehmai = "ehmai:main"
+
+[build-system]
+requires = ["uv_build>=0.10.12,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
