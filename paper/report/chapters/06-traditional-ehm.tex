@@ -1,0 +1,121 @@
+\chapter{The traditional EHM pipeline}
+\label{ch:trad}
+
+\begin{quote}\itshape
+This chapter in brief: the classical monitoring stack ---smoothed deviations, statistical
+alarms, Kalman health tracking, expert isolation rules, margin extrapolation--- is built with
+care and run on the test fleet. Its characteristic strengths and weaknesses, known from the
+literature, now appear as measured numbers against ground truth: fast detection of strong
+faults, heavy smearing on confusable ones, optimistic early-life prognosis. Two detector-design
+lessons learned along the way are recorded. Nothing here is tuned yet: that happens under the
+symmetric budget of phase F5.
+\end{quote}
+
+\section{Pipeline overview}
+\label{sec:trad-overview}
+
+The traditional pipeline mirrors the industrial monitoring stack (SAGE/ADEM-class systems). Per
+engine and per flight, the cruise snapshot is converted into corrected-space percentage
+deviations against the published baseline (the same F1 artifacts available to both EHM
+families); the deviations feed four consumers:
+
+\begin{enumerate}
+  \item \textbf{Smoothing} (Holt double exponential, level + trend): the airline-facing trend
+    plots, and the source of \emph{innovations} --- one-step forecast errors, which are the
+    correct series for event detection because the chronic trend has been absorbed by the
+    level and trend states.
+  \item \textbf{Detection}: a CUSUM on the innovations (catches steps: FOD, abrupt faults)
+    combined with a dual-EWMA \emph{gap} detector --- fast EWMA minus slow EWMA --- whose gap
+    opens by roughly the fault magnitude during a ramp (catches acute episodes). Alarms
+    require persistence ($k$-of-$n$) and, for EGT, are one-sided: washes pull the deviation
+    down, and improvement is not a fault.
+  \item \textbf{Health estimation}: snapshot WLS-GPA (\cref{eq:wls}) and a random-walk
+    Kalman-GPA tracker (\cref{eq:kalman}) with the operating-point-interpolated ICM. The
+    tracker is \emph{wash-aware}: at logged wash events (maintenance records are available to
+    a real EHM system too) the recoverable compressor states are pulled toward zero and their
+    covariance reopened.
+  \item \textbf{Isolation and prognosis}: on detection, the deviation step across the alarm is
+    matched against the single-parameter ICM signatures (nearest-cosine expert rule); the
+    remaining useful life comes from a robust Theil--Sen extrapolation of the tracked takeoff
+    EGT margin to zero, with a NASA-style horizon cap.
+\end{enumerate}
+
+\section{Two detector-design lessons}
+\label{sec:trad-lessons}
+
+Both are classical results rediscovered the honest way --- by watching the first
+implementation fail --- and both are now embodied in tests:
+
+\begin{itemize}
+  \item \textbf{CUSUM on the raw deviation is wrong for aging systems.} The first run applied
+    CUSUM to the EGT deviation itself: the chronic trend integrates without bound, so
+    \emph{every} engine alarmed mid-life (detection recall 0, every healthy engine a false
+    alarm). Step detectors belong on innovations, where the expected value under chronic aging
+    is zero.
+  \item \textbf{A Holt trend-shift detector cannot see acute ramps.} At realistic smoothing
+    gains the noise of the estimated trend exceeds the slope added by a 50--500-cycle ramp
+    entirely. The dual-EWMA gap detector solves this: over the ramp the fast average follows
+    and the slow one lags, opening a gap of the order of the full fault magnitude ---
+    signal-to-noise an order of magnitude better than the trend estimate.
+\end{itemize}
+
+\section{Results on the test fleet (v0 defaults)}
+\label{sec:trad-results}
+
+\Cref{tab:trad} shows the pipeline's scores on the 20 test engines with its engineering-default
+settings --- deliberately untuned, since hypothesis testing requires the tuning budget to be
+spent symmetrically on both families (F5). Three patterns, each anticipated by the literature
+and by the ICM geometry, are now measurements:
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Traditional pipeline on the test split, v0 defaults. Auto-generated.}
+  \label{tab:trad}
+  \input{tables/table_trad}
+\end{table}
+
+\begin{description}
+  \item[Detection is fast but partial.] Detected episodes alarm within $\sim$100 cycles
+    (against ramps of 50--500), but recall is 0.5: the missed episodes are dominated by the
+    weak-signature faults ($\Gamma_{\mathrm{HPT}}$ moves EGT by only $+0.11$\,\% per percent
+    --- half a noise standard deviation) and by drift-contaminated engines.
+  \item[Isolation collapses exactly where the ICM said it would.] Overall isolation is
+    40\,\%; on the confusable subset it is 0\,\%. \Cref{fig:kf-smearing} shows the mechanism
+    live: the Kalman tracker follows the \emph{measurements} faithfully but splits the acute
+    step between the faulted parameter and its 1.3$^{\circ}$ partner --- the smearing index
+    says 85\,\% of the estimated magnitude lands on healthy components. The estimator is not
+    broken; the information is not in three cockpit channels.
+  \item[Margin extrapolation is optimistic early.] \Cref{fig:rul-funnel}: at half-life the
+    median RUL error is $+7\,600$ cycles, shrinking to $+1\,900$ at 90\,\% of life. Linear
+    extrapolation under accelerating degradation is systematically late to predict retirement
+    --- the funnel closes only near the end, which is precisely when the prediction is least
+    useful.
+\end{description}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{kf_smearing}
+  \caption{Smearing, live: Kalman-GPA on a test engine with an acute fault (onset dashed).
+  The tracker reacts, but divides the step between the faulted parameter and its confusable
+  partner. Auto-generated.}
+  \label{fig:kf-smearing}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{rul_funnel}
+  \caption{RUL error of the margin-extrapolation prognosis versus the moment of prediction
+  (test engines). Positive = late prediction. Auto-generated.}
+  \label{fig:rul-funnel}
+\end{figure}
+
+\section{Milestone H3}
+\label{sec:h3}
+
+The gate requires the traditional pipeline to run end-to-end on the test fleet and produce the
+common metric set --- met above ($\sim$2 minutes per fleet, one worker per engine). Its
+defaults and their rationale are itemized in the decision register
+(\cref{ch:decisions}); every one of them is exposed to the F5 tuning budget. H3 is declared
+closed with this documented status: \textbf{these are floor numbers, not the traditional
+family's final word} --- treating them otherwise would manufacture exactly the straw-man
+comparison this project exists to avoid.

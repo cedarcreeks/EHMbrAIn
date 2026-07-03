@@ -19,6 +19,11 @@ sensor-noise floor injected in phase F2 and are common-mode to both EHM pipeline
 intent ---a baseline whose error does not distort the comparison--- is met. Optional
 refinement (grid densification near block boundaries) is queued as non-blocking.
 
+\section{Phase F3: closed}
+
+Documented in \cref{ch:trad}: the traditional pipeline, its two detector-design lessons, and
+its v0 test-fleet scores --- explicitly floor numbers pending the symmetric F5 tuning budget.
+
 \section{Phase F2: closed}
 
 Documented in \cref{ch:fleet}: generator architecture, ground-truth trajectory library,
@@ -35,9 +40,6 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
     \toprule
     Phase & Key deliverable & Closing criterion (gate) \\
     \midrule
-    F3 & Complete traditional pipeline (baseline, trending, WLS, Kalman, rules, extrapolation
-         RUL) &
-         H3: full metrics on test; smearing measured against ground truth \\
     F4 & AI suite (detection, diagnosis, RUL, physics-informed hybrid, conformal intervals,
          PCS) &
          H4: beats the traditional pipeline on $\geq1$ primary metric per task on validation \\
@@ -51,6 +53,11 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
       (\cref{tab:nonlin}); difficulty gate failed at 81.6\,\% with chronic labels, passed at
       54.0\,\% after the acute-episode design change (\cref{sec:audit-difficulty}); realism
       checks all positive; onset bug found and fixed by the audits; 25 automated tests green. \\
+    \textbf{H3 closed} & 2026-07-03 & Traditional pipeline end-to-end on the test fleet
+      (\cref{tab:trad}): detection recall 0.5 at 98-cycle median delay, isolation 0\,\% on
+      the confusable subset, smearing index 0.85, RUL optimism funnel measured
+      (\cref{fig:rul-funnel}); two detector-design lessons recorded; all defaults registered
+      in \cref{ch:decisions} and exposed to the F5 budget; 31 automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -88,6 +95,11 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
       (\cref{tab:nonlin}); difficulty gate failed at 81.6\,\% with chronic labels, passed at
       54.0\,\% after the acute-episode design change (\cref{sec:audit-difficulty}); realism
       checks all positive; onset bug found and fixed by the audits; 25 automated tests green. \\
+    \textbf{H3 closed} & 2026-07-03 & Traditional pipeline end-to-end on the test fleet
+      (\cref{tab:trad}): detection recall 0.5 at 98-cycle median delay, isolation 0\,\% on
+      the confusable subset, smearing index 0.85, RUL optimism funnel measured
+      (\cref{fig:rul-funnel}); two detector-design lessons recorded; all defaults registered
+      in \cref{ch:decisions} and exposed to the F5 budget; 31 automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}

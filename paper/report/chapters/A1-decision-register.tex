@@ -1,0 +1,103 @@
+\chapter{Decision register}
+\label{ch:decisions}
+
+\begin{quote}\itshape
+Every material free choice made in this study, its value, and the \emph{kind} of justification
+behind it. Justification classes: \textbf{[M]}~measured/certified data; \textbf{[L]}~literature
+range; \textbf{[D]}~derived from our own model; \textbf{[C]}~community convention or benchmark
+practice; \textbf{[T]}~engineering default, explicitly exposed to the symmetric tuning budget
+of phase F5; \textbf{[A]}~assumption with declared sensitivity. A choice justified by none of
+these classes would be arbitrary --- the audit that produced this table found two such cases,
+both already resolved (noted below).
+\end{quote}
+
+\section*{Engine model (F1)}
+
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}c>{\raggedright\arraybackslash}p{0.38\textwidth}}
+  \toprule
+  Decision & Value & Class & Basis \\
+  \midrule
+  Engine variant & CFM56-7B26 & [C] & most common -7B; richest public data \\
+  Design point & M0.78 / FL350 / ISA & [C] & aerodynamic-design-point convention \\
+  Calibration targets \& tolerances & \cref{tab:tcds}; $\pm3$/$\pm5$\,\% & [M] & TCDS + EEDB; tolerances set a priori in the spec \\
+  Cruise thrust/TSFC targets & 5480 lbf / 0.627 & [A] & public type data, still flagged
+    TO\_VERIFY in the contract; H1 was gated on measured anchors only \\
+  HPC design PR & 9.35 & [M] & calibrated to the measured SLS OPR 27.61 \\
+  HP map speed reference & 13 940 rpm & [M] & placed so rated-thrust N2 respects the TCDS redline \\
+  Rating temperature $T_{4,\max}$ & 3200\,°R & [D] & from the calibrated takeoff anchor (\cref{sec:decks}) \\
+  ICM perturbation step & $\pm0.5$\,\% & [C] & central-difference standard: large enough to
+    dominate the $10^{-8}$ solver tolerance, small enough for linearity \\
+  Confusable threshold & $15^{\circ}$ & [T] & pre-registered definition for H2; sensitivity
+    checked implicitly by reporting all angles \\
+  Deck envelope blocks \& PC $\geq 0.5$ & \cref{sec:decks} & [C] & EHM trending conditions \\
+  Thermo method & tabular & [D] & CEA cross-check within 0.7\,\% (\cref{tab:cea}) \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Synthetic fleet (F2)}
+
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}c>{\raggedright\arraybackslash}p{0.38\textwidth}}
+  \toprule
+  Decision & Value & Class & Basis \\
+  \midrule
+  Degradation magnitudes/profiles & \cref{tab:degradation} & [L] & Diakunchak; Kurz \& Brun \\
+  Fouling time constant & 3000 cycles & [L] & fouling saturates within months of service \\
+  Wash interval / recovery & 800--1600 cy / 30--70\,\% & [L] & typical wash programs;
+    recovery range from the same sources \\
+  New-engine EGT margin & $85\pm6$\,°C & [L] & public -7B two-digit margins; per-engine
+    scatter is a manufacturing-variability assumption [A] \\
+  Severity multiplier spread & LogNormal $(0,\,0.3)$ & [A] & produces the observed-in-service
+    spread of lives (\cref{tab:fleet}); a fleet-realism knob, not a fitted quantity \\
+  Sensor noise / quantization & catalog table & [L] & typical ACARS-class instrumentation \\
+  Acute-fault targets \& magnitudes & 6 params, 0.4--1.5\,\% & [D] & drawn from the ICM
+    confusable set; magnitudes bracket the detectability edge (sub-noise to clearly visible) \\
+  Acute probability / onset & 0.5 / 30--90\,\% of life & [T] & enough episodes per class for
+    test statistics; onset as life fraction after the audit-found bug (\cref{sec:audit-difficulty}) \\
+  Ambient scatter (takeoff dTs) & $\mathcal{N}(10, 8)$\,°C clipped & [A] & plausible mixed
+    fleet climate; affects realism, not comparison fairness (common to both pipelines) \\
+  Difficulty gate threshold & 60\,\% & [T] & pre-set before the audit ran; its bite was
+    demonstrated when the first design failed it \\
+  Splits & 70/10/20 by engine & [C] & leakage-free standard; CI-checked \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\section*{Traditional pipeline (F3) and evaluation}
+
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.15\textwidth}c>{\raggedright\arraybackslash}p{0.38\textwidth}}
+  \toprule
+  Decision & Value & Class & Basis \\
+  \midrule
+  Holt gains & $\alpha{=}0.15, \beta{=}0.05$ & [T] & responsive-but-smooth default; swept in F5 \\
+  CUSUM parameters & $k{=}0.75\sigma, h{=}8$ & [T] & standard allowances; swept in F5 \\
+  Gap-detector EWMAs & 0.1 / 0.005 & [T] & fast follows a ramp, slow spans a wash cycle; swept in F5 \\
+  Alarm persistence & 10-of-14 & [T] & multi-sample confirmation; swept in F5 \\
+  Kalman $q$, prior, $\lambda$ & $2{\cdot}10^{-4}$, 2\,\%, 1 & [T] & $q$ sized to chronic
+    rates; all swept in F5 \\
+  Wash reset fraction & 0.5 & [A] & mid-range of the catalog's 30--70\,\% recovery \\
+  RUL window / cap & 1500 cy / 25 000 cy & [T]/[C] & window spans a wash cycle; cap is
+    NASA-benchmark practice \\
+  NASA-score scaling & $d/100$ cycles & [A] & the PHM08 constants assume C-MAPSS-scale RUL;
+    scaling declared, identical for both families \\
+  Assumed nominal margin & 85\,°C & [A] & fleet nominal; per-engine estimation is queued as a
+    pipeline improvement in F5 \\
+  Statistical tests & Wilcoxon, Holm, BCa & [C] & pre-registered (\cref{sec:safeguards}) \\
+  $\alpha$--$\lambda$ settings & $\alpha{=}20\,\%$, $\lambda{=}\{.5,.7,.9\}$ & [C] & common
+    prognostics practice \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\paragraph{Audit outcome.} Sweeping the study for unjustified choices found two genuinely
+arbitrary decisions, both caught and resolved before this appendix was written: the
+\emph{chronic-mechanism labeling} of the diagnosis task (resolved by the acute-episode
+redesign, \cref{sec:audit-difficulty}) and the \emph{acute onset drawn against the simulation
+horizon} rather than engine life (resolved by two-pass generation). Remaining class-[A]
+assumptions are declared at their point of use and shared by both EHM families, so they affect
+the realism of the world, not the fairness of the comparison. Class-[T] defaults are the
+traditional pipeline's tuning surface --- left untouched by design until F5 spends the same
+optimization budget on both families.
