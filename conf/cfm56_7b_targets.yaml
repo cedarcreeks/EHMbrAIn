@@ -1,0 +1,41 @@
+# Calibration contract for the CFM56-7B26 performance model (see docs/f1-model-spec.md §3).
+# Single source of truth: loaded by the model runner AND by tests/test_od_anchors.py.
+# status: VERIFIED = checked against the cited source document; TO_VERIFY = public-domain
+# ballpark pending verification (do NOT gate H1 on TO_VERIFY values).
+
+engine:
+  variant: CFM56-7B26
+  application: Boeing 737-800
+  n1_100pct_rpm: {value: 5175, source: "EASA TCDS E.004", status: TO_VERIFY}
+  n2_100pct_rpm: {value: 14460, source: "EASA TCDS E.004", status: TO_VERIFY}
+  egt_redline_C: {value: 950, source: "EASA TCDS E.004", status: TO_VERIFY}
+  fan_diameter_in: {value: 61, source: "type data", status: TO_VERIFY}
+  stages: {fan: 1, booster: 3, hpc: 9, hpt: 1, lpt: 4}
+
+design_point:            # A1 — aero design point (cruise)
+  mach: 0.78
+  alt_ft: 35000
+  dTs_degR: 0.0          # ISA
+  targets:
+    fn_lbf:    {value: 5480,  tol_pct: 3.0, source: "public type data", status: TO_VERIFY}
+    tsfc:      {value: 0.627, tol_pct: 3.0, units: "lbm/(h*lbf)", source: "public type data", status: TO_VERIFY}
+    bpr:       {value: 5.1,   tol_abs: 0.2, source: "public type data", status: TO_VERIFY}
+    opr:       {value: 32.0,  window: [30, 34], source: "public type data", status: TO_VERIFY}
+  windows:               # WP1.1 DoD sanity windows (not calibration targets)
+    t4_degR: [2800, 3000]
+    cooling_total_frac: [0.18, 0.25]
+
+anchors_offdesign:       # SLS anchors; WF values from ICAO Emissions Databank (EEDB)
+  A2_takeoff:
+    condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 100}
+    fn_lbf:  {value: 26300, tol_pct: 3.0, source: "EASA TCDS E.004", status: TO_VERIFY}
+    wf_kgps: {value: null,  tol_pct: 3.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+  A3_climbout:
+    condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 85}
+    wf_kgps: {value: null, tol_pct: 3.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+  A4_approach:
+    condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 30}
+    wf_kgps: {value: null, tol_pct: 5.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
+  A5_idle:
+    condition: {mach: 0.0, alt_ft: 0, power_pct_f00: 7}
+    wf_kgps: {value: null, tol_pct: 5.0, source: "ICAO EEDB CFM56-7B26", status: TO_VERIFY}
