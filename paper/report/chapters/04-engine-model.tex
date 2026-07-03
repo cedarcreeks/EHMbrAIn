@@ -185,6 +185,114 @@ real compressor's--- a known limitation of the approach; the anchor is \textbf{r
 gated} for milestone H1, a decision recorded in the calibration contract
 (\code{gated:~false}).
 
+\section{Baseline decks (WP1.3)}
+\label{sec:decks}
+
+Both EHM pipelines need a \emph{baseline}: what a healthy engine reads at any operating
+condition, so that measured values can be turned into deviations. The baseline is produced by
+sweeping the healthy model over a realistic flight envelope ---altitude blocks with their
+plausible Mach ranges (no Mach~0.8 at sea level), ambient temperature offsets of 0, $+15$ and
+$+30$\,\si{\degreeCelsius} above ISA, and six thrust settings from 50 to 100\,\% of the locally
+available maximum. At each condition the model first finds the maximum thrust at the rating
+temperature (point \code{OD\_max}, throttled by $T_{4}$), then solves the part-power point at
+the commanded fraction (\code{OD\_pt}) ---the same two-point pattern used by the pyCycle
+reference example.
+
+Two engineering lessons from WP1.2 shaped the sweep. First, the walk is ordered for warm
+starting (nearest condition first, thrust descending). Second ---the lesson learned the hard
+way--- a failed Newton attempt corrupts the point's internal states beyond re-seeding, so the
+sweep's recovery action on any failure is to \emph{rebuild} the problem cold with
+altitude-appropriate guesses; a first version of the sweep without this recovery lost every
+point downstream of the first divergence. The result is stored as a table plus a scattered
+linear interpolator in the four operating coordinates, and its quality is measured by
+leave-one-out cross-validation (each grid point predicted from all the others), reported per
+channel in \cref{tab:deck-loo}.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Leave-one-out interpolation error of the baseline deck, per channel.
+  Auto-generated.}
+  \label{tab:deck-loo}
+  \input{tables/table_deck_loo}
+\end{table}
+
+\section{Influence coefficient matrix and observability (WP1.4)}
+\label{sec:icm}
+
+\subsection{Health-parameter injection}
+
+To compute the ICM ---and, in phase F2, to simulate degraded engines--- the model must accept
+imposed health deviations. pyCycle scales its generic component maps with per-component design
+scalars (efficiency and flow); the off-design points normally inherit them from the design
+point. In the \code{MPCFM56Study} model those connections are routed through multiplier
+components, so that any efficiency or flow-capacity deviation can be dialed in per run. Two
+implementation subtleties are worth recording: (i) the multipliers must execute \emph{before}
+the off-design point ---the multi-point group runs its children in insertion order, and a
+mis-ordered version silently solved the off-design point with unscaled maps; the symptom (a
+``healthy'' point that did not reproduce the design point) was caught by the self-consistency
+check below; and (ii) holding N1 constant, the CFM56's rating parameter, requires a fuel-flow
+balance targeting the LP spool speed through a passthrough component, since the speed is itself
+the output of another balance.
+
+The wiring is validated by a self-consistency property that is now a permanent test: the
+\emph{healthy} off-design point at cruise with N1 equal to its design value must reproduce the
+design point exactly. It does: thrust \SI{5480.0}{lbf}, N2 \SI{13940.0}{rpm}, OPR 30.03, EGT
+\SI{1141.6}{\kelvin} ---machine-precision agreement with \cref{tab:design}.
+
+\subsection{The ICM at the reference conditions}
+
+The ICM is computed by central finite differences ($\pm0.5$\,\% per health parameter) at the
+two conditions where airline EHM snapshots are taken: cruise (M\,0.78/\SI{35000}{ft}) and
+sea-level takeoff, at constant N1. \Cref{fig:icm} shows the cruise matrix for the extended
+sensor set; every sign satisfies the physical expectations (e.g.\ a healthier HPT runs cooler
+and thriftier: negative EGT and $W_f$ entries in its efficiency column), and these sign checks
+run automatically in the test suite.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{icm_cruise}
+  \caption{Influence coefficient matrix at cruise (extended sensor set): \% change of each
+  measured channel per $+1$\,\% change of each health parameter. Auto-generated from the
+  model.}
+  \label{fig:icm}
+\end{figure}
+
+\subsection{Observability: the quantitative case for hypothesis H2}
+
+With the cockpit set only (N2, $W_f$, EGT ---N1 is the held rating parameter, so it carries no
+information), the ICM has rank 3 for 10 unknowns and the geometry of its columns is damning:
+the minimum angle between fault signatures is \textbf{1.3\,degrees}, with seven pairs below
+15\,degrees (\cref{tab:confusable}). The most confusable pair, HPC efficiency versus HPT
+efficiency, is precisely the classical HPC/HPT ambiguity reported in the GPA
+literature~\cite{Li2002} ---here quantified for this engine. Two faults whose signatures differ
+by 1.3\,degrees are, at realistic noise levels, indistinguishable to any linear
+estimator: this is the smearing mechanism measured, and it defines the ``confusable'' subset on
+which hypothesis H2 will compare the AI's isolation ability against WLS-GPA. The extended
+sensor set (adding P25/T25/PS3/T3) raises the rank to 7 and multiplies the minimum angle by
+roughly five ---the quantitative basis for the sensor-set ablation of contribution C6.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Confusable fault pairs at cruise with cockpit sensors (signature angle
+  $<15^{\circ}$). Auto-generated.}
+  \label{tab:confusable}
+  \input{tables/table_confusable}
+\end{table}
+
+\subsection{Thermodynamics cross-check}
+
+Decision D2 (tabular thermodynamics for speed) is closed by re-solving the design point with
+NASA's chemical-equilibrium code (CEA): all key quantities agree within
+0.7\,\% (\cref{tab:cea}), an order of magnitude below the $\pm3$\,\% calibration tolerance.
+Tabular thermodynamics is therefore retained for all fleet-scale computation.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Design point solved with tabular versus CEA thermodynamics. Auto-generated.}
+  \label{tab:cea}
+  \input{tables/table_cea}
+\end{table}
+
 \section{Declared limitations}
 \label{sec:limitations}
 
@@ -203,5 +311,7 @@ rests on the model's sensitivity structure (the ICM), not on its absolute values
 
 The chapter's claims are pinned by tests: design-point convergence and acceptance windows;
 convergence of all four anchors including the idle continuation; fuel-flow and pressure-ratio
-tolerances at the gated anchors; N1/N2 redlines at rated thrust; and the pyCycle environment
-smoke test. Nine tests green in continuous integration at the time of writing.
+tolerances at the gated anchors; N1/N2 redlines at rated thrust; the Study self-consistency
+property (healthy off-design $=$ design); the ICM physical sign checks and its rank-3 cockpit
+underdetermination; and the pyCycle environment smoke test. Twelve tests green in continuous
+integration at the time of writing.

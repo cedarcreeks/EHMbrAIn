@@ -16,7 +16,8 @@ class CFM56(pyc.Cycle):
     """Single cycle point. design=True for the design point, False for off-design."""
 
     def initialize(self):
-        self.options.declare('throttle_mode', default='T4', values=['T4', 'percent_thrust'])
+        self.options.declare('throttle_mode', default='T4',
+                             values=['T4', 'percent_thrust', 'N1'])
         super().initialize()
 
     def setup(self):
@@ -108,11 +109,22 @@ class CFM56(pyc.Cycle):
                 self.connect('balance.FAR', 'burner.Fl_I:FAR')
                 self.connect('burner.Fl_O:tot:T', 'balance.lhs:FAR')
                 self.promotes('balance', inputs=[('rhs:FAR', 'T4_MAX')])
-            else:
+            elif self.options['throttle_mode'] == 'percent_thrust':
                 balance.add_balance('FAR', val=0.017, lower=1e-4, eq_units='lbf', use_mult=True)
                 self.connect('balance.FAR', 'burner.Fl_I:FAR')
                 self.connect('perf.Fn', 'balance.rhs:FAR')
                 self.promotes('balance', inputs=[('mult:FAR', 'PC'), ('lhs:FAR', 'Fn_max')])
+            else:  # 'N1': hold physical fan speed — the CFM56 rating parameter.
+                # The FAR balance targets the LP spool speed, which is itself the
+                # output of another balance in this component. OpenMDAO forbids a
+                # direct self-connection, so the speed is routed through a
+                # passthrough; the algebraic loop is resolved by the Newton solver.
+                balance.add_balance('FAR', val=0.017, lower=1e-4, eq_units='rpm')
+                self.connect('balance.FAR', 'burner.Fl_I:FAR')
+                self.add_subsystem('n1_pass', om.ExecComp('n1_out = n1_in', units='rpm'))
+                self.connect('balance.lp_Nmech', 'n1_pass.n1_in')
+                self.connect('n1_pass.n1_out', 'balance.lhs:FAR')
+                self.promotes('balance', inputs=[('rhs:FAR', 'N1_target')])
 
             balance.add_balance('W', units='lbm/s', lower=10., upper=1000., eq_units='inch**2')
             self.connect('balance.W', 'fc.W')
@@ -174,6 +186,77 @@ class CFM56(pyc.Cycle):
         super().setup()
 
 
+# Map scalars per turbomachine: (flow scalar, speed scalar). s_eff is common.
+# These are the injection points for the GPA health parameters: efficiency
+# deviations multiply s_eff, flow-capacity deviations multiply s_Wc / s_Wp.
+TURBO_SCALARS = {
+    'fan': ('s_Wc', 's_Nc'),
+    'lpc': ('s_Wc', 's_Nc'),
+    'hpc': ('s_Wc', 's_Nc'),
+    'hpt': ('s_Wp', 's_Np'),
+    'lpt': ('s_Wp', 's_Np'),
+}
+
+
+def _configure_design_point(mp):
+    """Add the DESIGN point and the shared cycle parameters to an MPCycle."""
+    mp.pyc_add_pnt('DESIGN', CFM56(thermo_method=mp.THERMO))
+
+    # Flow-path Mach numbers inherited from the HBTF reference (same engine class).
+    mp.set_input_defaults('DESIGN.inlet.MN', 0.751)
+    mp.set_input_defaults('DESIGN.fan.MN', 0.4578)
+    mp.set_input_defaults('DESIGN.splitter.BPR', 5.1)      # CFM56-7B26 target
+    mp.set_input_defaults('DESIGN.splitter.MN1', 0.3104)
+    mp.set_input_defaults('DESIGN.splitter.MN2', 0.4518)
+    mp.set_input_defaults('DESIGN.duct4.MN', 0.3121)
+    mp.set_input_defaults('DESIGN.lpc.MN', 0.3059)
+    mp.set_input_defaults('DESIGN.duct6.MN', 0.3563)
+    mp.set_input_defaults('DESIGN.hpc.MN', 0.2442)
+    mp.set_input_defaults('DESIGN.bld3.MN', 0.3000)
+    mp.set_input_defaults('DESIGN.burner.MN', 0.1025)
+    mp.set_input_defaults('DESIGN.hpt.MN', 0.3650)
+    mp.set_input_defaults('DESIGN.duct11.MN', 0.3063)
+    mp.set_input_defaults('DESIGN.lpt.MN', 0.4127)
+    mp.set_input_defaults('DESIGN.duct13.MN', 0.4463)
+    mp.set_input_defaults('DESIGN.byp_bld.MN', 0.4489)
+    mp.set_input_defaults('DESIGN.duct15.MN', 0.4589)
+    # Map-scaling reference speeds. HP value chosen so that the predicted N2 at
+    # rated SLS takeoff thrust stays below the TCDS redline (15 183 rpm = 105 %)
+    # given the generic HPCMap speed-flow shape; with 13 940 rpm at design the
+    # model gives ~14 900 rpm (103 %) at A2. Speed labels are approximate by
+    # construction (generic maps) — documented limitation.
+    mp.set_input_defaults('DESIGN.LP_Nmech', 4666.0, units='rpm')
+    mp.set_input_defaults('DESIGN.HP_Nmech', 13940.0, units='rpm')
+
+    # Pressure losses, nozzle coefficients and the secondary-air network (D5).
+    mp.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
+    mp.pyc_add_cycle_param('duct4.dPqP', 0.0048)
+    mp.pyc_add_cycle_param('duct6.dPqP', 0.0101)
+    mp.pyc_add_cycle_param('burner.dPqP', 0.0540)
+    mp.pyc_add_cycle_param('duct11.dPqP', 0.0051)
+    mp.pyc_add_cycle_param('duct13.dPqP', 0.0107)
+    mp.pyc_add_cycle_param('duct15.dPqP', 0.0149)
+    mp.pyc_add_cycle_param('core_nozz.Cv', 0.9933)
+    mp.pyc_add_cycle_param('byp_bld.bypBld:frac_W', 0.005)
+    mp.pyc_add_cycle_param('byp_nozz.Cv', 0.9939)
+    mp.pyc_add_cycle_param('hpc.cool1:frac_W', 0.050708)   # HPT vane cooling
+    mp.pyc_add_cycle_param('hpc.cool1:frac_P', 0.5)
+    mp.pyc_add_cycle_param('hpc.cool1:frac_work', 0.5)
+    mp.pyc_add_cycle_param('hpc.cool2:frac_W', 0.020274)   # HPT blade cooling
+    mp.pyc_add_cycle_param('hpc.cool2:frac_P', 0.55)
+    mp.pyc_add_cycle_param('hpc.cool2:frac_work', 0.5)
+    mp.pyc_add_cycle_param('bld3.cool3:frac_W', 0.067214)  # LPT cooling
+    mp.pyc_add_cycle_param('bld3.cool4:frac_W', 0.101256)
+    mp.pyc_add_cycle_param('hpc.cust:frac_P', 0.5)
+    mp.pyc_add_cycle_param('hpc.cust:frac_work', 0.5)
+    mp.pyc_add_cycle_param('hpc.cust:frac_W', 0.0445)      # customer bleed
+    mp.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
+    mp.pyc_add_cycle_param('hpt.cool4:frac_P', 0.0)
+    mp.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
+    mp.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
+    mp.pyc_add_cycle_param('hp_shaft.HPX', 250.0, units='hp')  # accessory power extraction
+
+
 class MPCFM56(pyc.MPCycle):
     """Multi-point model: DESIGN (A1 cruise) + SLS anchors A2–A5 (WP1.2).
 
@@ -182,7 +265,7 @@ class MPCFM56(pyc.MPCycle):
     against the ICAO EEDB measurements in conf/cfm56_7b_targets.yaml.
     """
 
-    THERMO = 'TABULAR'  # D2: tabular for speed; CEA cross-check at end of WP1.2
+    THERMO = 'TABULAR'  # D2: tabular for speed; CEA cross-check in WP1.4
 
     FN_TAKEOFF_LBF = 26302.0            # TCDS: 11699 daN
     OD_ANCHORS = {                      # name -> fraction of takeoff thrust (EEDB settings)
@@ -198,61 +281,7 @@ class MPCFM56(pyc.MPCycle):
         super().initialize()
 
     def setup(self):
-        self.pyc_add_pnt('DESIGN', CFM56(thermo_method=self.THERMO))
-
-        # Flow-path Mach numbers inherited from the HBTF reference (same engine class).
-        self.set_input_defaults('DESIGN.inlet.MN', 0.751)
-        self.set_input_defaults('DESIGN.fan.MN', 0.4578)
-        self.set_input_defaults('DESIGN.splitter.BPR', 5.1)      # CFM56-7B26 target
-        self.set_input_defaults('DESIGN.splitter.MN1', 0.3104)
-        self.set_input_defaults('DESIGN.splitter.MN2', 0.4518)
-        self.set_input_defaults('DESIGN.duct4.MN', 0.3121)
-        self.set_input_defaults('DESIGN.lpc.MN', 0.3059)
-        self.set_input_defaults('DESIGN.duct6.MN', 0.3563)
-        self.set_input_defaults('DESIGN.hpc.MN', 0.2442)
-        self.set_input_defaults('DESIGN.bld3.MN', 0.3000)
-        self.set_input_defaults('DESIGN.burner.MN', 0.1025)
-        self.set_input_defaults('DESIGN.hpt.MN', 0.3650)
-        self.set_input_defaults('DESIGN.duct11.MN', 0.3063)
-        self.set_input_defaults('DESIGN.lpt.MN', 0.4127)
-        self.set_input_defaults('DESIGN.duct13.MN', 0.4463)
-        self.set_input_defaults('DESIGN.byp_bld.MN', 0.4489)
-        self.set_input_defaults('DESIGN.duct15.MN', 0.4589)
-        # Map-scaling reference speeds. HP value chosen so that the predicted N2 at
-        # rated SLS takeoff thrust stays below the TCDS redline (15 183 rpm = 105 %)
-        # given the generic HPCMap speed-flow shape; with 13 940 rpm at design the
-        # model gives ~14 900 rpm (103 %) at A2. Speed labels are approximate by
-        # construction (generic maps) — documented limitation.
-        self.set_input_defaults('DESIGN.LP_Nmech', 4666.0, units='rpm')
-        self.set_input_defaults('DESIGN.HP_Nmech', 13940.0, units='rpm')
-
-        # Pressure losses, nozzle coefficients and the secondary-air network (D5).
-        self.pyc_add_cycle_param('inlet.ram_recovery', 0.9990)
-        self.pyc_add_cycle_param('duct4.dPqP', 0.0048)
-        self.pyc_add_cycle_param('duct6.dPqP', 0.0101)
-        self.pyc_add_cycle_param('burner.dPqP', 0.0540)
-        self.pyc_add_cycle_param('duct11.dPqP', 0.0051)
-        self.pyc_add_cycle_param('duct13.dPqP', 0.0107)
-        self.pyc_add_cycle_param('duct15.dPqP', 0.0149)
-        self.pyc_add_cycle_param('core_nozz.Cv', 0.9933)
-        self.pyc_add_cycle_param('byp_bld.bypBld:frac_W', 0.005)
-        self.pyc_add_cycle_param('byp_nozz.Cv', 0.9939)
-        self.pyc_add_cycle_param('hpc.cool1:frac_W', 0.050708)   # HPT vane cooling
-        self.pyc_add_cycle_param('hpc.cool1:frac_P', 0.5)
-        self.pyc_add_cycle_param('hpc.cool1:frac_work', 0.5)
-        self.pyc_add_cycle_param('hpc.cool2:frac_W', 0.020274)   # HPT blade cooling
-        self.pyc_add_cycle_param('hpc.cool2:frac_P', 0.55)
-        self.pyc_add_cycle_param('hpc.cool2:frac_work', 0.5)
-        self.pyc_add_cycle_param('bld3.cool3:frac_W', 0.067214)  # LPT cooling
-        self.pyc_add_cycle_param('bld3.cool4:frac_W', 0.101256)
-        self.pyc_add_cycle_param('hpc.cust:frac_P', 0.5)
-        self.pyc_add_cycle_param('hpc.cust:frac_work', 0.5)
-        self.pyc_add_cycle_param('hpc.cust:frac_W', 0.0445)      # customer bleed
-        self.pyc_add_cycle_param('hpt.cool3:frac_P', 1.0)
-        self.pyc_add_cycle_param('hpt.cool4:frac_P', 0.0)
-        self.pyc_add_cycle_param('lpt.cool1:frac_P', 1.0)
-        self.pyc_add_cycle_param('lpt.cool2:frac_P', 0.0)
-        self.pyc_add_cycle_param('hp_shaft.HPX', 250.0, units='hp')  # accessory power extraction
+        _configure_design_point(self)
 
         if self.options['od']:
             for name, pc in self.OD_ANCHORS.items():
@@ -268,6 +297,88 @@ class MPCFM56(pyc.MPCycle):
             self.pyc_use_default_des_od_conns()
             self.pyc_connect_des_od('core_nozz.Throat:stat:area', 'balance.rhs:W')
             self.pyc_connect_des_od('byp_nozz.Throat:stat:area', 'balance.rhs:BPR')
+
+        super().setup()
+
+
+class MPCFM56Study(pyc.MPCycle):
+    """DESIGN + one off-design point ('OD') with health-parameter injection.
+
+    The map scalars of the five turbomachines are routed through multiplier
+    components (`health_<comp>.eta_fac`, `health_<comp>.flow_fac`, default 1.0)
+    instead of the default design->off-design connections, so efficiency and
+    flow-capacity deviations can be imposed per run. Used to generate the ICM
+    (throttle_mode='N1', the CFM56 rating parameter) and, in phase F2, the
+    degraded-fleet snapshots.
+    """
+
+    THERMO = 'TABULAR'
+
+    def initialize(self):
+        self.options.declare('throttle_mode', default='N1',
+                             values=['T4', 'percent_thrust', 'N1'])
+        super().initialize()
+
+    def setup(self):
+        _configure_design_point(self)
+
+        # The health multipliers MUST be added before the OD point: this group
+        # has no top-level solver and executes its children in insertion order,
+        # so a component added after OD would feed it stale values (the OD point
+        # would silently solve with unscaled maps).
+        for comp in TURBO_SCALARS:
+            self.add_subsystem(
+                f'health_{comp}',
+                om.ExecComp(['s_eff_od = s_eff * eta_fac',
+                             's_flow_od = s_flow * flow_fac'],
+                            eta_fac=1.0, flow_fac=1.0))
+
+        self.pyc_add_pnt('OD', CFM56(design=False, thermo_method=self.THERMO,
+                                     throttle_mode=self.options['throttle_mode']))
+        self.od_pts = ['OD']
+
+        # Default conns for everything except the turbomachines, whose scalars
+        # go through the health multipliers.
+        self.pyc_use_default_des_od_conns(skip=list(TURBO_SCALARS))
+        for comp, (flow_s, spd_s) in TURBO_SCALARS.items():
+            self.connect(f'DESIGN.{comp}.s_eff', f'health_{comp}.s_eff')
+            self.connect(f'DESIGN.{comp}.{flow_s}', f'health_{comp}.s_flow')
+            self.connect(f'health_{comp}.s_eff_od', f'OD.{comp}.s_eff')
+            self.connect(f'health_{comp}.s_flow_od', f'OD.{comp}.{flow_s}')
+            self.connect(f'DESIGN.{comp}.s_PR', f'OD.{comp}.s_PR')
+            self.connect(f'DESIGN.{comp}.{spd_s}', f'OD.{comp}.{spd_s}')
+            self.connect(f'DESIGN.{comp}.Fl_O:stat:area', f'OD.{comp}.area')
+
+        self.pyc_connect_des_od('core_nozz.Throat:stat:area', 'balance.rhs:W')
+        self.pyc_connect_des_od('byp_nozz.Throat:stat:area', 'balance.rhs:BPR')
+
+        super().setup()
+
+
+class MPCFM56Deck(pyc.MPCycle):
+    """DESIGN + OD_max (T4-limited full power) + OD_pt (fraction of local max).
+
+    The HBTF-example pattern: at each flight condition, OD_max finds the maximum
+    thrust available at the rating temperature T4_MAX, and OD_pt runs at
+    PC x that thrust. Sweeping (alt, MN, dTs, PC) with warm starts produces the
+    healthy-engine baseline decks (WP1.3).
+    """
+
+    THERMO = 'TABULAR'
+
+    def setup(self):
+        _configure_design_point(self)
+
+        self.pyc_add_pnt('OD_max', CFM56(design=False, thermo_method=self.THERMO,
+                                         throttle_mode='T4'))
+        self.pyc_add_pnt('OD_pt', CFM56(design=False, thermo_method=self.THERMO,
+                                        throttle_mode='percent_thrust'))
+        self.od_pts = ['OD_max', 'OD_pt']
+        self.connect('OD_max.perf.Fn', 'OD_pt.Fn_max')
+
+        self.pyc_use_default_des_od_conns()
+        self.pyc_connect_des_od('core_nozz.Throat:stat:area', 'balance.rhs:W')
+        self.pyc_connect_des_od('byp_nozz.Throat:stat:area', 'balance.rhs:BPR')
 
         super().setup()
 
@@ -378,6 +489,117 @@ def solve_anchors(prob):
 
     return {name: anchor_converged(prob, name, pc)
             for name, pc in MPCFM56.OD_ANCHORS.items()}
+
+
+# Sensor readout at an off-design point. EGT uses the station-45 proxy; P25/T25
+# and PS3/T3 (extended instrumentation set) use total conditions at the element
+# exits — consistent proxies, declared in the model limitations.
+SENSORS = {
+    'N1_rpm': ('balance.lp_Nmech', 'rpm'),
+    'N2_rpm': ('balance.hp_Nmech', 'rpm'),
+    'WF_kgps': ('burner.Wfuel', 'kg/s'),
+    'EGT_degK': ('hpt.Fl_O:tot:T', 'degK'),
+    'P25_bar': ('duct6.Fl_O:tot:P', 'bar'),
+    'T25_degK': ('duct6.Fl_O:tot:T', 'degK'),
+    'PS3_bar': ('hpc.Fl_O:tot:P', 'bar'),
+    'T3_degK': ('hpc.Fl_O:tot:T', 'degK'),
+    'Fn_lbf': ('perf.Fn', 'lbf'),
+    'OPR': ('perf.OPR', None),
+}
+
+
+def snapshot(prob, pt):
+    """All sensor channels at point `pt` as a dict."""
+    out = {}
+    for key, (var, units) in SENSORS.items():
+        out[key] = float(prob.get_val(f'{pt}.{var}', units=units)[0])
+    return out
+
+
+# Cruise-like guesses for a Study OD point near the design condition.
+STUDY_CRUISE_GUESS = dict(FAR=0.0251, W=314.0, BPR=5.1, lp_Nmech=4666.0, hp_Nmech=13940.0,
+                          hpt_PR=3.586, lpt_PR=4.288)
+
+
+def build_study_problem(mn=0.78, alt_ft=35000.0, dTs=0.0, n1_rpm=4666.0,
+                        throttle_mode='N1', guesses=None):
+    """MPCFM56Study problem, solved-ready, healthy (all health factors = 1)."""
+    prob = om.Problem()
+    prob.model = MPCFM56Study(throttle_mode=throttle_mode)
+    prob.setup()
+
+    for name, (val, units) in DESIGN_INPUTS.items():
+        prob.set_val(name, val, units=units)
+    prob['DESIGN.balance.FAR'] = 0.025
+    prob['DESIGN.balance.W'] = 100.
+    prob['DESIGN.balance.lpt_PR'] = 4.0
+    prob['DESIGN.balance.hpt_PR'] = 3.0
+    prob['DESIGN.fc.balance.Pt'] = 5.2
+    prob['DESIGN.fc.balance.Tt'] = 440.0
+
+    prob.set_val('OD.fc.MN', mn)
+    prob.set_val('OD.fc.alt', alt_ft, units='ft')
+    prob.set_val('OD.fc.dTs', dTs, units='degR')
+    if throttle_mode == 'N1':
+        prob.set_val('OD.N1_target', n1_rpm, units='rpm')
+
+    g = dict(STUDY_CRUISE_GUESS)
+    if guesses:
+        g.update(guesses)
+    prob['OD.balance.FAR'] = g['FAR']
+    prob['OD.balance.W'] = g['W']
+    prob['OD.balance.BPR'] = g['BPR']
+    prob['OD.balance.lp_Nmech'] = g['lp_Nmech']
+    prob['OD.balance.hp_Nmech'] = g['hp_Nmech']
+    prob['OD.hpt.PR'] = g['hpt_PR']
+    prob['OD.lpt.PR'] = g['lpt_PR']
+    for comp in ('fan', 'lpc', 'hpc'):
+        prob[f'OD.{comp}.map.RlineMap'] = 2.0
+
+    return prob
+
+
+def set_health(prob, deltas):
+    """Impose health deviations on a Study problem.
+
+    `deltas` maps '<comp>.eta' / '<comp>.flow' to fractional deviations
+    (e.g. {'hpt.eta': -0.01} = HPT efficiency down 1 %). Unlisted factors reset
+    to healthy.
+    """
+    for comp in TURBO_SCALARS:
+        prob[f'health_{comp}.eta_fac'] = 1.0 + deltas.get(f'{comp}.eta', 0.0)
+        prob[f'health_{comp}.flow_fac'] = 1.0 + deltas.get(f'{comp}.flow', 0.0)
+
+
+def build_deck_problem():
+    """MPCFM56Deck problem with guesses set for SLS full power."""
+    prob = om.Problem()
+    prob.model = MPCFM56Deck()
+    prob.setup()
+
+    for name, (val, units) in DESIGN_INPUTS.items():
+        prob.set_val(name, val, units=units)
+    prob['DESIGN.balance.FAR'] = 0.025
+    prob['DESIGN.balance.W'] = 100.
+    prob['DESIGN.balance.lpt_PR'] = 4.0
+    prob['DESIGN.balance.hpt_PR'] = 3.0
+    prob['DESIGN.fc.balance.Pt'] = 5.2
+    prob['DESIGN.fc.balance.Tt'] = 440.0
+
+    prob.set_val('OD_max.T4_MAX', 3200.0, units='degR')  # takeoff-rating temperature
+    prob.set_val('OD_pt.PC', 1.0)
+    for pt, g in (('OD_max', OD_GUESSES['A2_takeoff']), ('OD_pt', OD_GUESSES['A2_takeoff'])):
+        prob[f'{pt}.balance.FAR'] = g['FAR']
+        prob[f'{pt}.balance.W'] = g['W']
+        prob[f'{pt}.balance.BPR'] = g['BPR']
+        prob[f'{pt}.balance.lp_Nmech'] = g['lp_Nmech']
+        prob[f'{pt}.balance.hp_Nmech'] = g['hp_Nmech']
+        prob[f'{pt}.hpt.PR'] = 3.7
+        prob[f'{pt}.lpt.PR'] = 4.3
+        for comp in ('fan', 'lpc', 'hpc'):
+            prob[f'{pt}.{comp}.map.RlineMap'] = 2.0
+
+    return prob
 
 
 def anchor_summary(prob, name):

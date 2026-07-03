@@ -3,21 +3,11 @@
 
 \section{Closing phase F1}
 
-Two work packages remain to close milestone H1:
-
-\begin{description}
-  \item[WP1.3 --- Baseline decks.] Sweep the model over the operating envelope (altitude
-    $\times$ Mach $\times$ thrust setting $\times$ $\Delta T_{\mathrm{ISA}}$ $\times$ bleed)
-    and package a healthy-engine interpolator validated by leave-one-out (interpolation error
-    $<0.1$\,\%). This interpolator is the baseline against which both EHM pipelines will
-    compute measurement deviations.
-  \item[WP1.4 --- Influence coefficient matrix.] Central finite differences ($\pm0.5$\,\%) on
-    the ten health parameters over a sub-grid of operating conditions; an SVD analysis (rank,
-    condition number, angles between fault signatures) that defines the ``confusable'' subset
-    of hypothesis H2; automated physical sign checks (e.g.\
-    $\Delta\eta_{\mathrm{HPT}}\downarrow \Rightarrow \mathrm{EGT}\uparrow, W_f\uparrow$); and
-    the tabular-versus-CEA thermodynamics cross-check at the anchor points.
-\end{description}
+WP1.3 (baseline decks) and WP1.4 (influence coefficient matrix, observability analysis and
+thermodynamics cross-check) are documented in \cref{sec:decks,sec:icm}. Remaining before
+declaring H1 closed: extending the ICM to a grid of operating conditions (currently the two
+snapshot reference conditions), the corrected-parameter exponent regressions on the deck, and
+densifying the deck grid wherever the leave-one-out error concentrates.
 
 \section{Remaining phases}
 
@@ -64,8 +54,13 @@ Two work packages remain to close milestone H1:
     H1 (partial) & 2026-07-03 & WP1.1 and WP1.2 complete: design point inside all five
       acceptance windows (\cref{tab:design}); SLS anchors calibrated against TCDS + EEDB with
       all three gated anchors in tolerance (\cref{tab:anchors}); calibration contract with
-      verified values; nine automated tests green. Pending: WP1.3 (baseline decks) and WP1.4
-      (ICM + SVD + CEA cross-check). \\
+      verified values. \\
+    H1 (WP1.3--1.4) & 2026-07-03 & Baseline decks over the flight envelope with leave-one-out
+      quality report (\cref{tab:deck-loo}); health-parameter injection validated by the
+      off-design/design self-consistency check; ICM at both snapshot conditions with SVD
+      observability analysis --- minimum cockpit signature angle 1.3$^{\circ}$, seven
+      confusable pairs (\cref{tab:confusable}); tabular-vs-CEA cross-check within 0.7\,\%
+      (\cref{tab:cea}); twelve automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
