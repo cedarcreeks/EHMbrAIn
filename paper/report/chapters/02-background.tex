@@ -39,33 +39,42 @@ station numbers used throughout this document.
 
 \begin{figure}[htbp]
   \centering
-  \begin{tikzpicture}[font=\footnotesize,
-      comp/.style={draw, minimum height=8mm, minimum width=11mm, align=center},
-      lp/.style={comp, fill=blue!12},
-      hp/.style={comp, fill=red!12},
-      st/.style={font=\scriptsize, text=black!60}]
-    \node[lp] (fan) {Fan};
-    \node[lp, right=3mm of fan] (lpc) {Booster\\(LPC)};
-    \node[hp, right=3mm of lpc] (hpc) {HPC};
-    \node[comp, fill=orange!15, right=3mm of hpc] (comb) {Combustor};
-    \node[hp, right=3mm of comb] (hpt) {HPT};
-    \node[lp, right=3mm of hpt] (lpt) {LPT};
-    \node[comp, right=3mm of lpt] (cn) {Core\\nozzle};
-    \node[comp, above=4mm of cn] (bn) {Bypass\\nozzle};
-    \draw[-{Stealth}] (-1.1,0) -- (fan.west) node[midway, above, st] {air};
-    \draw[-{Stealth}] (fan.east) -- (lpc.west);
-    \draw[-{Stealth}] (lpc.east) -- (hpc.west);
-    \draw[-{Stealth}] (hpc.east) -- (comb.west);
-    \draw[-{Stealth}] (comb.east) -- (hpt.west);
-    \draw[-{Stealth}] (hpt.east) -- (lpt.west);
-    \draw[-{Stealth}] (lpt.east) -- (cn.west);
-    \draw[-{Stealth}] (fan.north east) .. controls +(0.6,0.35) .. ([yshift=0mm]bn.west)
-      node[pos=0.35, above, st] {bypass stream};
-    % station ticks
-    \foreach \x/\lbl in {fan.west/2, lpc.west/25, hpc.east/3, comb.east/4, hpt.east/45, lpt.east/5}
-      \node[st, below=5.5mm of \x] {\lbl};
-    \node[st, below=11mm of comb, align=center]
-      {LP spool (N1): \textcolor{blue!60}{fan + booster + LPT}\quad
+  \begin{tikzpicture}[font=\footnotesize, st/.style={font=\scriptsize, text=black!60}]
+    % --- shafts (concentric spools) ---
+    \draw[blue!55, line width=1.6pt] (0.05,0) -- (7.65,0);          % LP: fan..LPT
+    \draw[red!60, line width=1.0pt] (2.35,0.09) -- (6.05,0.09);     % HP: HPC..HPT
+    % --- turbomachinery: converging trapezoids = compressors, diverging = turbines ---
+    \draw[fill=blue!12] (0,-1.05) -- (0,1.05) -- (0.55,0.9) -- (0.55,-0.9) -- cycle;
+    \node[rotate=90] at (0.28,0.0) {Fan};
+    \draw[fill=blue!12] (0.95,-0.66) -- (0.95,0.66) -- (1.9,0.48) -- (1.9,-0.48) -- cycle;
+    \node at (1.42,0) {LPC};
+    \draw[fill=red!12] (2.3,-0.48) -- (2.3,0.48) -- (3.5,0.3) -- (3.5,-0.3) -- cycle;
+    \node at (2.9,0) {HPC};
+    \draw[fill=orange!18, rounded corners=2pt] (3.8,-0.3) rectangle (5.1,0.3);
+    \node[font=\scriptsize] at (4.45,0) {Combustor};
+    \draw[fill=red!12] (5.4,-0.3) -- (5.4,0.3) -- (6.05,0.46) -- (6.05,-0.46) -- cycle;
+    \node at (5.72,0) {HPT};
+    \draw[fill=blue!12] (6.45,-0.46) -- (6.45,0.46) -- (7.65,0.72) -- (7.65,-0.72) -- cycle;
+    \node at (7.05,0) {LPT};
+    % core nozzle: converging duct
+    \draw[fill=black!6] (8.05,-0.72) -- (8.05,0.72) -- (9.0,0.42) -- (9.0,-0.42) -- cycle;
+    \node[font=\scriptsize] at (8.5,0) {Nozzle};
+    % --- bypass duct ---
+    \draw[black!45] (0.55,0.9) -- (0.55,1.5) -- (9.0,1.5);
+    \draw[black!45] (0.95,0.66) -- (0.95,1.15) -- (9.0,1.15);
+    \node[st] at (4.5,1.32) {bypass stream};
+    \draw[-{Stealth}, black!60] (9.0,1.32) -- (9.6,1.32);
+    % --- flow arrows ---
+    \draw[-{Stealth}] (-0.9,0.35) -- (-0.15,0.35) node[pos=0.3, above, st] {air};
+    \draw[-{Stealth}, black!60] (9.0,0) -- (9.6,0);
+    \foreach \a/\b in {0.62/0.9, 1.95/2.25, 3.55/3.85, 5.05/5.35, 6.1/6.4, 7.7/8.0}
+      \draw[-{Stealth}, black!35] (\a,0.62) -- (\b,0.62);
+    % --- station ticks ---
+    \foreach \x/\lbl in {0/2, 0.75/21, 2.3/25, 3.5/3, 5.0/4, 6.05/45, 7.65/5}{
+      \draw[black!40] (\x,-1.05) -- (\x,-1.12);
+      \node[st] at (\x,-1.28) {\lbl};}
+    \node[st, align=center] at (4.5,-1.75)
+      {LP spool (N1): \textcolor{blue!60}{fan + booster + LPT}\qquad
        HP spool (N2): \textcolor{red!60}{HPC + HPT}};
   \end{tikzpicture}
   \caption{Two-spool separate-flow turbofan layout with the SAE station numbers used in this
