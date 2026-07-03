@@ -34,3 +34,16 @@ multirun/
 
 # LaTeX build
 paper/report/build/
+
+# LaTeX aux (in-source builds from editors like TeXstudio)
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+paper/report/build/
