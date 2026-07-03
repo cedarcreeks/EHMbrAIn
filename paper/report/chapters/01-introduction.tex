@@ -1,6 +1,13 @@
 \chapter{Introduction}
 \label{ch:introduction}
 
+\begin{quote}\itshape
+This chapter in brief: jet engines degrade invisibly, airlines monitor them through a handful
+of measurements, and two schools of methods compete to interpret those measurements. This
+project builds a level playing field to compare them. If you are new to the field, skim the
+hypotheses table on first read and return to it after \cref{ch:background}.
+\end{quote}
+
 \section{Motivation}
 
 A commercial jet engine degrades from its very first flight. Dust and pollution stick to
@@ -45,7 +52,7 @@ phenomenon, \cref{sec:gpa}) and where AI is least transparent (the black-box pro
 Since neither a performance model of the engine nor degradation data were available to the
 project, both are built from scratch: a thermodynamic ``digital twin'' of the CFM56-7B26 in
 pyCycle~\cite{Hendricks2019}, calibrated against certified public data (\cref{ch:model}), and a
-fleet degradation generator with physically derived fault signatures (planned, \cref{ch:wip}).
+fleet degradation generator with physically derived fault signatures (\cref{ch:fleet}).
 
 \section{Hypotheses}
 \label{sec:hypotheses}

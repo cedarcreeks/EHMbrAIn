@@ -1,6 +1,14 @@
 \chapter{Background}
 \label{ch:background}
 
+\begin{quote}\itshape
+This chapter in brief: how a turbofan works and what its two spools are; which handful of
+numbers an airline actually sees; why raw readings must be corrected before comparison (with a
+worked example); how gas path analysis turns corrected deviations into a health diagnosis; a
+two-line toy problem showing exactly how that diagnosis fails (smearing); and how real engines
+physically degrade. Everything later builds on these six ideas.
+\end{quote}
+
 This chapter assumes no prior knowledge of gas turbines. It introduces the engine, the
 measurements available in service, the mathematics of gas path diagnosis, and the physics of
 degradation ---everything needed to follow the rest of the document.
@@ -26,7 +34,45 @@ The machine is arranged in two mechanically independent \emph{spools} (concentri
 The ratio of bypass to core mass flow is the \emph{bypass ratio} (BPR); the ratio of compressor
 exit pressure to inlet pressure is the \emph{overall pressure ratio} (OPR). Higher BPR and OPR
 generally mean better fuel efficiency, measured as \emph{thrust-specific fuel consumption}
-(TSFC): fuel flow per unit of thrust.
+(TSFC): fuel flow per unit of thrust. \Cref{fig:engine-schematic} shows the layout and the
+station numbers used throughout this document.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[font=\footnotesize,
+      comp/.style={draw, minimum height=8mm, minimum width=11mm, align=center},
+      lp/.style={comp, fill=blue!12},
+      hp/.style={comp, fill=red!12},
+      st/.style={font=\scriptsize, text=black!60}]
+    \node[lp] (fan) {Fan};
+    \node[lp, right=3mm of fan] (lpc) {Booster\\(LPC)};
+    \node[hp, right=3mm of lpc] (hpc) {HPC};
+    \node[comp, fill=orange!15, right=3mm of hpc] (comb) {Combustor};
+    \node[hp, right=3mm of comb] (hpt) {HPT};
+    \node[lp, right=3mm of hpt] (lpt) {LPT};
+    \node[comp, right=3mm of lpt] (cn) {Core\\nozzle};
+    \node[comp, above=4mm of cn] (bn) {Bypass\\nozzle};
+    \draw[-{Stealth}] (-1.1,0) -- (fan.west) node[midway, above, st] {air};
+    \draw[-{Stealth}] (fan.east) -- (lpc.west);
+    \draw[-{Stealth}] (lpc.east) -- (hpc.west);
+    \draw[-{Stealth}] (hpc.east) -- (comb.west);
+    \draw[-{Stealth}] (comb.east) -- (hpt.west);
+    \draw[-{Stealth}] (hpt.east) -- (lpt.west);
+    \draw[-{Stealth}] (lpt.east) -- (cn.west);
+    \draw[-{Stealth}] (fan.north east) .. controls +(0.6,0.35) .. ([yshift=0mm]bn.west)
+      node[pos=0.35, above, st] {bypass stream};
+    % station ticks
+    \foreach \x/\lbl in {fan.west/2, lpc.west/25, hpc.east/3, comb.east/4, hpt.east/45, lpt.east/5}
+      \node[st, below=5.5mm of \x] {\lbl};
+    \node[st, below=11mm of comb, align=center]
+      {LP spool (N1): \textcolor{blue!60}{fan + booster + LPT}\quad
+       HP spool (N2): \textcolor{red!60}{HPC + HPT}};
+  \end{tikzpicture}
+  \caption{Two-spool separate-flow turbofan layout with the SAE station numbers used in this
+  document. The EGT probe of the real CFM56-7B sits inside the LPT (station 49.5); this model
+  uses station 45 (HPT exit) as its consistent EGT proxy.}
+  \label{fig:engine-schematic}
+\end{figure}
 
 \section{The subject engine: CFM56-7B26}
 \label{sec:engine}
@@ -98,6 +144,14 @@ using $\theta = T_{t2}/\SI{288.15}{\kelvin}$ and $\delta = P_{t2}/\SI{101.325}{\
 The exponent $a$ (typically 0.5--0.7) is often copied from generic tables; here it will instead
 be fitted by regression on sweeps of our own thermodynamic model, removing a classical source
 of systematic baseline error.
+
+\paragraph{Worked example.} A healthy engine reads \SI{880}{\kelvin} of EGT on a standard day
+($\theta = 1$). On an ISA$+30$ day the inlet runs at \SI{318}{\kelvin}, so
+$\theta = 318/288.15 = 1.104$, and the same healthy engine reads \SI{966}{\kelvin}. A naive
+comparison would report an ``$86$\,K deterioration'' where none exists. Corrected with the
+fitted exponent $a = 0.95$: $966 / 1.104^{0.95} = \SI{879}{\kelvin}$ --- the hot-day reading
+collapses onto the standard-day one, and only \emph{genuine} health changes remain visible.
+This is why every deviation in this project is computed in corrected space.
 
 \section{Gas Path Analysis}
 \label{sec:gpa}
@@ -171,11 +225,35 @@ with process noise $\mathbf{Q}$ calibrated to realistic degradation rates and th
 optionally augmented with sensor biases~\cite{Volponi2014}. At recorded compressor-wash events
 the recoverable part of the state is reset.
 
-\subsection{Smearing}
+\subsection{Smearing: a two-parameter toy example}
 
-When $\mathbf{H}$ is ill-conditioned ---some fault signatures are nearly parallel--- noise makes
-the estimator distribute a fault that is physically concentrated in one component across
-several: the \emph{smearing} phenomenon, the classical weakness of linear GPA~\cite{Li2002}.
+Before the formal statement, a miniature GPA problem shows the failure mode this whole project
+revolves around. Suppose only two health parameters (HPC and HPT efficiency) and two
+measurements (EGT and $W_f$ deviations, in \%), with influence matrix
+\begin{equation*}
+  \mathbf{H} = \begin{pmatrix} 1.0 & 0.9 \\ 0.5 & 0.5 \end{pmatrix},
+\end{equation*}
+whose columns ---the two fault signatures--- point in nearly the same direction. Let the truth
+be an HPC fault only: $\mathbf{x} = (-1, 0)^{\mathsf T}$, giving exact measurements
+$\Delta\mathbf{z} = (-1.0, -0.5)^{\mathsf T}$, and indeed
+$\mathbf{H}^{-1}\Delta\mathbf{z} = (-1, 0)^{\mathsf T}$ recovers it. Now perturb the first
+measurement by just $+0.1$ (a 10\,\% error, comparable to one noise standard deviation):
+\begin{equation*}
+  \mathbf{H}^{-1}\begin{pmatrix}-0.9\\-0.5\end{pmatrix}
+  = \begin{pmatrix} 10 & -18 \\ -10 & 20 \end{pmatrix}
+    \begin{pmatrix}-0.9\\-0.5\end{pmatrix}
+  = \begin{pmatrix} 0 \\ -1 \end{pmatrix}.
+\end{equation*}
+The estimate now says: HPC healthy, \emph{HPT} degraded by 1\,\% --- a single noise-sized error
+flipped the diagnosis to the wrong component entirely. Nothing is wrong with the algebra; the
+information simply is not in the measurements when signatures nearly coincide.
+
+\subsection{Smearing in general}
+
+That is \emph{smearing}: when $\mathbf{H}$ is ill-conditioned ---fault signatures nearly
+parallel--- noise makes the estimator distribute a fault that is physically concentrated in one
+component across several, or attribute it to the wrong one; it is the classical weakness of
+linear GPA~\cite{Li2002}.
 A singular-value decomposition (SVD) of the ICM quantifies this weakness (rank, condition
 number, angles between fault signatures) and defines the ``confusable'' subset used by
 hypothesis H2: fault pairs whose signatures are less than $15^{\circ}$ apart.

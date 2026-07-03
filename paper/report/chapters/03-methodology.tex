@@ -1,7 +1,40 @@
 \chapter{Methodology and testbed architecture}
 \label{ch:methodology}
 
+\begin{quote}\itshape
+This chapter in brief: the project is six chained phases, each ending in a pass/fail gate
+(\cref{fig:pipeline}). Four safeguards keep the AI-versus-traditional comparison honest;
+one section explains every machine-learning tool by name before it is used; and the software
+inventory maps each program to its role. Read \cref{sec:ai-toolbox} even if you skip the rest.
+\end{quote}
+
 \section{Overall architecture}
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[font=\footnotesize, node distance=3.5mm,
+      ph/.style={draw, rounded corners=1pt, minimum height=9mm, minimum width=17mm,
+                 align=center, fill=blue!8},
+      gate/.style={font=\scriptsize, text=black!60}]
+    \node[ph] (f1) {F1\\engine twin};
+    \node[ph, right=of f1] (f2) {F2\\synthetic fleet};
+    \node[ph, right=of f2] (f3) {F3\\traditional EHM};
+    \node[ph, right=of f3] (f4) {F4\\AI EHM};
+    \node[ph, right=of f4] (f5) {F5\\evaluation};
+    \node[ph, right=of f5] (f6) {F6\\cases + report};
+    \foreach \a/\b/\g in {f1/f2/H1, f2/f3/H2, f3/f4/H3, f4/f5/H4, f5/f6/H5}{
+      \draw[-{Stealth}] (\a) -- (\b) node[midway, above, gate] {\g};}
+    \node[gate, right=2mm of f6] {H6};
+    \node[gate, below=1.5mm of f1] {decks + ICM};
+    \node[gate, below=1.5mm of f2] {SynCFM56};
+    \node[gate, below=1.5mm of f3] {baseline scores};
+    \node[gate, below=1.5mm of f4] {AI scores};
+    \node[gate, below=1.5mm of f5] {verdicts H1--H5};
+  \end{tikzpicture}
+  \caption{The six project phases, their gates (H1--H6) and their key artifacts. Everything to
+  the left of an arrow must pass its gate before the next phase starts.}
+  \label{fig:pipeline}
+\end{figure}
 
 The testbed is organized in six chained phases, each closed by a milestone (\emph{gate}) with a
 measurable acceptance criterion:

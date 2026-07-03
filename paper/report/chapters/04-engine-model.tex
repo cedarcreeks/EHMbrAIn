@@ -1,6 +1,14 @@
 \chapter{Thermodynamic twin of the CFM56-7B26}
 \label{ch:model}
 
+\begin{quote}\itshape
+This chapter in brief: a virtual CFM56-7B26 is built in pyCycle by adapting a validated NASA
+example, calibrated against certified data (its fuel-flow predictions land within 3\,\% of
+measured test-bed values), and then interrogated for the two artifacts everything else
+consumes: the healthy-engine baseline decks and the influence coefficient matrix, whose
+geometry quantifies exactly how blind the cockpit sensor set is.
+\end{quote}
+
 This chapter documents the completed part of phase F1: the CFM56-7B26 performance model in
 pyCycle~\cite{Hendricks2019}, its design point (work package WP1.1) and its off-design
 calibration against certified measured data (WP1.2). All result figures and tables are produced
