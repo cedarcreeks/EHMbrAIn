@@ -1,0 +1,120 @@
+\chapter{Beyond the wall: operating-point tomography}
+\label{ch:tomography}
+
+\begin{quote}\itshape
+This chapter in brief: chapter 8 ended with ``buy sensors.'' This chapter finds two cheaper
+exits. First, the \emph{schedule} of routine snapshot reports is itself an observability
+design variable --- one added report condition buys $+79\,\%$ separability on the HPT
+ambiguity with zero hardware. Second, a learner that fuses per-flight \emph{physics
+projections} over time more than triples classical multi-point isolation on identical data.
+Both claims survived a second pre-registered freeze; one companion hypothesis did not, and
+that story is told too.
+\end{quote}
+
+\section{The idea, and what free variation turns out to be worth}
+\label{sec:tomo-idea}
+
+The influence matrix is not one matrix: $\mathbf{H}(u)$ changes with the flight condition.
+A window of ordinary snapshots at scattered conditions --- hot day, derate, another flight
+level --- is therefore a set of \emph{different projections of the same health state}, and
+fusing them is a tomography problem. Classical multi-operating-point analysis exploits this
+with deliberately scheduled test points and a constant-health assumption; the question here
+is what the \emph{in-service} version is worth.
+
+The physics audit (\code{scripts/f7_observability.py}, \cref{fig:f7-obs}) gave a two-sided
+answer. Encouraging: today's dual-report structure (one takeoff, one cruise snapshot per
+flight) already restores full algebraic rank --- 10/10 from two flights --- because the two
+report families are far apart in condition space. Sobering: the \emph{free} ambient and
+power scatter around those two conditions saturates almost immediately; the critical
+signature angles improve only $\approx 1.4\times$ over a single point, far short of what
+deliberately spread conditions achieve. Free variation is real but thin.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{f7_observability}
+  \caption{Observability under realistic in-service scatter (200 draws per window size).
+  Left: identifiable rank recovers immediately. Right: signature angles saturate ---
+  free scatter is too narrow to keep paying. Auto-generated.}
+  \label{fig:f7-obs}
+\end{figure}
+
+\section{The report schedule as a design variable}
+\label{sec:tomo-schedule}
+
+If free scatter saturates but designed spread works, the actionable question becomes:
+\emph{which report condition should be added to the monitoring schedule?} Treating the
+ACARS report schedule as an observability design problem --- to our knowledge a new framing
+--- and greedily evaluating candidate additions on the influence-matrix grid gives
+\cref{tab:schedule}: a single periodic \textbf{stabilized low-power cruise report} nearly
+doubles the separability of the HPT efficiency-vs-flow ambiguity ($6.2^{\circ} \to
+11.0^{\circ}$, $+79\,\%$); the best pair of additions reaches $12.7^{\circ}$. The cost is a
+procedure bulletin, not avionics. Equally important is what no schedule fixes:
+$\eta_{HPC}\!\sim\!\eta_{HPT}$ stays below $1.8^{\circ}$ everywhere in the envelope ---
+that pair is \emph{fundamental} for cockpit sensors, and the sensor-purchase conclusion of
+chapter 8 stands for it alone.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Marginal diagnosability value of adding one report condition to today's
+  schedule (cockpit sensors). Auto-generated from the ICM grid.}
+  \label{tab:schedule}
+  \input{tables/table_schedule}
+\end{table}
+
+\section{Learned MOPA: fusing physics projections over time}
+\label{sec:tomo-learner}
+
+The classical way to fuse a window is stacked weighted least squares --- valid only while
+health holds still, which in service it does not (chronic drift, washes). The architecture
+that works is neither classical stacking nor a raw neural network: a raw GRU fed deviation
+sequences failed outright (12\,\% isolation --- it must learn the entire inverse physics
+from a few hundred windows), while a GRU fed the \emph{per-flight regularized WLS
+projections} $\hat{\mathbf{x}}_t$ --- physics inversion first, learned temporal fusion
+second --- is data-efficient exactly where the classical method is brittle. Development
+also surfaced two reusable engineering facts, both now in the code: block-averaging inside
+the window (not subsampling) buys the full $\sqrt{n}$ noise reduction both methods deserve,
+and the drift-degradation signature of constant-health stacking appeared in development
+precisely as predicted.
+
+\section{Second freeze, second verdicts}
+\label{sec:tomo-verdicts}
+
+The confirmatory protocol was frozen a second time (\code{docs/prereg-v2.md}, tag
+\code{prereg-v2}: thresholds, pinned methods, development on a held-out slice of
+\emph{training} engines so validation stayed clean for conformal calibration and the test
+episodes stayed unseen). One pass over the 23 test episodes (\cref{tab:f7-verdicts}):
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{F7 pre-registered verdicts (single confirmatory pass). Auto-generated.}
+  \label{tab:f7-verdicts}
+  \input{tables/table_f7_verdicts}
+\end{table}
+
+\begin{itemize}
+  \item \textbf{H7.2$'$ confirmed, by a wide margin.} The learned fusion isolates at
+    0.65 against classical stacking's 0.17 on identical windows --- and the McNemar bound
+    holds under \emph{any} pairing of outcomes, so no replay of the test pass was needed.
+    Recall from chapter 8 that the best single-snapshot method managed 0.31: temporal
+    fusion of physics projections roughly doubles that too.
+  \item \textbf{H7.4$'$ confirmed.} Conformal isolation sets cover at 0.96 with median
+    sizes 2--3.5, and the fundamental pair receives systematically larger sets than the
+    rest: ambiguity is now a calibrated, physics-explained deliverable.
+  \item \textbf{H7.3 refuted as frozen --- discipline over narrative.} The drift-robustness
+    thresholds (classical must degrade $\geq 20$ pp, learner $\leq 10$ pp) were calibrated
+    on a 16-episode development sample and the test came out softer on both sides (17 and
+    13 pp). The qualitative pattern is exactly as hypothesized --- stacking collapses to
+    0.00 on long windows while the learner holds 0.52 --- but the registered claim is the
+    thresholds, and the thresholds failed. The lesson is itself transferable: freezing
+    quantitative margins from small development samples is how honest protocols get
+    refuted, and reporting that beats renegotiating it.
+\end{itemize}
+
+\section{What F7 adds to the adoption picture}
+
+Chapter 8's checklist gains two rows: \textbf{(6) redesign the report schedule before
+buying anything} --- one procedural report condition recovers most of what deliberate
+condition spread can offer; and \textbf{(7) when fusing windows, learn the fusion but keep
+the physics inversion} --- projections-then-GRU tripled classical stacking where raw
+learning failed. And one row hardens: for the truly fundamental ambiguities, neither
+schedules nor learning substitute for instrumentation.
