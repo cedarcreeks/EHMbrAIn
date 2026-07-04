@@ -75,3 +75,46 @@ u-scatter too narrow to help → that *negative* quantifies how much deliberate 
 diversity (e.g., requesting one derated takeoff per week) buys — an operational
 recommendation either way; (c) η_HPC~η_HPT stays unbreakable → already framed as the
 fundamental-ambiguity finding.
+
+
+---
+
+## WP7.0 + WP7.1 executed (2026-07-04): novelty memo and the honest pivot
+
+**Literature sweep.** Multi-point appears in ML work as a *training-data generation*
+device (feature-fusion cascade NN; dual-transformer spatiotemporal fusion), not as an
+identifiability instrument with drifting health. Conformal prediction sets exist for fault
+detection generically (risk-guaranteed prediction sets, arXiv:2508.01208; calibrated
+classifiers for launcher engines, arXiv:2507.13022) but not GPA-ambiguity-aware. The drift-
+during-fusion-window claim found no prior art. Claims stand, repositioned.
+
+**H7.1 strong form FAILED on realistic free scatter** (scripts/f7_observability.py,
+200 draws/window): rank recovers trivially (10/10 from K=2 flights — today's
+takeoff+cruise dual-report structure already spans the space), but signature angles
+saturate at ~1.4x (hpt.eta~hpt.flow plateaus at 8.7 deg vs 13.1 deg for the designed
+grid): ambient/derate scatter is too narrow. Recorded as the phase's load-bearing negative.
+
+**The pivot — report-schedule design (stronger than the original claim).** The 8.7->13.1
+gap is purchasable procedurally. Greedy design over the ICM grid, starting from today's
+schedule (takeoff+cruise):
+
+| Addition to the ACARS schedule | hpc.eta~hpt.eta | hpt.eta~hpt.flow |
+|---|---|---|
+| (baseline) | 1.33 deg | 6.16 deg |
+| + low-power stabilized cruise | 1.64 | **11.03 (+79 %)** |
+| + climb report | 1.36 | 7.33 |
+| + FL390 cruise | 1.41 | 8.04 |
+| best pair: low-power cruise + hot-day takeoff | 1.71 | **12.65** |
+
+New headline contribution: **the snapshot report schedule as an observability design
+variable** — selecting in-service report *trigger conditions* from influence-matrix
+geometry. One periodic stabilized low-power cruise report nearly doubles the separability
+of the HPT ambiguity at zero hardware cost. hpc.eta~hpt.eta is confirmed *fundamental*
+for cockpit sensors under any schedule in the envelope.
+
+**Reshaped hypotheses for prereg-v2** (learning phase):
+- H7.2': the u-aware sequence learner under the DESIGNED schedule beats snapshot-AI and
+  stacked-WLS on u-breakable episodes by >=15 pp (free-scatter arm reported alongside).
+- H7.3 (drift robustness) unchanged — now evaluated under both schedules.
+- H7.4' conformal sets with set size tracking the per-pair angle map (physics-explained
+  ambiguity signaling).
