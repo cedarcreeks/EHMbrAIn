@@ -281,8 +281,11 @@ selection, autoencoder separation, GRU countdown learning).
 
 This document and the repository are designed to be used together: every result chapter
 names the script that produced its evidence, and this section gives the complete replication
-path. Total cost on the reference machine: about \textbf{11 minutes} end to end
-(\cref{tab:compute}).
+path. \textbf{Reference machine for every wall-clock figure in this document}: an Apple M5
+desktop chip (10 cores, 16\,GB unified memory), with tensor training on its GPU through the
+torch MPS backend --- consumer hardware, deliberately. Total cost: about \textbf{11 minutes}
+end to end (\cref{tab:compute}; per-stage breakdown measured by
+\code{scripts/benchmark_pipeline.py}, norm N5).
 
 \paragraph{Setup (once).}
 \begin{enumerate}
@@ -337,9 +340,9 @@ register): torch-MPS training runs must execute in the \emph{foreground} on macO
   \input{tables/table_compute}
 \end{table}
 
-The entire evidence base of this document regenerates in about eleven minutes on a consumer
-desktop chip --- the quantitative form of transferability rule 4 (PLAN §0-bis): if it only
-ran on a cluster, it would not be adoptable.
+The entire evidence base of this document regenerates in 657 seconds --- about eleven
+minutes --- on the Apple M5 reference machine, GPU stages included. This is the quantitative
+form of transferability rule 4: if it only ran on a cluster, it would not be adoptable.
 
 \section{Comparison metrics}
 

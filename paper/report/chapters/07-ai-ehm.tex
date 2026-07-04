@@ -20,7 +20,9 @@ baseline, plus the takeoff EGT deviation. No extra sensors, no truth channels, n
 leakage (all windows end at the prediction time). Missing snapshots are forward-filled, as a
 monitoring unit holding its last valid report would. Training uses the train engines only;
 thresholds and conformal calibration use the validation engines; every number below comes
-from the 20 test engines. Torch models train on the Apple-silicon GPU (MPS backend, norm N1);
+from the 20 test engines. Torch models train on the Apple M5's GPU (MPS backend, norm N1) --- the full AI suite
+trains and evaluates in 27 seconds, the hybrid ablation (18 GRU trainings) in 104
+(\cref{tab:compute});
 tree models are scikit-learn's histogram gradient boosting.\footnote{XGBoost was evicted for
 an unglamorous reason recorded in the decision register: its bundled OpenMP runtime
 segfaults alongside torch-MPS on macOS. One runtime, no crash, same model family.}

@@ -28,7 +28,7 @@ where $z_0(u)$ is the healthy baseline and $\mathbf{H}(u)$ the influence coeffic
 both linearly interpolated between the ICM grid points that bracket the sampled operating
 condition (takeoff snapshots: in $\Delta T_{\mathrm{ISA}}$; cruise snapshots: in commanded N1).
 N1 itself carries zero deviation by construction --- it is the held power-setting parameter,
-not a health channel. The whole fleet generates in 37 seconds on all cores (one worker process
+not a health channel. The whole fleet generates in 40 seconds on all cores of the Apple M5 reference machine (one worker process
 per engine, norm N1), with per-engine deterministic random seeds so the output is reproducible
 regardless of process scheduling.
 
