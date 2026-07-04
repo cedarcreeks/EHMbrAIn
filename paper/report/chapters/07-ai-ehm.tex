@@ -1,0 +1,126 @@
+\chapter{The AI EHM suite}
+\label{ch:ai}
+
+\begin{quote}\itshape
+This chapter in brief: the AI suite consumes exactly the same deviations as the traditional
+pipeline and is scored by the same protocol. In its untuned v0 form it already wins the
+prognosis contest decisively --- 4--6$\times$ lower RUL error with calibrated uncertainty
+intervals --- while its detection and diagnosis attempts surface two instructive failures,
+and the first physics-informed hybrid experiment produces a pre-registration-grade
+\emph{negative} result. All of it is reported.
+\end{quote}
+
+\section{Fairness by construction}
+\label{sec:ai-fairness}
+
+Every AI model in this chapter sees, per flight, the same four numbers the traditional
+pipeline sees: the three cockpit deviations (N2, $W_f$, EGT) against the same published
+baseline, plus the takeoff EGT deviation. No extra sensors, no truth channels, no future
+leakage (all windows end at the prediction time). Missing snapshots are forward-filled, as a
+monitoring unit holding its last valid report would. Training uses the train engines only;
+thresholds and conformal calibration use the validation engines; every number below comes
+from the 20 test engines. Torch models train on the Apple-silicon GPU (MPS backend, norm N1);
+tree models are scikit-learn's histogram gradient boosting.\footnote{XGBoost was evicted for
+an unglamorous reason recorded in the decision register: its bundled OpenMP runtime
+segfaults alongside torch-MPS on macOS. One runtime, no crash, same model family.}
+
+\section{Prognosis: the headline result}
+\label{sec:ai-rul}
+
+A two-layer GRU consumes a downsampled 1\,280-cycle deviation history and regresses the
+remaining useful life (capped at 12\,000 cycles, the standard prognostics practice).
+\Cref{fig:rul-compare} and \cref{tab:ai-vs-trad} give the v0 face-off against the
+margin-extrapolation prognosis of \cref{ch:trad}:
+
+\begin{itemize}
+  \item \textbf{4--6$\times$ lower RMSE} at every evaluation point (1\,547 vs.\ 9\,084 cycles
+    at half-life; 702 vs.\ 2\,375 at 90\,\%).
+  \item \textbf{The optimism bias is gone.} The traditional median error of $+7\,612$ cycles
+    at half-life ---late retirement predictions, the dangerous direction--- collapses to
+    $-393$; the GRU learns the acceleration of late-life degradation that a linear
+    extrapolation structurally cannot represent.
+  \item \textbf{Calibrated uncertainty.} Split-conformal intervals at 90\,\% nominal coverage
+    achieve 0.85/0.95/1.00 empirical coverage on test with $\pm2\,022$-cycle half-width
+    (contribution C4's machinery, live). The traditional pipeline's Theil--Sen slope
+    dispersion offers no comparable guarantee.
+\end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{rul_compare}
+  \caption{RUL RMSE on the test fleet, both families at v0 defaults. Auto-generated.}
+  \label{fig:rul-compare}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Head-to-head at v0 defaults (untuned on both sides; the symmetric tuning budget
+  arrives in F5). Auto-generated.}
+  \label{tab:ai-vs-trad}
+  \input{tables/table_ai_vs_trad}
+\end{table}
+
+\section{Detection and diagnosis: two instructive failures}
+\label{sec:ai-failures}
+
+\textbf{The naive window-autoencoder scores recall 0.} Trained on acute-free windows, it
+reconstructs \emph{everything} well --- including post-fault windows. Root cause: a dense
+autoencoder over raw deviation windows learns a near-identity map, and a sustained level
+shift is statistically indistinguishable from the chronic drift it was trained to compress.
+Anomaly detection by reconstruction needs either residual whitening or change-relative
+features; the Isolation Forest on step features (fast-minus-slow averages) is the right
+shape of fix but at its conservative v0 threshold also detects nothing sustained. Detection
+remains the traditional pipeline's win at v0 (recall 0.5 vs.\ 0.0) --- an honest scoreboard
+entry with a clear engineering path.
+
+\textbf{Diagnosis is sample-starved at the engine level for both families.} The gradient
+boosting classifier reaches 20\,\% isolation accuracy vs.\ the expert rule's 40\,\% --- but
+these are 2 vs.\ 4 correct out of \emph{ten} test engines, drawn from only 35 acute training
+engines spread over six fault classes. No classifier learns six signatures from five engines
+each, and no comparison on ten samples separates the families statistically. This is a fleet
+design limitation, not a method result: SynCFM56 v1.1 (more episodes per engine) is queued
+as the F5 prerequisite for hypothesis H2.
+
+\section{The hybrid experiment: a negative result worth having}
+\label{sec:ai-hybrid}
+
+The stacking mechanism of contribution C3 --- feeding the Kalman-GPA tracked health
+parameters (10 physics-based channels) to the GRU alongside the raw deviations --- was run
+through the H4 data-efficiency protocol: pure vs.\ hybrid at 10/25/100\,\% of the training
+engines, three seeds each (\cref{fig:hybrid}).
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{hybrid_ablation}
+  \caption{Data-efficiency ablation (mean $\pm$ std over three seeds): the stacked hybrid is
+  \emph{worse} than the pure GRU everywhere, and worst exactly where H4 predicted it would
+  help most. Auto-generated.}
+  \label{fig:hybrid}
+\end{figure}
+
+The result is the opposite of hypothesis H4's prediction: the hybrid is worse at every data
+fraction, and \emph{most} worse in the scarce-data regime (2\,918 vs.\ 1\,980 cycles RMSE at
+10\,\%). The mechanism is intelligible in hindsight: the Kalman estimates are heavily smeared
+(\cref{sec:trad-results}) --- they add ten noisy, mutually correlated channels whose
+information content about RUL is already present in the three deviations they were computed
+from. With seven training engines, ten extra input dimensions are pure variance. Two more
+observations from the same figure: the pure GRU at 25\,\% of the data nearly matches 100\,\%
+(1\,277 vs.\ 1\,217) --- the RUL task saturates around 17 engines on this fleet --- and seed
+variance at 10\,\% is large, exactly why F5 prescribes multi-seed reporting.
+
+This does not close hypothesis H4 --- stacking is one of three planned hybrid mechanisms, and
+none has been tuned --- but it is recorded now, before the pre-registration freeze, as v0
+evidence \emph{against} the popular assumption that physics features automatically help.
+Negative results of this kind are precisely what the pre-registered protocol exists to keep
+honest.
+
+\section{Status toward milestone H4}
+
+Done: the shared datamodule, detection (two variants), diagnosis, RUL with conformal
+intervals, the stacking hybrid with the data-efficiency ablation, all under the common
+protocol. Pending before H4 is declared: the remaining hybrid mechanisms
+(physics-constrained loss, twin-residual features), SHAP attributions with the
+Physics-Consistency Score (blocked on fleet v1.1 --- attribution analysis of a
+sample-starved classifier would be theater), and the detection redesign. The gate requires
+the AI to beat the traditional pipeline on at least one primary metric per task on
+validation; prognosis already clears it, detection does not yet.

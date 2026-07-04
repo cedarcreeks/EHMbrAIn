@@ -86,6 +86,10 @@ both already resolved (noted below).
   Assumed nominal margin & 85\,°C & [A] & fleet nominal; per-engine estimation is queued as a
     pipeline improvement in F5 \\
   Statistical tests & Wilcoxon, Holm, BCa & [C] & pre-registered (\cref{sec:safeguards}) \\
+  RUL cap (AI) & 12\,000 cy & [C] & piecewise-linear RUL target, standard prognostics practice; same cap both families in F5 \\
+  GRU/AE architectures \& gains & \cref{ch:ai} & [T] & engineering defaults; swept in F5 \\
+  Gradient-boosting impl. & sklearn HistGB & [D] & XGBoost's second OpenMP runtime segfaults beside torch-MPS on macOS; same model family \\
+  Conformal level & 90\,\% & [C] & matches hypothesis H5's coverage target \\
   $\alpha$--$\lambda$ settings & $\alpha{=}20\,\%$, $\lambda{=}\{.5,.7,.9\}$ & [C] & common
     prognostics practice \\
   \bottomrule

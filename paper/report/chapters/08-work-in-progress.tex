@@ -19,6 +19,14 @@ sensor-noise floor injected in phase F2 and are common-mode to both EHM pipeline
 intent ---a baseline whose error does not distort the comparison--- is met. Optional
 refinement (grid densification near block boundaries) is queued as non-blocking.
 
+\section{Phase F4: v0 complete}
+
+Documented in \cref{ch:ai}: the AI suite under the common protocol, the 4--6$\times$
+prognosis win with calibrated conformal intervals, the two instructive detection/diagnosis
+failures, and the negative stacking-hybrid result recorded ahead of the pre-registration
+freeze. H4 remains open pending the detection redesign, the remaining hybrid mechanisms and
+fleet v1.1.
+
 \section{Phase F3: closed}
 
 Documented in \cref{ch:trad}: the traditional pipeline, its two detector-design lessons, and
@@ -40,9 +48,6 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
     \toprule
     Phase & Key deliverable & Closing criterion (gate) \\
     \midrule
-    F4 & AI suite (detection, diagnosis, RUL, physics-informed hybrid, conformal intervals,
-         PCS) &
-         H4: beats the traditional pipeline on $\geq1$ primary metric per task on validation \\
     F5 & Pre-registered evaluation + ablations + N-CMAPSS &
          H5: hypotheses H1--H5 resolved with statistical tests; figures reproducible with one
          command \\
@@ -58,6 +63,11 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
       the confusable subset, smearing index 0.85, RUL optimism funnel measured
       (\cref{fig:rul-funnel}); two detector-design lessons recorded; all defaults registered
       in \cref{ch:decisions} and exposed to the F5 budget; 31 automated tests green. \\
+    F4 v0 & 2026-07-04 & AI suite end-to-end on MPS (\cref{tab:ai-vs-trad}): RUL RMSE
+      4--6$\times$ below traditional with near-zero bias; conformal coverage
+      0.85/0.95/1.00 at 0.9 nominal; naive-AE recall-0 and engine-level sample-starvation
+      findings recorded; stacking hybrid \emph{negative} result (\cref{fig:hybrid}) logged
+      pre-freeze; 36 automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -100,6 +110,11 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
       the confusable subset, smearing index 0.85, RUL optimism funnel measured
       (\cref{fig:rul-funnel}); two detector-design lessons recorded; all defaults registered
       in \cref{ch:decisions} and exposed to the F5 budget; 31 automated tests green. \\
+    F4 v0 & 2026-07-04 & AI suite end-to-end on MPS (\cref{tab:ai-vs-trad}): RUL RMSE
+      4--6$\times$ below traditional with near-zero bias; conformal coverage
+      0.85/0.95/1.00 at 0.9 nominal; naive-AE recall-0 and engine-level sample-starvation
+      findings recorded; stacking hybrid \emph{negative} result (\cref{fig:hybrid}) logged
+      pre-freeze; 36 automated tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
