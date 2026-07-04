@@ -53,6 +53,30 @@ cd paper/report && latexmk -pdf -outdir=build report.tex
 
 TeXstudio users: set the bibliography tool to Biber (Options → Configure → Build).
 
+## Replicate everything (~11 min on an Apple M5)
+
+```bash
+uv sync && uv run pytest                          # environment + 36 gate tests
+uv run python scripts/run_design_point.py         # F1: design point
+uv run python scripts/run_anchors.py              # F1: calibration vs TCDS/EEDB
+uv run python scripts/make_decks.py               # F1: baseline decks
+uv run python scripts/make_corrected_baseline.py  # F1: corrected-space baseline
+uv run python scripts/make_icm.py                 # F1: ICM grid + observability
+uv run python scripts/make_fleet.py               # F2: SynCFM56 fleet
+uv run python scripts/audit_dataset.py            # F2: difficulty + realism gates
+uv run python scripts/audit_nonlinearity.py       # F2: linearization audit
+uv run python scripts/run_trad.py                 # F3: traditional EHM metrics
+uv run python scripts/run_ai.py                   # F4: AI suite (MPS; run in FOREGROUND)
+uv run python scripts/run_hybrid.py               # F4: hybrid ablation (foreground)
+uv run python scripts/run_pcs.py                  # F4: Physics-Consistency Score
+uv run python scripts/benchmark_pipeline.py       # norm N5: compute times
+uv run python scripts/make_report_assets.py       # regenerate ALL report evidence
+```
+
+macOS notes: torch-MPS runs must be foreground (backgrounded runs segfault);
+XGBoost is intentionally absent (OpenMP clash with torch-MPS — sklearn HistGB instead).
+Full mapping of scripts to report tables/figures: report ch. 3, "Replication guide".
+
 ## Status
 
 - [x] **H0** — environment runs an end-to-end pyCycle cycle; repo skeleton in place

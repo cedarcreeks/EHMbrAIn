@@ -276,6 +276,71 @@ step-not-trend, gap-detector ramp capture, WLS recovery, Kalman observation-spac
 convergence, Theil--Sen); and AI primitives (feature fill, window alignment, device
 selection, autoencoder separation, GRU countdown learning).
 
+\section{Replication guide}
+\label{sec:replication}
+
+This document and the repository are designed to be used together: every result chapter
+names the script that produced its evidence, and this section gives the complete replication
+path. Total cost on the reference machine: about \textbf{11 minutes} end to end
+(\cref{tab:compute}).
+
+\paragraph{Setup (once).}
+\begin{enumerate}
+  \item Clone \code{github.com/cedarcreeks/EHMbrAIn} and install
+    \code{uv} (the Python package manager).
+  \item \code{uv sync} --- reproduces the exact pinned environment (Python 3.11,
+    pyCycle 4.4, torch with MPS).
+  \item \code{uv run pytest} --- 36 tests must pass before anything else; they gate every
+    claim in this document.
+\end{enumerate}
+
+\paragraph{Pipeline (in order).} Each command writes versioned artifacts under
+\code{data/processed/}; the mapping to report evidence is:
+
+\begin{center}\footnotesize
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}}
+  \toprule
+  Command (\code{uv run python \ldots}) & Produces & Feeds \\
+  \midrule
+  \code{scripts/run_design_point.py} & design-point check & \cref{tab:design,tab:stations} \\
+  \code{scripts/run_anchors.py} & calibration verdicts & \cref{tab:anchors,fig:anchor-errors} \\
+  \code{scripts/make_decks.py} & baseline decks + LOO & \cref{tab:deck-loo} \\
+  \code{scripts/make_corrected_baseline.py} & corrected-space exponents & \cref{tab:corrected} \\
+  \code{scripts/make_icm.py} & ICM grid + observability & \cref{fig:icm,tab:confusable,tab:icm-grid} \\
+  \code{scripts/cea_crosscheck.py} & thermo cross-check & \cref{tab:cea} \\
+  \code{scripts/make_fleet.py} & SynCFM56 fleet & \cref{tab:fleet,fig:egtm,fig:trajectory} \\
+  \code{scripts/audit_dataset.py} & difficulty + realism audits & \cref{tab:difficulty-audit} \\
+  \code{scripts/audit_nonlinearity.py} & linearization audit & \cref{tab:nonlin} \\
+  \code{scripts/run_trad.py} & traditional metrics & \cref{tab:trad,fig:kf-smearing,fig:rul-funnel} \\
+  \code{scripts/run_ai.py} & AI metrics + conformal & \cref{tab:ai-vs-trad,fig:rul-compare} \\
+  \code{scripts/run_hybrid.py} & hybrid ablation & \cref{fig:hybrid} \\
+  \code{scripts/run_pcs.py} & PCS attribution study & \cref{sec:pcs} \\
+  \code{scripts/benchmark_pipeline.py} & compute times (norm N5) & \cref{tab:compute} \\
+  \code{scripts/make_report_assets.py} & \emph{every} figure and table above & this document \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Two platform notes a replicator needs (both learned the hard way, both in the decision
+register): torch-MPS training runs must execute in the \emph{foreground} on macOS
+(backgrounded runs segfault), and XGBoost cannot coexist with torch-MPS in one process
+(scikit-learn's histogram gradient boosting is used instead).
+
+\subsection{Compute cost on the reference machine}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Wall-clock time per stage on the reference desktop machine (Apple M5, 10 cores,
+  16\,GB, torch MPS backend). Cold-start subprocess timings --- what a replicator actually
+  pays. Auto-generated per norm N5.}
+  \label{tab:compute}
+  \input{tables/table_compute}
+\end{table}
+
+The entire evidence base of this document regenerates in about eleven minutes on a consumer
+desktop chip --- the quantitative form of transferability rule 4 (PLAN §0-bis): if it only
+ran on a cluster, it would not be adoptable.
+
 \section{Comparison metrics}
 
 Both families are scored with identical metrics. For detection: lead time (how many flights
