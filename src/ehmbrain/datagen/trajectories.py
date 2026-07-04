@@ -32,7 +32,8 @@ class EngineConfig:
     fod_step_pct: np.ndarray     # eta step per event (negative)
     drifts: dict = field(default_factory=dict)  # sensor -> (onset_cycle, rate_per_cycle)
     egtm_new_C: float = 85.0
-    acute: dict | None = None    # {'param', 'magnitude_pct', 'onset', 'ramp_cycles'}
+    acute: list = field(default_factory=list)  # episodes: {'param', 'magnitude_pct',
+                                               #  'onset_frac', 'ramp_cycles', ['onset']}
 
 
 def sample_engine_config(engine_id, catalog, max_cycles, rng):
@@ -69,18 +70,21 @@ def sample_engine_config(engine_id, catalog, max_cycles, rng):
     var = catalog['engine_variability']
     egtm = float(rng.normal(var['egtm_new_mean_C'], var['egtm_new_sigma_C']))
 
-    acute = None
+    acute = []
     af = catalog.get('acute_faults')
-    if af and rng.uniform() < af['prob_per_engine']:
-        param = str(rng.choice(list(af['targets'])))
-        lo, hi = af['targets'][param]
-        # onset stored as a fraction of ACTUAL life; the fleet builder resolves
-        # it in a second pass once the chronic-only life is known (an absolute
-        # draw against max_cycles would push most episodes beyond end of life).
-        acute = {'param': param,
-                 'magnitude_pct': float(rng.uniform(lo, hi)),
-                 'onset_frac': float(rng.uniform(*af['onset_frac_of_life'])),
-                 'ramp_cycles': float(rng.uniform(*af['ramp_cycles']))}
+    if af:
+        # v1.1: chain of conditional episode probabilities; onsets stored as
+        # fractions of ACTUAL life, resolved by the fleet builder second pass.
+        for p_ep in af['episode_probs']:
+            if rng.uniform() >= p_ep:
+                break
+            param = str(rng.choice(list(af['targets'])))
+            lo, hi = af['targets'][param]
+            acute.append({'param': param,
+                          'magnitude_pct': float(rng.uniform(lo, hi)),
+                          'onset_frac': float(rng.uniform(*af['onset_frac_of_life'])),
+                          'ramp_cycles': float(rng.uniform(*af['ramp_cycles']))})
+        acute.sort(key=lambda a: a['onset_frac'])
 
     return EngineConfig(engine_id, mults, washes, recovery, fod_cycles,
                         fod_comp, fod_step, drifts, egtm, acute)
@@ -177,13 +181,14 @@ def health_series(cfg, catalog, n_cycles):
             x_fod[i:, PARAM_INDEX[f'{comp}.eta']] += step
     contributions['fod'] = x_fod
 
-    # Acute fault episode: fast ramp on one health parameter, then sustained.
-    # Skipped until the fleet builder has resolved 'onset' (second pass).
+    # Acute fault episodes: fast ramp on one health parameter, then sustained.
+    # Episodes without a resolved 'onset' (first pass) are skipped.
     x_acute = np.zeros((n_cycles, N_PARAMS))
-    if cfg.acute is not None and 'onset' in cfg.acute:
-        a = cfg.acute
+    for a in cfg.acute:
+        if 'onset' not in a:
+            continue
         ramp = np.clip((cycles - a['onset']) / a['ramp_cycles'], 0.0, 1.0)
-        x_acute[:, PARAM_INDEX[a['param']]] = a['magnitude_pct'] * ramp
+        x_acute[:, PARAM_INDEX[a['param']]] += a['magnitude_pct'] * ramp
     contributions['acute'] = x_acute
 
     x = sum(contributions.values())
@@ -194,10 +199,10 @@ def health_series(cfg, catalog, n_cycles):
                   'step_eta_pct': float(s)}
                  for c, comp, s in zip(cfg.fod_cycles, cfg.fod_component,
                                        cfg.fod_step_pct) if c < n_cycles])
-    if (cfg.acute is not None and 'onset' in cfg.acute
-            and cfg.acute['onset'] < n_cycles):
-        events.append({'type': 'acute', 'cycle': cfg.acute['onset'],
-                       'param': cfg.acute['param'],
-                       'magnitude_pct': cfg.acute['magnitude_pct']})
+    for a in cfg.acute:
+        if 'onset' in a and a['onset'] < n_cycles:
+            events.append({'type': 'acute', 'cycle': a['onset'],
+                           'param': a['param'],
+                           'magnitude_pct': a['magnitude_pct']})
     events.sort(key=lambda e: e['cycle'])
     return x, contributions, events

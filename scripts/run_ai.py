@@ -95,51 +95,50 @@ def detection_task(fleet, mu, sd):
     return det, float(thr)
 
 
-def detection_task_if(fleet, mu, sd, rng):
-    """Isolation Forest on step features. The naive window-AE scores recall 0
-    (it learns a near-identity map and reconstructs post-ramp windows
-    perfectly - recorded as a finding); step features expose exactly the
-    change the acute episodes make."""
-    from sklearn.ensemble import IsolationForest
+def detection_task_maha(fleet, mu, sd, rng):
+    """Whitened-residual detector: Mahalanobis distance of step features
+    against their healthy distribution (Ledoit-Wolf covariance) — the fix the
+    naive-AE finding called for. Alarm = sustained exceedance of a
+    val-calibrated threshold."""
+    from sklearn.covariance import LedoitWolf
     Xtr = []
     for v in fleet.values():
         if v['split'] != 'train':
             continue
         Fn = norm_f(v['F'], mu, sd)
-        hi = int(v['acute_onset']) if v['acute_param'] else v['life']
+        hi = int(v['episodes'][0][0]) if v['episodes'] else v['life']
         for t in rng.integers(700, max(701, hi - 50), size=60):
             Xtr.append(step_features(Fn, int(t)))
-    forest = IsolationForest(n_estimators=300, contamination='auto',
-                             random_state=0).fit(np.array(Xtr))
+    lw = LedoitWolf().fit(np.array(Xtr))
+    prec = lw.precision_
+    mean = lw.location_
 
-    def first_alarm(v, k=8, stride=10):
+    def scores_for(v, stride=10):
         Fn = norm_f(v['F'], mu, sd)
         ts = np.arange(700, v['life'], stride)
-        scores = -forest.score_samples(np.stack([step_features(Fn, int(t))
-                                                 for t in ts]))
-        exceed = scores > first_alarm.thr
+        X = np.stack([step_features(Fn, int(t)) for t in ts]) - mean
+        return ts, np.einsum('ij,jk,ik->i', X, prec, X)
+
+    val_scores = []
+    for v in fleet.values():
+        if v['split'] == 'val' and not v['episodes']:
+            val_scores.append(scores_for(v)[1])
+    thr = float(np.percentile(np.concatenate(val_scores), 99.8))
+
+    def first_alarm(v, k=6):
+        ts, sc = scores_for(v)
         run = 0
-        for i, ex in enumerate(exceed):
+        for i, ex in enumerate(sc > thr):
             run = run + 1 if ex else 0
             if run >= k:
                 return int(ts[i])
         return None
 
-    # threshold: val clean engines, worst score seen + margin
-    val_scores = []
-    for v in fleet.values():
-        if v['split'] == 'val' and not v['acute_param']:
-            Fn = norm_f(v['F'], mu, sd)
-            ts = np.arange(700, v['life'], 10)
-            val_scores.append(-forest.score_samples(
-                np.stack([step_features(Fn, int(t)) for t in ts])))
-    first_alarm.thr = float(np.percentile(np.concatenate(val_scores), 99.8))
-
     det = {}
     for eid, v in fleet.items():
         if v['split'] == 'test':
             det[eid] = first_alarm(v)
-    return det, first_alarm.thr
+    return det, thr
 
 
 # --------------------------------------------------------------------------
@@ -171,14 +170,18 @@ def diagnosis_task(fleet, mu, sd, rng):
         if v['split'] not in ('train', 'val'):
             continue
         Fn = norm_f(v['F'], mu, sd)
-        if v['acute_param']:
-            onset = int(v['acute_onset'])
-            lo = min(onset + 500, v['life'] - 2)
-            for t in rng.integers(lo, v['life'], size=40):
-                Xtr.append(diag_features(Fn, int(t)))
-                ytr.append(CLASSES.index(f"acute_{v['acute_param']}"))
-            if onset - 100 > 900:
-                for t in rng.integers(900, onset - 100, size=15):
+        eps = v['episodes']
+        if eps:
+            bounds = [int(o) for o, _ in eps] + [v['life']]
+            for k, (onset, param) in enumerate(eps):
+                lo = min(int(onset) + 500, bounds[k + 1] - 2)
+                if lo >= bounds[k + 1]:
+                    continue
+                for t in rng.integers(lo, bounds[k + 1], size=25):
+                    Xtr.append(diag_features(Fn, int(t)))
+                    ytr.append(CLASSES.index(f'acute_{param}'))
+            if bounds[0] - 100 > 900:
+                for t in rng.integers(900, bounds[0] - 100, size=15):
                     Xtr.append(diag_features(Fn, int(t)))
                     ytr.append(0)
         else:
@@ -190,25 +193,28 @@ def diagnosis_task(fleet, mu, sd, rng):
                                          class_weight='balanced')
     clf.fit(np.array(Xtr), np.array(ytr))
 
-    correct = confus_ok = n_conf = n_acute = 0
+    correct = confus_ok = n_conf = n_ep = 0
     for v in fleet.values():
-        if v['split'] != 'test' or not v['acute_param']:
+        if v['split'] != 'test' or not v['episodes']:
             continue
-        n_acute += 1
-        t = min(v['life'] - 1, int(v['acute_onset']) + 500)
-        pred = CLASSES[int(clf.predict(diag_features(
-            norm_f(v['F'], mu, sd), t)[None])[0])]
-        truth = f"acute_{v['acute_param']}"
-        confusable = v['acute_param'] in ('hpc.eta', 'hpt.eta', 'hpt.flow')
-        if pred == truth:
-            correct += 1
+        bounds = [int(o) for o, _ in v['episodes']] + [v['life']]
+        for k, (onset, param) in enumerate(v['episodes']):
+            t = min(bounds[k + 1] - 1, v['life'] - 1, int(onset) + 500)
+            if t <= int(onset) + 100:
+                continue
+            n_ep += 1
+            pred = CLASSES[int(clf.predict(diag_features(
+                norm_f(v['F'], mu, sd), t)[None])[0])]
+            confusable = param in ('hpc.eta', 'hpt.eta', 'hpt.flow')
+            if pred == f'acute_{param}':
+                correct += 1
+                if confusable:
+                    confus_ok += 1
             if confusable:
-                confus_ok += 1
-        if confusable:
-            n_conf += 1
-    return {'accuracy': correct / n_acute if n_acute else None,
+                n_conf += 1
+    return {'accuracy': correct / n_ep if n_ep else None,
             'confusable_accuracy': confus_ok / n_conf if n_conf else None,
-            'n_confusable': n_conf, 'n_acute_test': n_acute}
+            'n_confusable': n_conf, 'n_episodes_test': n_ep}
 
 
 # --------------------------------------------------------------------------
@@ -295,14 +301,14 @@ def main():
 
     det_ae, thr_ae = detection_task(fleet, mu, sd)
     detection_ae = aggregate_detection(fleet, det_ae)
-    det_if, thr_if = detection_task_if(fleet, mu, sd, rng)
-    detection = aggregate_detection(fleet, det_if)
+    det_m, thr_m = detection_task_maha(fleet, mu, sd, rng)
+    detection = aggregate_detection(fleet, det_m)
     diagnosis = diagnosis_task(fleet, mu, sd, rng)
     rul = rul_task(fleet, mu, sd, rng)
 
     metrics = {'detection': detection, 'detection_naive_ae': detection_ae,
                'diagnosis': diagnosis, 'rul': rul,
-               'ae_threshold': thr_ae, 'if_threshold': thr_if,
+               'ae_threshold': thr_ae, 'maha_threshold': thr_m,
                'device': str(device())}
     (OUT / 'ai_metrics.json').write_text(json.dumps(metrics, indent=2))
     print(json.dumps(metrics, indent=2))

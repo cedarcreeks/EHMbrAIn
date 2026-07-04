@@ -42,14 +42,23 @@ def generate_engine(engine_id, catalog, H, channels, baseline, rng):
     max_cycles = catalog['fleet']['max_cycles']
     cfg = sample_engine_config(engine_id, catalog, max_cycles, rng)
 
-    # Two passes: the acute-episode onset is a fraction of the engine's actual
-    # life, which is only known after a chronic-only pass.
-    if cfg.acute is not None:
-        x0, _, _ = health_series(cfg, catalog, max_cycles)   # acute inactive (no onset)
+    # Two passes: episode onsets are fractions of the engine's actual life,
+    # which is only known after a chronic-only pass. v1.1: multiple episodes,
+    # separated by at least min_gap cycles (violators dropped).
+    if cfg.acute:
+        x0, _, _ = health_series(cfg, catalog, max_cycles)   # acute inactive (no onsets)
         egtm0 = egt_margin_series(x0, H, channels, baseline, cfg.egtm_new_C)
         below0 = np.nonzero(egtm0 <= 0.0)[0]
         prov_life = int(below0[0]) + 1 if len(below0) else max_cycles
-        cfg.acute['onset'] = cfg.acute['onset_frac'] * prov_life
+        min_gap = catalog['acute_faults'].get('min_gap_cycles', 2500)
+        kept, last = [], -1e9
+        for a in cfg.acute:
+            onset = a['onset_frac'] * prov_life
+            if onset - last >= min_gap:
+                a['onset'] = onset
+                kept.append(a)
+                last = onset
+        cfg.acute = kept
 
     x, contributions, events = health_series(cfg, catalog, max_cycles)
     egtm = egt_margin_series(x, H, channels, baseline, cfg.egtm_new_C)

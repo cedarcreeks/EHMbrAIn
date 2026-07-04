@@ -75,16 +75,21 @@ and by the ICM geometry, are now measurements:
 \end{table}
 
 \begin{description}
-  \item[Detection is fast but partial.] Detected episodes alarm within $\sim$100 cycles
-    (against ramps of 50--500), but recall is 0.5: the missed episodes are dominated by the
-    weak-signature faults ($\Gamma_{\mathrm{HPT}}$ moves EGT by only $+0.11$\,\% per percent
-    --- half a noise standard deviation) and by drift-contaminated engines.
-  \item[Isolation collapses exactly where the ICM said it would.] Overall isolation is
-    40\,\%; on the confusable subset it is 0\,\%. \Cref{fig:kf-smearing} shows the mechanism
-    live: the Kalman tracker follows the \emph{measurements} faithfully but splits the acute
-    step between the faulted parameter and its 1.3$^{\circ}$ partner --- the smearing index
-    says 85\,\% of the estimated magnitude lands on healthy components. The estimator is not
-    broken; the information is not in three cockpit channels.
+  \item[Detection is partial and often late.] On the subtler v1.1 faults, recall is 0.44
+    with a median delay of $\sim$4\,600 cycles --- many episodes are caught only when their
+    sustained offset compounds with chronic wear. Missed episodes concentrate in the
+    weak-signature faults ($\Gamma_{\mathrm{HPT}}$ moves EGT by only $+0.11$\,\% per
+    percent --- half a noise standard deviation) and drift-contaminated engines. One false
+    alarm on four clean test engines.
+  \item[Isolation struggles exactly where the ICM said it would.] Under the v1.1
+    per-episode oracle-timed protocol (both families are asked the isolation question at
+    onset$+500$; 23 test episodes), the expert rule reaches 30\,\% overall and 31\,\% on
+    the confusable subset --- against a 1-in-7 chance level, informative but weak.
+    \Cref{fig:kf-smearing} shows the mechanism live: the Kalman tracker follows the
+    \emph{measurements} faithfully but splits an acute step between the faulted parameter
+    and its 1.3$^{\circ}$ partner --- the smearing index says 89\,\% of the estimated
+    magnitude lands on healthy components. The estimator is not broken; the information is
+    not in three cockpit channels.
   \item[Margin extrapolation is optimistic early.] \Cref{fig:rul-funnel}: at half-life the
     median RUL error is $+7\,600$ cycles, shrinking to $+1\,900$ at 90\,\% of life. Linear
     extrapolation under accelerating degradation is systematically late to predict retirement

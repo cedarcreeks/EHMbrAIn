@@ -127,12 +127,14 @@ def engine_snapshots(engine, contributions, catalog, rng):
                for i in range(life)]
     df['label_chronic'] = chronic
     # Isolation label: during an acute episode the target is the faulted
-    # health parameter (the H2 task); otherwise the chronic dominant mechanism.
-    if cfg.acute is not None and cfg.acute['onset'] < life:
-        active = df.cycle.to_numpy() >= cfg.acute['onset']
-        df['label'] = np.where(active, 'acute_' + cfg.acute['param'], chronic)
-    else:
-        df['label'] = chronic
+    # health parameter (the H2 task); the NEWEST episode wins while several
+    # sustained faults overlap. Otherwise the chronic dominant mechanism.
+    label = np.array(chronic, dtype=object)
+    cyc = df.cycle.to_numpy()
+    for a in sorted([a for a in cfg.acute if 'onset' in a and a['onset'] < life],
+                    key=lambda a: a['onset']):
+        label[cyc >= a['onset']] = 'acute_' + a['param']
+    df['label'] = label
     drift_ch = next(iter(cfg.drifts), '')
     df['drift_channel'] = drift_ch
     if drift_ch:

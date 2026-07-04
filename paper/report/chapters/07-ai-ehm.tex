@@ -33,16 +33,17 @@ remaining useful life (capped at 12\,000 cycles, the standard prognostics practi
 margin-extrapolation prognosis of \cref{ch:trad}:
 
 \begin{itemize}
-  \item \textbf{4--6$\times$ lower RMSE} at every evaluation point (1\,547 vs.\ 9\,084 cycles
-    at half-life; 702 vs.\ 2\,375 at 90\,\%).
-  \item \textbf{The optimism bias is gone.} The traditional median error of $+7\,612$ cycles
-    at half-life ---late retirement predictions, the dangerous direction--- collapses to
-    $-393$; the GRU learns the acceleration of late-life degradation that a linear
+  \item \textbf{Several-fold lower RMSE} at every evaluation point (\cref{tab:ai-vs-trad};
+    on fleet v1.1: 1\,678 cycles at half-life and 842 at 90\,\% against the traditional
+    pipeline's thousands).
+  \item \textbf{The optimism bias is gone.} The traditional median error of thousands of
+    cycles at half-life ---late retirement predictions, the dangerous direction--- collapses
+    to near zero; the GRU learns the acceleration of late-life degradation that a linear
     extrapolation structurally cannot represent.
-  \item \textbf{Calibrated uncertainty.} Split-conformal intervals at 90\,\% nominal coverage
-    achieve 0.85/0.95/1.00 empirical coverage on test with $\pm2\,022$-cycle half-width
-    (contribution C4's machinery, live). The traditional pipeline's Theil--Sen slope
-    dispersion offers no comparable guarantee.
+  \item \textbf{Calibrated uncertainty.} Split-conformal intervals at 90\,\% nominal
+    coverage achieve 0.80/0.95/1.00 empirical coverage on test with $\pm2\,365$-cycle
+    half-width (contribution C4's machinery, live). The traditional pipeline's Theil--Sen
+    slope dispersion offers no comparable guarantee.
 \end{itemize}
 
 \begin{figure}[htbp]
@@ -68,18 +69,19 @@ reconstructs \emph{everything} well --- including post-fault windows. Root cause
 autoencoder over raw deviation windows learns a near-identity map, and a sustained level
 shift is statistically indistinguishable from the chronic drift it was trained to compress.
 Anomaly detection by reconstruction needs either residual whitening or change-relative
-features; the Isolation Forest on step features (fast-minus-slow averages) is the right
-shape of fix but at its conservative v0 threshold also detects nothing sustained. Detection
-remains the traditional pipeline's win at v0 (recall 0.5 vs.\ 0.0) --- an honest scoreboard
-entry with a clear engineering path.
+features. The whitened-residual detector built in response (Mahalanobis distance of step
+features under a Ledoit--Wolf covariance) improves on the AE but still reaches only 0.06
+recall at its conservative validation threshold on the subtler v1.1 faults. Detection
+remains the traditional pipeline's win (0.44 vs.\ 0.06) --- an honest scoreboard entry with
+a clear engineering path for the F5 tuning round.
 
-\textbf{Diagnosis is sample-starved at the engine level for both families.} The gradient
-boosting classifier reaches 20\,\% isolation accuracy vs.\ the expert rule's 40\,\% --- but
-these are 2 vs.\ 4 correct out of \emph{ten} test engines, drawn from only 35 acute training
-engines spread over six fault classes. No classifier learns six signatures from five engines
-each, and no comparison on ten samples separates the families statistically. This is a fleet
-design limitation, not a method result: SynCFM56 v1.1 (more episodes per engine) is queued
-as the F5 prerequisite for hypothesis H2.
+\textbf{Diagnosis remains the traditional rule's win on v1.1.} With the sample starvation
+relieved (23 oracle-timed test episodes, \cref{sec:fleet-v11}), the gradient-boosting
+classifier reaches 13\,\% isolation accuracy against the ICM signature rule's 30\,\% ---
+the subtler v1.1 magnitudes hurt the data-driven learner more than the physics-based rule,
+which encodes the fault directions it should look for. Together with detection, this leaves
+the v0/v1.1 scoreboard genuinely split: traditional wins the event tasks, AI wins prognosis
+--- a far more credible starting point for the F5 tuned comparison than a clean sweep.
 
 \section{The hybrid experiment: a negative result worth having}
 \label{sec:ai-hybrid}
@@ -99,14 +101,15 @@ engines, three seeds each (\cref{fig:hybrid}).
 \end{figure}
 
 The result is the opposite of hypothesis H4's prediction: the hybrid is worse at every data
-fraction, and \emph{most} worse in the scarce-data regime (2\,918 vs.\ 1\,980 cycles RMSE at
-10\,\%). The mechanism is intelligible in hindsight: the Kalman estimates are heavily smeared
+fraction, and \emph{most} worse in the scarce-data regime (2\,852 vs.\ 1\,902 cycles RMSE
+at 10\,\% on fleet v1.1; the same pattern held on v1.0 --- the negative result replicates
+across dataset versions). The mechanism is intelligible in hindsight: the Kalman estimates are heavily smeared
 (\cref{sec:trad-results}) --- they add ten noisy, mutually correlated channels whose
 information content about RUL is already present in the three deviations they were computed
 from. With seven training engines, ten extra input dimensions are pure variance. Two more
-observations from the same figure: the pure GRU at 25\,\% of the data nearly matches 100\,\%
-(1\,277 vs.\ 1\,217) --- the RUL task saturates around 17 engines on this fleet --- and seed
-variance at 10\,\% is large, exactly why F5 prescribes multi-seed reporting.
+observations from the same figure: the pure GRU at 25\,\% of the data nearly matches
+100\,\% (1\,303 vs.\ 1\,271) --- the RUL task saturates around 17 engines on this fleet
+--- and seed variance at 10\,\% is large, exactly why F5 prescribes multi-seed reporting.
 
 This does not close hypothesis H4 --- stacking is one of three planned hybrid mechanisms, and
 none has been tuned --- but it is recorded now, before the pre-registration freeze, as v0

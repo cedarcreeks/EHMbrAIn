@@ -194,15 +194,32 @@ sampled wash events); end-of-life deviations carry the physical deterioration si
 residual on drift-free engines reproduces the catalog $\sigma$ (2.51 vs.\ 2.50\,K); lives
 center on 15\,400 cycles with a realistic severe-degrader tail and no censored engines.
 
+\subsection{Version 1.1: more episodes, and the gate bites again}
+\label{sec:fleet-v11}
+
+The engine-level sample starvation diagnosed in \cref{ch:ai} (v1.0 carried at most one acute
+episode per engine) was fixed in \textbf{SynCFM56 v1.1}: a chain of conditional episode
+probabilities gives up to three non-overlapping episodes per engine (minimum gap 2\,500
+cycles, onsets as fractions of actual life). The result: 79 engines with 114 episodes,
+every fault class with $\geq 9$ training instances, and 23 evaluable test episodes instead
+of ten.
+
+Re-auditing v1.1 produced a second demonstration that the difficulty gate is real: with the
+original fault magnitudes, the trivial classifier now scored \textbf{62.2\,\%} --- more
+episodes feed the trivial classifier too, and the gate (60\,\%) failed again. The response
+was again physical rather than cosmetic: episode magnitudes were scaled by 0.75 (subtler
+faults, closer to the detectability edge), bringing the trivial classifier to
+\textbf{58.1\,\%} --- pass. The nonlinearity audit was re-run on v1.1 with unchanged
+conclusions (medians 0.14--0.34\,\%, P95 $\leq$ 1\,\%).
+
 \section{Milestone H2: declared closed}
 \label{sec:h2}
 
 All gate criteria are met: realism and difficulty audits passed (the latter after the
 documented design change), nonlinearity quantified at the noise floor, split-by-engine
 leakage checks automated in CI, and the dataset datasheet written
-(\code{docs/syncfm56-datasheet.md}). SynCFM56 v1.0 is frozen: regeneration is deterministic
+(\code{docs/syncfm56-datasheet.md}). SynCFM56 v1.1 is the frozen evaluation dataset (v1.0 history retained above): regeneration is deterministic
 from the catalog and seed, so the dataset is fully specified by the repository state. Known
 limitations, declared for downstream chapters: linearized generation (audited,
 \cref{tab:nonlin}); two fixed snapshot conditions with ambient/power scatter rather than a
-full mission mix; chronic labels are age-correlated by nature; and one acute episode per
-engine at most.
+full mission mix; chronic labels are age-correlated by nature; and at most three acute episodes per engine (v1.1).

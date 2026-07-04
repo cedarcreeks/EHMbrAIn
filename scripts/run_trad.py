@@ -61,17 +61,26 @@ def process_engine(args):
     det = min([d for d in (det_step, det_ramp_egt, det_ramp_wf) if d is not None],
               default=None)
 
-    # --- isolation of the detected step (expert rule) ---
-    iso = 'none'
-    if det is not None and det + 60 < n:
-        pre = np.nanmean(dz_s[max(0, det - 300):max(1, det - 20)], axis=0)
-        post = np.nanmean(dz_s[det + 20:min(n, det + 300)], axis=0)
-        Ha, Hb, w = bm.cruise(e.cr_N1_cmd.to_numpy())[1]
-        Hdet = Ha * (1 - w[det]) + Hb * w[det]
-        iso = isolate_step(post - pre, Hdet)
+    # --- isolation, oracle-timed per episode (v1.1 protocol: the isolation
+    # question is asked at onset+500 for BOTH families, decoupled from each
+    # family's detection performance) ---
+    acutes = sorted([r for r in events_rows if r['type'] == 'acute'],
+                    key=lambda r: r['cycle'])
+    bounds = [int(r['cycle']) for r in acutes] + [n]
+    Ha, Hb, w = bm.cruise(e.cr_N1_cmd.to_numpy())[1]
+    episode_iso = []
+    for k, r in enumerate(acutes):
+        onset = int(r['cycle'])
+        t = min(bounds[k + 1] - 1, n - 1, onset + 500)
+        if t <= onset + 100:
+            continue
+        pre = np.nanmean(dz_s[max(0, onset - 300):max(1, onset - 20)], axis=0)
+        post = np.nanmean(dz_s[max(0, t - 300):t], axis=0)
+        Ht = Ha * (1 - w[t]) + Hb * w[t]
+        episode_iso.append({'param': r['param'],
+                            'isolated': isolate_step(post - pre, Ht)})
 
     # --- Kalman-GPA health tracking ---
-    Ha, Hb, w = bm.cruise(e.cr_N1_cmd.to_numpy())[1]
     washes = [r['cycle'] for r in events_rows if r['type'] == 'wash']
     xs = kalman_gpa(dz, lambda i: Ha * (1 - w[i]) + Hb * w[i], R_DIAG,
                     q=2e-4, wash_cycles=washes)
@@ -79,7 +88,7 @@ def process_engine(args):
     kf_rmse = float(np.sqrt(np.nanmean((xs[n // 2:] - x_true[n // 2:]) ** 2)))
 
     # smearing on acute engines: share of |x_hat| on healthy components
-    acute = next((r for r in events_rows if r['type'] == 'acute'), None)
+    acute = acutes[0] if acutes else None
     smear = None
     if acute is not None:
         j_true = HEALTH_PARAMS.index(acute['param'])
@@ -104,7 +113,7 @@ def process_engine(args):
                          'rul_pred': pred})
 
     return {'engine_id': int(eid), 'n': n, 'split': e.split.iloc[0],
-            'det_cycle': det, 'isolated': iso,
+            'det_cycle': det, 'episode_iso': episode_iso,
             'acute_param': acute['param'] if acute else None,
             'acute_onset': float(acute['cycle']) if acute else None,
             'kf_rmse_pct': kf_rmse, 'smearing_index': smear,
@@ -125,9 +134,11 @@ def aggregate(results):
     delays = [r['det_cycle'] - r['acute_onset'] for r in detected]
     false_alarms = [r for r in clean if r['det_cycle'] is not None]
 
-    iso_ok = [r for r in detected if r['isolated'] == r['acute_param']]
-    confus = [r for r in detected if r['acute_param'] in ('hpc.eta', 'hpt.eta', 'hpt.flow')]
-    confus_ok = [r for r in confus if r['isolated'] == r['acute_param']]
+    episodes = [ep for r in test for ep in r['episode_iso']]
+    iso_ok = [ep for ep in episodes if ep['isolated'] == ep['param']]
+    confus = [ep for ep in episodes
+              if ep['param'] in ('hpc.eta', 'hpt.eta', 'hpt.flow')]
+    confus_ok = [ep for ep in confus if ep['isolated'] == ep['param']]
 
     rul_errs, scores = {f: [] for f in EVAL_FRACS}, {f: [] for f in EVAL_FRACS}
     for r in test:
@@ -144,9 +155,9 @@ def aggregate(results):
             'median_delay_cycles': float(np.median(delays)) if delays else None,
             'false_alarm_engines': len(false_alarms), 'n_clean': len(clean)},
         'isolation': {
-            'accuracy': len(iso_ok) / len(detected) if detected else None,
+            'accuracy': len(iso_ok) / len(episodes) if episodes else None,
             'confusable_accuracy': len(confus_ok) / len(confus) if confus else None,
-            'n_confusable': len(confus)},
+            'n_confusable': len(confus), 'n_episodes_test': len(episodes)},
         'health_tracking': {
             'kf_rmse_pct_median': float(np.median([r['kf_rmse_pct'] for r in test])),
             'smearing_index_median': float(np.median(

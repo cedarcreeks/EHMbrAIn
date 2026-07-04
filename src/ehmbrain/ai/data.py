@@ -70,13 +70,15 @@ def load_fleet_features():
         eid = rec['engine_id']
         e = df[df.engine_id == eid].sort_values('cycle').reset_index(drop=True)
         ev = events[events.engine_id == eid]
-        ac = ev[ev.type == 'acute']
+        ac = ev[ev.type == 'acute'].sort_values('cycle')
+        episodes = [(float(r.cycle), str(r.param)) for r in ac.itertuples()]
         out[eid] = {
             'F': engine_features(e, bm),
             'split': e.split.iloc[0],
             'life': len(e),
-            'acute_param': ac.param.iloc[0] if len(ac) else None,
-            'acute_onset': float(ac.cycle.iloc[0]) if len(ac) else None,
+            'episodes': episodes,
+            'acute_param': episodes[0][1] if episodes else None,
+            'acute_onset': episodes[0][0] if episodes else None,
         }
     return out
 
