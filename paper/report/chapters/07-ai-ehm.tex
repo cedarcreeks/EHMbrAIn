@@ -117,13 +117,48 @@ evidence \emph{against} the popular assumption that physics features automatical
 Negative results of this kind are precisely what the pre-registered protocol exists to keep
 honest.
 
+\section{The Physics-Consistency Score: machinery delivered, null result at v0}
+\label{sec:pcs}
+
+Contribution C5 is now implemented end-to-end: for each oracle-timed test episode, SHAP
+attributions of the diagnosis classifier's predicted class are read on the step block of
+the cockpit channels --- a direction in measurement space representing the model's evidence
+--- projected into health-parameter space through the pseudo-inverse of the cockpit ICM,
+and compared with the true fault direction:
+\begin{equation}
+  \mathrm{PCS} \;=\; \bigl|\cos\bigl(\mathbf{H}_{\mathrm{ckpt}}^{+}\,
+  \mathbf{m}_{\mathrm{SHAP}},\; \mathbf{e}_{\mathrm{true}}\bigr)\bigr|.
+\end{equation}
+On the v1.1 test episodes the result is \textbf{null}: mean PCS 0.20 for correct
+predictions versus 0.24 for incorrect ones, correlation with correctness $-0.09$. This is
+the expected behavior of the metric applied to a weak classifier --- the attributions of a
+13\,\%-accurate model are dominated by noise, so there is no physically coherent reasoning
+for the PCS to detect. The metric's diagnostic value can only be demonstrated on a
+competent classifier; its meaningful evaluation is therefore scheduled after the F5 tuning
+round. Recording the null result now, rather than quietly deferring the metric, is the
+protocol working as designed.
+
+\section{Detection: a design gap, not a threshold gap}
+\label{sec:det-sweep}
+
+A validation sweep of the Mahalanobis detector (threshold percentile $\times$ persistence,
+20 configurations, false-alarm budget of one val engine) found \textbf{no configuration
+with non-zero validation recall inside the budget}; the selected setting scores 0.04 on
+test. The diagnosis is structural: the step features average 100 cycles, and for v1.1 fault
+magnitudes (0.3--1.1\,\%) that window's noise floor sits above most signatures ---
+whereas the traditional dual-EWMA gap detector effectively averages over thousands of
+cycles. The fix (longer-window change features for the AI detector) is a design change,
+booked for the F5 round where it can be tuned under the symmetric budget.
+
 \section{Status toward milestone H4}
 
-Done: the shared datamodule, detection (two variants), diagnosis, RUL with conformal
-intervals, the stacking hybrid with the data-efficiency ablation, all under the common
-protocol. Pending before H4 is declared: the remaining hybrid mechanisms
-(physics-constrained loss, twin-residual features), SHAP attributions with the
-Physics-Consistency Score (blocked on fleet v1.1 --- attribution analysis of a
-sample-starved classifier would be theater), and the detection redesign. The gate requires
-the AI to beat the traditional pipeline on at least one primary metric per task on
-validation; prognosis already clears it, detection does not yet.
+Done: the shared datamodule, detection (naive AE, whitened-residual Mahalanobis, and its
+validation sweep), per-episode diagnosis, RUL with conformal intervals, the stacking hybrid
+with the data-efficiency ablation, and the PCS machinery --- all under the common protocol.
+The gate requires the AI to beat the traditional pipeline on at least one primary metric per
+task on validation: \textbf{prognosis clears it decisively; detection does not} (structural
+gap above), and diagnosis trails the ICM rule on v1.1. \textbf{H4 is therefore not declared.}
+The remaining levers --- detector redesign, the two remaining hybrid mechanisms
+(physics-constrained loss, twin-residual features), and the full tuning budget --- belong to
+F5, and the pre-registered evaluation will adjudicate hypotheses H1--H5 on whatever the
+tuned families deliver.

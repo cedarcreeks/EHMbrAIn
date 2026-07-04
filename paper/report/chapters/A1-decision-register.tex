@@ -90,6 +90,8 @@ both already resolved (noted below).
   GRU/AE architectures \& gains & \cref{ch:ai} & [T] & engineering defaults; swept in F5 \\
   Gradient-boosting impl. & sklearn HistGB & [D] & XGBoost's second OpenMP runtime segfaults beside torch-MPS on macOS; same model family \\
   Conformal level & 90\,\% & [C] & matches hypothesis H5's coverage target \\
+  PCS attribution basis & SHAP of predicted class, step block, cockpit channels & [T] & one defensible instantiation of C5; alternatives (true-class attribution, all blocks) belong to the F5 sensitivity study \\
+  Detector sweep budget & 20 configs, $\leq$1 val false alarm & [T] & pre-F5 threshold exercise; selection on validation only \\
   $\alpha$--$\lambda$ settings & $\alpha{=}20\,\%$, $\lambda{=}\{.5,.7,.9\}$ & [C] & common
     prognostics practice \\
   \bottomrule
