@@ -103,9 +103,10 @@ plague the literature. Four safeguards are adopted:
 \begin{description}
   \item[Pre-registration.] Hypotheses (\cref{tab:hypotheses}), metrics, data splits (with file
     hashes), statistical tests and the stopping rule are frozen in the repository under a git
-    tag (\code{prereg-v1}) \emph{before} the test set is evaluated. This borrows a standard
-    practice from medicine: you state what would convince you before looking at the answer, so
-    you cannot move the goalposts afterwards.
+    tag (\code{prereg-v1}, document \code{docs/prereg-v1.md}) \emph{before} the confirmatory
+    evaluation. This borrows a standard practice from medicine: you state what would convince
+    you before looking at the answer, so you cannot move the goalposts afterwards. The frozen
+    document also discloses every exploratory test-set exposure that preceded it.
   \item[Symmetric tuning budget.] Every method has knobs. The traditional pipeline's
     (alert thresholds, regularization $\lambda$, Kalman $\mathbf{Q}$, smoothing windows) and
     each AI family's hyperparameters are tuned with the \emph{same number} of automated search

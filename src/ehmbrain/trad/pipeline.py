@@ -228,6 +228,34 @@ def isolate_step(step_dz, H, min_norm=0.15):
     return HEALTH_PARAMS[j] if best > 0.6 else 'none'
 
 
+def theil_sen_rul_interval(egtm_est, window=1500, stride=25, q_lo=5, q_hi=95):
+    """90 % RUL interval from the (q_lo, q_hi) percentiles of the Theil-Sen
+    pairwise slopes projected to margin exhaustion (pre-registered H5 spec:
+    prereg-v1 §3). Returns (lo, point, hi) in cycles, or None if the median
+    trend is non-decreasing; unbounded ends are capped by the caller."""
+    y = np.asarray(egtm_est, float)
+    n = len(y)
+    a = max(0, n - window)
+    idx = np.arange(a, n, max(1, stride))
+    yy = y[idx]
+    ok = np.isfinite(yy)
+    idx, yy = idx[ok], yy[ok]
+    if len(yy) < 10:
+        return None
+    slopes = np.array([(yy[j] - yy[i]) / (idx[j] - idx[i])
+                       for i in range(len(yy)) for j in range(i + 1, len(yy))])
+    med = float(np.median(slopes))
+    if med >= -1e-6:
+        return None
+    last = y[np.isfinite(y)][-1]
+    s_lo, s_hi = np.percentile(slopes, [q_lo, q_hi])
+    point = float(-last / med)
+    # steeper (more negative) slope -> shorter RUL; s_hi may be >= 0 -> +inf
+    lo = float(-last / s_lo) if s_lo < -1e-9 else point
+    hi = float(-last / s_hi) if s_hi < -1e-9 else np.inf
+    return min(lo, hi), point, max(lo, hi)
+
+
 def theil_sen_rul(egtm_est, window=1500, stride=25):
     """Robust slope of the recent EGT-margin estimate -> cycles to zero.
     Returns predicted RUL (cycles) or None if the trend is non-decreasing."""

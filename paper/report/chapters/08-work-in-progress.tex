@@ -19,6 +19,21 @@ sensor-noise floor injected in phase F2 and are common-mode to both EHM pipeline
 intent ---a baseline whose error does not distort the comparison--- is met. Optional
 refinement (grid densification near block boundaries) is queued as non-blocking.
 
+\section{Phase F5: pre-registration frozen}
+
+The confirmatory protocol is frozen at git tag \code{prereg-v1}
+(\code{docs/prereg-v1.md}): dataset hashes, split assignments, the exact
+operationalization of hypotheses H1--H5 (including the freeze-time amendment of H1's
+operating-point definition, made because v0 showed the plan's ``fixed recall 0.9'' is
+unreachable at v1.1 fault magnitudes), the 50-trial-per-family Optuna budget with its search
+spaces, the selection metrics, the single-pass test rule, and the statistical machinery
+(Wilcoxon and McNemar paired tests, Holm correction, BCa bootstrap, Cliff's delta). The
+document also \emph{discloses all prior exploratory test-set exposure} --- every v0/v1.1
+number in chapters 6--7 --- and commits to keeping exploratory and confirmatory results
+separate. The pre-registered traditional uncertainty interval (Theil--Sen slope-percentile
+band) is implemented and tested at freeze time. What remains of F5 is execution: the two
+tuning campaigns, the one confirmatory pass, and the verdicts.
+
 \section{Phase F4: v0 complete}
 
 Documented in \cref{ch:ai}: the AI suite under the common protocol, the 4--6$\times$

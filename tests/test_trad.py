@@ -66,3 +66,14 @@ def test_theil_sen_linear_decay():
     rul = theil_sen_rul(y)
     assert rul is not None
     assert abs(rul - (80.0 - 0.01 * 5999) / 0.01) < 300
+
+
+def test_theil_sen_interval_brackets_point():
+    from ehmbrain.trad.pipeline import theil_sen_rul_interval
+    rng = np.random.default_rng(9)
+    y = 80.0 - 0.01 * np.arange(6000) + rng.normal(0, 0.5, 6000)
+    out = theil_sen_rul_interval(y)
+    assert out is not None
+    lo, point, hi = out
+    assert lo <= point <= hi
+    assert abs(point - (y[-1] / 0.01)) < 600
