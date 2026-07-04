@@ -64,8 +64,26 @@ chapter 8 stands for it alone.
 \section{Learned MOPA: fusing physics projections over time}
 \label{sec:tomo-learner}
 
-The classical way to fuse a window is stacked weighted least squares --- valid only while
-health holds still, which in service it does not (chronic drift, washes). The architecture
+The classical way to fuse a window of $T$ flights is to stack every snapshot's linear
+observation into one tall system and solve it as a single regularized least squares:
+\begin{equation}
+  \begin{bmatrix} \Delta\mathbf{z}_1 \\ \vdots \\ \Delta\mathbf{z}_T \end{bmatrix}
+  =
+  \begin{bmatrix} \mathbf{H}(u_1) \\ \vdots \\ \mathbf{H}(u_T) \end{bmatrix} \mathbf{x}
+  + \mathbf{v},
+  \qquad
+  \hat{\mathbf{x}} = \bigl(\mathbf{H}_s^{\!\top}\mathbf{H}_s + \lambda \mathbf{I}\bigr)^{-1}
+  \mathbf{H}_s^{\!\top} \Delta\mathbf{z}_s,
+  \label{eq:stacked-wls}
+\end{equation}
+predicting the fault as the largest-magnitude entry of $\hat{\mathbf{x}}$ (with a
+no-fault threshold). The single $\mathbf{x}$ on the right-hand side is the method's load-
+bearing assumption --- \emph{one constant health state across the whole window} --- valid
+on a test bed, false in service, where health drifts and washes intervene. The learner
+replaces that assumption: each flight gets its own per-block projection
+$\hat{\mathbf{x}}_t$ (the one-flight version of \cref{eq:stacked-wls}), and the GRU
+(\cref{eq:gru}) reads the \emph{sequence} of projections, free to learn that a slow common
+drift is aging while a coherent recent step is a fault. The architecture
 that works is neither classical stacking nor a raw neural network: a raw GRU fed deviation
 sequences failed outright (12\,\% isolation --- it must learn the entire inverse physics
 from a few hundred windows), while a GRU fed the \emph{per-flight regularized WLS

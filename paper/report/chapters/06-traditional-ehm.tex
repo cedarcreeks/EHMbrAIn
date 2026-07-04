@@ -41,7 +41,122 @@ families); the deviations feed four consumers:
     EGT margin to zero, with a NASA-style horizon cap.
 \end{enumerate}
 
+\section{The mathematics of the pipeline}
+\label{sec:trad-math}
+
+Each stage above in full, with the notation of \cref{ch:background} ($d_j(n)$: the percent
+deviation of channel $j$ at cycle $n$).
+
+\subsection{Holt double exponential smoothing}
+\label{sec:math-holt}
+
+A noisy deviation series carries three things: a slowly moving level, a slope, and noise.
+Holt's smoother maintains estimates of the first two, updated each cycle:
+\begin{align}
+  \ell_n &= \alpha\, d(n) + (1-\alpha)\,(\ell_{n-1} + b_{n-1}), \nonumber\\
+  b_n    &= \beta\,(\ell_n - \ell_{n-1}) + (1-\beta)\, b_{n-1},
+  \label{eq:holt}
+\end{align}
+with gains $\alpha$ (level) and $\beta$ (trend) in $(0,1)$ --- small gains average over
+roughly $2/\alpha$ cycles. The quantity
+\begin{equation}
+  e_n \;=\; d(n) - (\ell_{n-1} + b_{n-1})
+  \label{eq:innovation}
+\end{equation}
+is the \emph{innovation}: what the new measurement says that the forecast did not already
+expect. Its role is central: the chronic trend lives inside $(\ell, b)$ and is therefore
+\emph{absent} from $e_n$, so a step detector fed with innovations reacts to genuine changes
+rather than to ordinary aging (the first design lesson of \cref{sec:det-lessons}).
+\emph{Worked example}: with $\alpha=0.15$, a sudden $+0.5\,\%$ EGT step makes
+$e_n \approx +0.5\,\%$ on the first post-step cycle, while the smoothed level moves only
+$0.15 \times 0.5 = 0.075\,\%$ --- the innovation shouts while the level whispers.
+
+\subsection{CUSUM}
+\label{sec:math-cusum}
+
+The cumulative-sum detector accumulates evidence of a persistent shift. With standardized
+innovations $z_n = e_n/\hat\sigma$:
+\begin{equation}
+  g_n^{+} = \max\!\bigl(0,\; g_{n-1}^{+} + z_n - k\bigr), \qquad
+  g_n^{-} = \max\!\bigl(0,\; g_{n-1}^{-} - z_n - k\bigr),
+  \label{eq:cusum}
+\end{equation}
+alarming when either exceeds a threshold $h$. The reference $k$ (in $\sigma$ units) is the
+drift the detector ignores; $h$ sets the trade between detection delay and false-alarm
+rate. The recursion is the sequential log-likelihood-ratio test for a mean shift of $2k$:
+each term adds the log-evidence for ``shifted'' against ``centered'', floored at zero so
+old quiet history cannot mask a new fault. \emph{Worked example}: $k=0.75$, $h=8$; a
+$1.5\sigma$ step contributes $1.5-0.75 = 0.75$ per cycle, so the alarm fires
+$\approx 8/0.75 \approx 11$ cycles after onset --- while unshifted noise ($\mathbb{E}[z]=0$)
+keeps $g^{\pm}$ pinned near zero.
+
+\subsection{The dual-EWMA gap detector}
+\label{sec:math-gap}
+
+For \emph{ramps} (gradual faults) the step evidence never concentrates in a few
+innovations. The gap detector maintains two exponentially weighted moving averages of the
+same deviation --- a fast one ($\lambda_f \approx 0.1$, memory tens of cycles) and a slow
+one ($\lambda_s \approx 0.005$, memory hundreds):
+\begin{equation}
+  m_n^{(\lambda)} = \lambda\, d(n) + (1-\lambda)\, m_{n-1}^{(\lambda)}, \qquad
+  G_n = m_n^{(\lambda_f)} - m_n^{(\lambda_s)}.
+  \label{eq:gap}
+\end{equation}
+Under steady aging both averages track the same slow line and $G_n$ hovers near a small
+constant; an acute ramp opens a gap of roughly the fault magnitude within the ramp's
+duration. $G_n$ is standardized robustly --- median and MAD (median absolute deviation,
+$\hat\sigma = 1.4826\,\mathrm{MAD}$, immune to the very outliers being hunted) --- from a
+warm-up segment, and the alarm requires $k$-of-$n$ persistence above an $n_\sigma$
+threshold so isolated noise spikes cannot fire it.
+
+\subsection{Wash-aware random-walk Kalman GPA}
+\label{sec:math-kalman}
+
+The snapshot WLS of \cref{eq:wls} answers each cycle in isolation; the Kalman filter adds
+the physics of time. Health drifts slowly, so the state model is a random walk, and each
+cycle's cockpit deviations are a linear observation of the state:
+\begin{equation}
+  \mathbf{x}_n = \mathbf{x}_{n-1} + \mathbf{w}_n, \quad \mathbf{w}_n \sim \mathcal{N}(0, q\mathbf{I});
+  \qquad
+  \Delta\mathbf{z}_n = \mathbf{H}(u_n)\,\mathbf{x}_n + \mathbf{v}_n, \quad \mathbf{v}_n \sim \mathcal{N}(0, \mathbf{R}).
+  \label{eq:kalman-model}
+\end{equation}
+The filter alternates prediction and update:
+\begin{align}
+  \text{predict:}\quad & \mathbf{P}_{n|n-1} = \mathbf{P}_{n-1} + q\mathbf{I}, \nonumber\\
+  \text{update:}\quad  & \mathbf{K}_n = \mathbf{P}_{n|n-1}\mathbf{H}_n^{\!\top}
+      \bigl(\mathbf{H}_n \mathbf{P}_{n|n-1}\mathbf{H}_n^{\!\top} + \mathbf{R}\bigr)^{-1}, \nonumber\\
+  & \hat{\mathbf{x}}_n = \hat{\mathbf{x}}_{n-1} + \mathbf{K}_n\bigl(\Delta\mathbf{z}_n - \mathbf{H}_n\hat{\mathbf{x}}_{n-1}\bigr), \qquad
+    \mathbf{P}_n = (\mathbf{I} - \mathbf{K}_n\mathbf{H}_n)\,\mathbf{P}_{n|n-1}.
+  \label{eq:kalman}
+\end{align}
+The gain $\mathbf{K}_n$ is the optimal compromise between trusting the prediction
+(small $q$: health cannot jump) and trusting the measurement (small $\mathbf{R}$): with
+three measurements and ten states each update nudges $\hat{\mathbf{x}}$ only along the
+three observable directions, which is exactly how smearing manifests in tracking form.
+\emph{Wash awareness}: at a logged wash, the recoverable (fouling) states are pulled toward
+zero by the expected recovery fraction and their covariance entries are reopened ---
+the maintenance log is information, and using it is standard practice, not cheating.
+
+\subsection{Theil--Sen extrapolation and its interval}
+\label{sec:math-theilsen}
+
+Given the tracked margin series $m(n)$ over a trailing window, the Theil--Sen slope is
+\begin{equation}
+  \hat{s} = \operatorname{median}_{\,i<j}\; \frac{m(n_j) - m(n_i)}{n_j - n_i},
+  \qquad
+  \widehat{\mathrm{RUL}} = -\,m(n_{\text{now}})/\hat{s},
+  \label{eq:theilsen}
+\end{equation}
+the median over all pairwise slopes --- robust to outliers and wash spikes, unlike a
+least-squares fit, because up to $\sim$29\,\% of pairs can be corrupted before the median
+moves. The pre-registered uncertainty band (H5) projects the 5th and 95th percentiles of
+the same pairwise-slope population to margin exhaustion: steeper slopes give the early
+edge, shallower the late edge. When the median slope is non-negative the method honestly
+abstains (no crossing is predicted).
+
 \section{Two detector-design lessons}
+\label{sec:det-lessons}
 \label{sec:trad-lessons}
 
 Both are classical results rediscovered the honest way --- by watching the first

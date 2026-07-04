@@ -28,7 +28,76 @@ tree models are scikit-learn's histogram gradient boosting.\footnote{XGBoost was
 an unglamorous reason recorded in the decision register: its bundled OpenMP runtime
 segfaults alongside torch-MPS on macOS. One runtime, no crash, same model family.}
 
+\section{The mathematics of the AI suite}
+\label{sec:ai-math}
+
+\subsection{Mahalanobis distance with Ledoit--Wolf shrinkage (detection)}
+\label{sec:math-maha}
+
+The detector asks: how atypical is the current feature vector $\mathbf{f}$ against healthy
+behavior? Euclidean distance fails because channels are correlated and differently scaled;
+the Mahalanobis distance whitens both away:
+\begin{equation}
+  D^2(\mathbf{f}) \;=\; (\mathbf{f} - \boldsymbol{\mu})^{\!\top}\,
+  \hat{\boldsymbol{\Sigma}}^{-1}\,(\mathbf{f} - \boldsymbol{\mu}),
+  \label{eq:mahalanobis}
+\end{equation}
+with $\boldsymbol{\mu}, \hat{\boldsymbol{\Sigma}}$ estimated from healthy training
+segments. In moderate dimensions with limited samples the empirical covariance
+$\mathbf{S}$ is ill-conditioned --- its smallest eigenvalues are underestimated, and
+$\mathbf{S}^{-1}$ explodes along those directions, manufacturing false alarms. Ledoit--Wolf
+shrinkage repairs this with the optimal convex blend
+\begin{equation}
+  \hat{\boldsymbol{\Sigma}}_{\mathrm{LW}} \;=\; (1-\rho)\,\mathbf{S} + \rho\,\bar{\sigma}^2 \mathbf{I},
+  \label{eq:ledoitwolf}
+\end{equation}
+where the shrinkage intensity $\rho$ is computed in closed form to minimize expected error
+--- no tuning knob. The alarm then requires $k$ consecutive exceedances of a percentile
+threshold set on healthy data (the persistence rule that turns a score into a detector).
+
+\subsection{The GRU, precisely}
+\label{sec:math-gru}
+
+The primer (\cref{sec:ml-primer}) said ``a small memory carried along the sequence''; here
+is the memory's actual algebra. At each step the gated recurrent unit mixes the new input
+$\mathbf{v}_n$ with its hidden state $\mathbf{h}_{n-1}$ through two learned gates:
+\begin{align}
+  \mathbf{z}_n &= \sigma(\mathbf{W}_z \mathbf{v}_n + \mathbf{U}_z \mathbf{h}_{n-1}) 
+    &&\text{(update gate: how much to rewrite)}, \nonumber\\
+  \mathbf{r}_n &= \sigma(\mathbf{W}_r \mathbf{v}_n + \mathbf{U}_r \mathbf{h}_{n-1})
+    &&\text{(reset gate: how much history to consult)}, \nonumber\\
+  \tilde{\mathbf{h}}_n &= \tanh\bigl(\mathbf{W}_h \mathbf{v}_n + \mathbf{U}_h (\mathbf{r}_n \odot \mathbf{h}_{n-1})\bigr)
+    &&\text{(candidate state)}, \nonumber\\
+  \mathbf{h}_n &= (1 - \mathbf{z}_n) \odot \mathbf{h}_{n-1} + \mathbf{z}_n \odot \tilde{\mathbf{h}}_n
+    &&\text{(gated blend)}.
+  \label{eq:gru}
+\end{align}
+The update gate is the learned analogue of Holt's $\alpha$ (\cref{eq:holt}): near zero it
+preserves memory across quiet stretches, near one it rewrites on new evidence --- but
+vector-valued and context-dependent rather than a single fixed constant. That is the
+entire advantage in one sentence: the classical smoothers commit to one timescale;
+the GRU learns per-feature, per-situation timescales from data. The final hidden state
+feeds a linear head; training minimizes mean squared error (RUL, in kilocycles, capped)
+or class-weighted cross-entropy (diagnosis) by gradient descent.
+
+\subsection{Gradient boosting over histograms (diagnosis)}
+\label{sec:math-gbdt}
+
+The diagnosis classifier is an ensemble of shallow decision trees built sequentially:
+tree $t$ fits the gradient of the loss with respect to the current ensemble's predictions
+--- each new tree corrects where the ensemble is currently most wrong,
+\begin{equation}
+  F_t(\mathbf{f}) \;=\; F_{t-1}(\mathbf{f}) + \nu\, h_t(\mathbf{f}), \qquad
+  h_t \approx -\nabla_{F} \mathcal{L}\bigl(y, F_{t-1}\bigr),
+  \label{eq:gbdt}
+\end{equation}
+with learning rate $\nu$ and histogram-binned split search for speed. Boosted trees
+remain the strongest general learners on small tabular datasets --- hundreds of episodes,
+engineered step features --- which is why this task got trees while sequence tasks got
+the GRU.
+
 \section{Prognosis: the headline result}
+
 \label{sec:ai-rul}
 
 A two-layer GRU consumes a downsampled 1\,280-cycle deviation history and regresses the

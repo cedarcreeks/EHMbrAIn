@@ -136,6 +136,103 @@ Supporting infrastructure named later: \emph{DVC} versions datasets the way git 
 \emph{MLflow} records every training run (configuration, metrics, artifacts) so experiments
 are traceable and repeatable.
 
+\section{The statistical machinery, in full}
+\label{sec:stats-math}
+
+Every verdict in this document rests on the following tests. Each is stated with its
+mathematics and the reason it was chosen; nothing later in the document uses a statistic
+not defined here (norm N6).
+
+\paragraph{Wilcoxon signed-rank test (paired continuous outcomes).} For paired errors
+$(a_i, b_i)$ on the same $n$ engines, compute differences $\delta_i = a_i - b_i$, discard
+zeros, rank $|\delta_i|$ ascending, and sum the ranks of the positive differences:
+\begin{equation}
+  W \;=\; \sum_{i:\,\delta_i > 0} \operatorname{rank}\bigl(|\delta_i|\bigr).
+  \label{eq:wilcoxon}
+\end{equation}
+Under the null (differences symmetric about zero) every rank is equally likely to carry
+either sign, giving an exact, distribution-free reference: no normality assumption, which
+matters because RUL errors are heavy-tailed. Pairing by engine removes engine-to-engine
+difficulty variation from the comparison --- the same reason a crossover trial beats two
+separate cohorts. \emph{Worked example}: $n=6$ engines with differences
+$\{+3, +8, -2, +5, +9, +1\}$: ranks of magnitudes $\{3,7\ldots\}$ --- the two negative
+values carry little rank mass, $W$ lands near its maximum, and the one-sided exact
+$p \approx 0.047$.
+
+\paragraph{McNemar's exact test (paired binary outcomes).} For paired correct/incorrect
+outcomes (e.g.\ both families isolating the same episodes), only the discordant pairs are
+informative: $b$ = cases only method A got right, $c$ = only method B. Under the null of
+equal skill each discordant pair is a fair coin, so
+\begin{equation}
+  p \;=\; \Pr\bigl[X \ge b\bigr], \qquad X \sim \mathrm{Binomial}(b+c,\ \tfrac12),
+  \label{eq:mcnemar}
+\end{equation}
+one-sided when the hypothesis is directional. The concordant cases cancel --- episodes both
+get right (or both miss) say nothing about the \emph{difference}. This is why chapter 10
+could bound its verdict without replaying the test pass: with 15/23 vs 4/23 correct, the
+accuracy gap forces $b - c = 11$, and $p$ is maximized at $b=15, c=4$, still $0.0096$.
+
+\paragraph{Holm correction (multiple comparisons).} Testing $m$ hypotheses at
+$\alpha = 0.05$ each inflates the chance of at least one false confirmation. Holm's
+step-down procedure sorts the p-values $p_{(1)} \le \cdots \le p_{(m)}$ and compares
+$p_{(k)}$ against $\alpha / (m - k + 1)$, stopping at the first failure:
+\begin{equation}
+  p^{\text{Holm}}_{(k)} \;=\; \min\!\Bigl(1,\ \max_{j \le k}\ (m - j + 1)\, p_{(j)}\Bigr).
+  \label{eq:holm}
+\end{equation}
+It controls the family-wise error rate at $\alpha$ with no independence assumption, and is
+uniformly more powerful than Bonferroni (which would multiply every $p$ by $m$).
+
+\paragraph{BCa bootstrap confidence intervals.} Resample engines (the exchangeable unit)
+with replacement $B = 10^4$ times, recompute the statistic $\hat\theta^{*}_b$, and read the
+interval from the bootstrap distribution --- but with two corrections: the \emph{bias}
+term $z_0 = \Phi^{-1}\bigl(\#\{\hat\theta^{*}_b < \hat\theta\}/B\bigr)$ (is the bootstrap
+distribution off-center?) and the \emph{acceleration} $a$ estimated by jackknife (does the
+statistic's variance depend on its value?). The adjusted percentiles
+\begin{equation}
+  \alpha_{1,2} \;=\; \Phi\!\Bigl(z_0 + \tfrac{z_0 + z_{\alpha_{1,2}}}{1 - a\,(z_0 + z_{\alpha_{1,2}})}\Bigr)
+  \label{eq:bca}
+\end{equation}
+replace the naive 2.5/97.5 cuts. For small $n$ (20 test engines) and skewed statistics
+(RMSE), the corrections matter --- the naive percentile interval can miss its nominal
+coverage badly.
+
+\paragraph{Cliff's delta (effect size).} Significance says an effect exists; $\delta$ says
+how big:
+\begin{equation}
+  \delta \;=\; \frac{\#\{(i,j): a_i > b_j\} - \#\{(i,j): a_i < b_j\}}{n_a\, n_b}
+  \;\in\; [-1, 1],
+  \label{eq:cliff}
+\end{equation}
+the probability a random error from method A exceeds a random one from B, minus the
+reverse. $\delta = 0.89$ (the H3 verdict) means: pick any traditional engine-error and any
+AI engine-error at random, and the traditional one is larger about 94\,\% of the time.
+Rank-based, hence robust to the same heavy tails that motivated Wilcoxon.
+
+\paragraph{Split conformal prediction (distribution-free intervals).} Fit any predictor on
+the training set; on a held-out calibration set of size $n_c$, collect the absolute
+residuals $r_i = |y_i - \hat{y}_i|$ and take
+\begin{equation}
+  \hat{q} \;=\; \text{the } \lceil (1-\alpha)(n_c + 1)\rceil\text{-th smallest } r_i;
+  \qquad
+  C(x) \;=\; \bigl[\hat{y}(x) - \hat{q},\ \hat{y}(x) + \hat{q}\bigr].
+  \label{eq:conformal}
+\end{equation}
+Exchangeability alone guarantees $\Pr[y \in C(x)] \ge 1 - \alpha$ --- no distributional
+assumption, any model, finite samples. The $(n_c + 1)$ (not $n_c$) accounts for the new
+point joining the ranking: the guarantee is exact, not asymptotic. The classification
+variant used in chapter 10 (adaptive prediction sets) sorts the predicted class
+probabilities, accumulates until the calibration quantile of ``mass needed to reach the
+true class'' is covered, and returns that \emph{set} of classes --- ambiguity becomes set
+size instead of silent error.
+
+\paragraph{Tree-structured Parzen estimator (the tuner).} Optuna's TPE turns tuning into
+inference: after some trials, split configurations into the best fraction ($\ell(\theta)$,
+a density fitted over good configs) and the rest ($g(\theta)$), then propose the $\theta$
+maximizing $\ell(\theta)/g(\theta)$ --- sampling where good configurations concentrate,
+exploring where $g$ is thin. Fifty trials of TPE typically cover a 14--16-dimensional
+mixed space far better than grid search's curse of dimensionality allows.
+
 \section{Methodological safeguards}
 \label{sec:safeguards}
 
