@@ -65,6 +65,86 @@ Reglas derivadas (ya operativas, ahora explícitas):
 
 ---
 
+## ⟪REANUDACIÓN⟫ Estado completo y cola de trabajo (actualizado 2026-07-04)
+
+**Instrucción de uso**: si el usuario dice "sigue el plan", leer esta sección entera,
+verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en orden.
+
+### Estado por fases (todo pusheado a github.com/cedarcreeks/EHMbrAIn, rama main)
+
+| Fase | Estado | Evidencia |
+|---|---|---|
+| F0-F1 gemelo calibrado + ICM | ✅ H1 | anclas −1.4/−2.2/−3.1 % vs EEDB; ICM 6 puntos; ch4 |
+| F2 SynCFM56 v1.1 | ✅ H2 | 1 551 071 filas; gate dificultad fallado 2× y arreglado físico; ch5 |
+| F3 pipeline tradicional | ✅ H3 | ch6 |
+| F4 suite IA v0 | ✅ (H4 sin declarar = resultado) | ch7 |
+| F5 prereg-v1 + tuning 50×2 + confirmatorio | ✅ H5 | H1✓ H3✓ H5✓ / H2✗ H4✗; tag prereg-v1; verdicts.json; ch8 |
+| Sim-to-real C-MAPSS FD001 | ✅ | IA 14.9 vs trad 42.1; sustitución N-CMAPSS divulgada |
+| F6 casos+dashboard+make all | ✅ H6 | ch9; dashboard/app.py; Makefile |
+| F7 tomografía puntos operación | ✅ prereg-v2 | H7.2'✓ (+48pp learned MOPA) H7.4'✓ / H7.3✗ umbrales; calendario reportes +79 %; ch10 |
+| F8/L1 sustituto diferenciable | ✅ gate | ambas familias 4-19× mejor; surrogate.pt/_takeoff.pt; ch11 |
+| F9/N7 handbook-tesis | 🔶 partes 1-2 | ch datos nuevo; matemática ch3/6/7/10; 72 pp |
+
+### COLA DE TRABAJO (en orden)
+
+**1. F9 checklist restante (norma N7, requisito §0-bis-A):**
+   - ch2 (02-background.tex): GPA y termodinámica al estándar handbook — derivación guiada
+     de Δz=Hx+Sb+v desde primeros principios, ejemplo numérico de smearing 2×2, qué es un
+     mapa de compresor explicado para novato.
+   - ch5 (05-synthetic-fleet.tex): cada mecanismo de degradación con su modelo matemático
+     (fouling exponencial saturante dx/dn, erosión lineal, break-in bilineal, hot-section
+     acelerando; ecuación del sawtooth exacto por segmentos ya está en texto — formalizar).
+   - ch8-11: revisión — cada resultado remite a maquinaria definida (grep términos).
+   - GATE F9: relectura completa; ningún término técnico usado antes de definirse;
+     notación ch0 al día. Criterio: pasada de grep + lectura por capítulo.
+**2. F8/L2 — flota v2 no lineal:** integrar surrogate.pt + surrogate_takeoff.pt como
+   emisor de snapshots en datagen (sustituir linealización en snapshots.py con flag de
+   versión; catálogo fleet.version 2.0); regenerar; re-auditorías (nonlinearity vs pyCycle
+   directo — debe bajar de P95≤1 % a ~0.2-0.4 %; dificultad <60 %; realismo); datasheet v2;
+   v1.1 queda CONGELADA como registro F5/F7 (no tocar).
+**3. F8/L6 — híbridos restantes sobre v2 (re-abre H4, prereg-v3):** mecanismo 2 features
+   residuo-twin (z_med − surrogate(x̂_kalman, u): en v2 el residuo ya no es espurio);
+   mecanismo 3 pérdida física con gradiente exacto del surrogate. Protocolo H4 (10/25/100 %,
+   3 semillas, Wilcoxon al 10 %). Congelar umbrales ANTES (lección H7.3: no calibrar
+   umbrales en dev pequeño).
+**4. F8 líneas L3-L10** según tabla §F8 (orden por sinergia tras L2/L6: L4, L7, L3, L5, L9,
+   L8 N-CMAPSS DS02, L10).
+**5. F9 parte final + cierre:** re-benchmark N5 (tune/confirm/f7/f8 etapas), capítulo F8
+   actualizado con L2/L6, conclusiones finales, posible Zenodo/DOI + paper corto (solo si
+   usuario pide).
+
+### Reglas operativas críticas (NO violar)
+
+- **Repo público sin rastro**: commits SIN Co-Authored-By Claude, SIN "Generated with";
+  identidad `cedarcreeks <cedarcreeks@users.noreply.github.com>`; antes de push, `git grep -il`
+  de los tokens personales (nombre real + handles de correo) y de `claude` debe salir vacío.
+  Los tokens EXACTOS viven solo en la memoria privada de Claude (fuera del repo), NUNCA se
+  escriben literalmente en ningún fichero versionado — ni siquiera como ejemplo de comando.
+- **Normas N1-N7** en docs/engineering-norms.md (N4 evidencia generada; N5 tiempos M5;
+  N6 concepto entra con matemática; N7 handbook/tesis §0-bis-A).
+- **torch-MPS SOLO foreground** (background segfault); pyCycle datagen sí puede background.
+- **cwd**: usar rutas absolutas; heredocs python desde raíz repo; scratchpad para correr
+  scripts que generan basura de solver (reports/ dirs).
+- **Report**: `cd paper/report && latexmk -pdf -outdir=build report.tex` ×2 pasadas si hay
+  refs nuevas; criterio 0 errores / 0 overfull / 0 undefined; `cp build/report.pdf report.pdf`;
+  assets SIEMPRE via `uv run python scripts/make_report_assets.py`.
+- **Test set**: los 20 motores test de v1.1 NO se re-evalúan fuera de protocolos
+  pre-registrados. Umbrales nuevos → prereg-vN + tag ANTES de mirar test.
+- **Gates fallan honesto**: nunca relajar umbral post-hoc; rediseño físico o refutación.
+- Tests: `uv run pytest -q` → 37 verdes. Full replicación: `make all`.
+
+### Mapa de artefactos
+
+- Veredictos: data/processed/f5/verdicts.json (H1-H5), f7/verdicts_f7.json (H7).
+- Preregs: docs/prereg-v1.md (tag prereg-v1), docs/prereg-v2.md (tag prereg-v2).
+- Sustitutos: data/processed/f8/surrogate{,_takeoff}.pt + reports json + parquets 2400 solves.
+- Flota congelada: data/processed/fleet/ (v1.1, hashes en prereg-v1).
+- Compute: data/processed/compute_times.json (benchmark_pipeline.py).
+- Report fuente: paper/report/ (12 capítulos + 04b + A1/A2); PDF versionado report.pdf.
+- Memoria de proyecto Claude: ~/.claude/.../memory/ehmai-project.md (complementa esto).
+
+---
+
 ## 0. Resumen ejecutivo
 
 Se construye un banco de pruebas reproducible en el que **ambas familias de EHM ven exactamente los
