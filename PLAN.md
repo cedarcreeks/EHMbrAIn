@@ -589,3 +589,24 @@ crítico es F1→F2 (todo depende del gemelo y del dataset).
 3. Redactar `conf/fault_catalog.yaml` y `conf/data_schema.yaml` desde §3.4 y §WP2.3.
 4. Descargar TCDS EASA E.004 (CFM56-7B) y volcar la tabla §4 con valores verificados.
 5. Abrir `paper/related_work.md` con las 4 fichas de WP0.2.
+
+
+---
+
+## F7 (propuesta 2026-07-04) — Tomografía por puntos de operación: MOPA oportunista aprendido
+
+**Idea**: H2 dijo "compra sensores"; F7 explora la salida sin hardware — H(u) varía con la
+condición de vuelo, luego una secuencia de snapshots ordinarios a condiciones dispersas son
+proyecciones distintas del mismo estado de salud. Fusionarlas = tomografía del gas path.
+Factibilidad YA medida en nuestra ICM: apilar los 6 puntos restaura rango 10/10 y duplica la
+separación de pares u-rompibles (η_HPT~Γ_HPT 6.0°→13.1°); η_HPC~η_HPT casi no se mueve
+(1.32°→1.66°) → existe un mapa u-rompible vs fundamental, y ese mapa es contribución.
+
+**Novedad honesta** (WP7.0 la endurece): MOPA clásico existe (puntos deliberados, salud
+constante, estimación clásica); los huecos = scatter OPORTUNISTA de servicio + salud que
+DERIVA dentro de la ventana de fusión (el modelo temporal aprendido separa deriva de fallo
+mientras fusiona — claim técnico central) + adjudicación con verdad-terreno + conjuntos de
+aislamiento conformal como salida de ambigüedad calibrada.
+
+Hipótesis H7.1–H7.4, WPs 7.0–7.6, prereg-v2, misma disciplina de gates: detalle completo en
+`docs/f7-proposal.md`.
