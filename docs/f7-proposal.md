@@ -118,3 +118,20 @@ for cockpit sensors under any schedule in the envelope.
 - H7.3 (drift robustness) unchanged — now evaluated under both schedules.
 - H7.4' conformal sets with set size tracking the per-pair angle map (physics-explained
   ambiguity signaling).
+
+
+---
+
+## Confirmatory verdicts (2026-07-04, prereg-v2, single test pass, 23 episodes)
+
+| Hypothesis | Verdict | Evidence |
+|---|---|---|
+| H7.2' fusion beats classical stacking | **CONFIRMED** | GRU-over-projections 0.65 vs stacked-WLS 0.17 (+48 pp); McNemar p <= 0.0096 under any pairing |
+| H7.3 drift robustness (thresholds) | **REFUTED as frozen** | WLS degraded 17 pp (needed >= 20); GRU 13 pp (needed <= 10). Qualitative pattern present (WLS -> 0.00, GRU holds 0.52); thresholds miscalibrated from the 16-episode dev sample. Discipline over narrative. |
+| H7.4' calibrated ambiguity | **CONFIRMED** | coverage 0.96; median sets 2-3.5; fundamental (3.0) > other (2.0) at short window |
+
+**F7's contributions, final form**: (1) the report-schedule-as-design-variable analysis with
+its +79 % procedural gain and the fundamental-pair map; (2) learned MOPA — a GRU fusing
+per-block physics projections — more than tripling classical multi-point isolation on
+identical data; (3) conformal isolation sets whose size tracks influence-matrix geometry;
+(4) two honest negatives (free scatter saturates; the drift-robustness thresholds as frozen).
