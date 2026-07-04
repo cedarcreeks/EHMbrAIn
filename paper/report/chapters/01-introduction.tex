@@ -49,6 +49,15 @@ or predicts well, but whether it \emph{attributes the damage to the correct comp
 attribution question is precisely where traditional GPA is weakest (the \emph{smearing}
 phenomenon, \cref{sec:gpa}) and where AI is least transparent (the black-box problem).
 
+\paragraph{Audience and register.} This document is a research work aimed at two readers at
+once: the engineering organization deciding whether and how to integrate AI into its engine
+health monitoring practice, and the researcher looking for a rigorous, reproducible
+benchmark at the knowledge frontier. That dual audience sets the register: every method is
+pushed to publishable rigor (pre-registration, statistical tests, audited datasets), and
+every concept is introduced without assuming prior specialization --- chapter briefs, worked
+numeric examples and a notation front-matter keep the document self-contained. Advancing the
+frontier and being readable are treated as the same job, not competing ones.
+
 Since neither a performance model of the engine nor degradation data were available to the
 project, both are built from scratch: a thermodynamic ``digital twin'' of the CFM56-7B26 in
 pyCycle~\cite{Hendricks2019}, calibrated against certified public data (\cref{ch:model}), and a

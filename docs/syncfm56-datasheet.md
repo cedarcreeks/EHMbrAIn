@@ -9,7 +9,7 @@ the same data with complete ground truth: per-flight component health state, EGT
 remaining useful life, fault labels and event log. Built because no public dataset offers
 GPA-style ground truth for a specific commercial engine with ACARS-style reporting.
 
-**Creator/funding.** The EHMbrAIn project (academic). No external funding.
+**Creator/funding.** The EHMbrAIn project (independent research promoting industry adoption of AI-based engine health monitoring). No external funding.
 
 ## Composition
 
