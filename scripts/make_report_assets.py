@@ -335,16 +335,31 @@ def fig_health_trajectory():
 
 
 def table_fleet(index, audit):
+    """All values computed from artifacts (norm N4) — nothing hardcoded."""
+    import pandas as pd
     lives = audit['realism']['lives']
-    n_drift = sum(1 for e in index['engines'] if e.get('drift_channel'))
+    engines = index['engines']
+    n = len(engines)
+    splits = {}
+    for e in engines:
+        splits[e['split']] = splits.get(e['split'], 0) + 1
+    n_rows = sum(e['life_cycles'] for e in engines)
+    n_drift = sum(1 for e in engines if e.get('drift_channel'))
+    ev = pd.read_parquet(FLEET_DIR / 'events.parquet')
+    ac = ev[ev.type == 'acute']
+    n_acute = ac.engine_id.nunique()
+    n_episodes = len(ac)
+    n_params = ac.param.nunique()
     rows = [
-        ('Engines (train / val / test)', '100 (70 / 10 / 20)'),
+        ('Engines (train / val / test)',
+         f"{n} ({splits.get('train', 0)} / {splits.get('val', 0)} / {splits.get('test', 0)})"),
         ('Snapshot rows (takeoff + cruise per flight)',
-         f"{index.get('n_rows', 1584808):,}".replace(',', '\\,')),
+         f"{n_rows:,}".replace(',', '\\,')),
         ('Life [cycles]: median (min--max)',
          f"{lives['median']:.0f} ({lives['min']}--{lives['max']})"),
         ('Censored engines', str(lives['censored'])),
-        ('Engines with an acute fault episode', '49 (all 6 target parameters)'),
+        ('Acute engines / episodes / fault classes',
+         f"{n_acute} / {n_episodes} / {n_params}"),
         ('Engines with a sensor drift', str(n_drift)),
         ('Wash EGTM recovery: mean, frac.\\ positive',
          f"{audit['realism']['wash_sawtooth']['mean_egtm_recovery_C']:.1f} °C, "

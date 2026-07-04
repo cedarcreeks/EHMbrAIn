@@ -5,8 +5,9 @@
 This chapter in brief: the classical monitoring stack ---smoothed deviations, statistical
 alarms, Kalman health tracking, expert isolation rules, margin extrapolation--- is built with
 care and run on the test fleet. Its characteristic strengths and weaknesses, known from the
-literature, now appear as measured numbers against ground truth: fast detection of strong
-faults, heavy smearing on confusable ones, optimistic early-life prognosis. Two detector-design
+literature, now appear as measured numbers against ground truth: partial and often late
+detection of subtle faults, heavy smearing on confusable ones, optimistic early-life
+prognosis. Two detector-design
 lessons learned along the way are recorded. Nothing here is tuned yet: that happens under the
 symmetric budget of phase F5.
 \end{quote}
@@ -69,7 +70,7 @@ and by the ICM geometry, are now measurements:
 
 \begin{table}[htbp]
   \centering\small
-  \caption{Traditional pipeline on the test split, v0 defaults. Auto-generated.}
+  \caption{Traditional pipeline on the test split: v0 settings, fleet v1.1. Auto-generated.}
   \label{tab:trad}
   \input{tables/table_trad}
 \end{table}
@@ -91,7 +92,8 @@ and by the ICM geometry, are now measurements:
     magnitude lands on healthy components. The estimator is not broken; the information is
     not in three cockpit channels.
   \item[Margin extrapolation is optimistic early.] \Cref{fig:rul-funnel}: at half-life the
-    median RUL error is $+7\,600$ cycles, shrinking to $+1\,900$ at 90\,\% of life. Linear
+    median RUL error is $+8\,400$ cycles, shrinking to $+1\,500$ at 90\,\% of life
+    (v1.1 fleet). Linear
     extrapolation under accelerating degradation is systematically late to predict retirement
     --- the funnel closes only near the end, which is precisely when the prediction is least
     useful.

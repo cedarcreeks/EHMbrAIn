@@ -78,7 +78,8 @@ For self-containedness, the AI techniques named above in one paragraph each:
     fault class of a snapshot window.
   \item[LSTM, TCN, Transformer (RUL prognosis).] Three sequence-model families ---recurrent,
     convolutional and attention-based--- that consume a sliding window of past snapshots and
-    regress the remaining useful life. Compared against each other in F4.
+    regress the remaining useful life. The v0 suite implements a GRU (recurrent); the
+    cross-family comparison belongs to the F5 tuned round.
   \item[Conformal prediction (uncertainty).] A distribution-free wrapper: from the model's
     errors on a calibration set it builds prediction intervals with a mathematically
     guaranteed coverage rate (e.g.\ 90\,\%), regardless of the underlying model.
@@ -238,19 +239,42 @@ Each script is a pipeline stage writing versioned artifacts under \code{data/pro
 \end{tabular}
 \end{center}
 
-The data flow is linear: \code{conf/cfm56_7b_targets.yaml} (the contract) feeds the model
-classes; runners and \code{make_*} scripts solve them and write \code{data/processed/*}
-artifacts; \code{make_report_assets.py} turns artifacts into report evidence; the tests
-gate every stage.
+Later phases added, under the same contract-artifact-evidence pattern:
+\begin{description}
+  \item[\code{datagen/}] \code{trajectories.py} (per-mechanism health profiles, exact wash
+    sawtooth, multi-episode acute faults), \code{fleet.py} (engine sampling, EGT-margin end
+    of life, leakage-free splits), \code{sensors.py} (noise/quantization/drift/dropout),
+    \code{snapshots.py} (ACARS-style two-report generator via the F1 linearization).
+    Driver: \code{make_fleet.py}; audits: \code{audit_nonlinearity.py},
+    \code{audit_dataset.py}.
+  \item[\code{trad/}] \code{pipeline.py}: baseline deviations, Holt smoothing with
+    innovations, CUSUM and dual-EWMA gap detectors, WLS and wash-aware Kalman GPA,
+    nearest-signature isolation, Theil--Sen RUL. Driver: \code{run_trad.py}.
+  \item[\code{ai/}] \code{data.py} (shared feature builder --- same deviations as
+    \code{trad/}), \code{models.py} (autoencoder, GRU RUL net, MPS-aware training loops).
+    Drivers: \code{run_ai.py} (detection/diagnosis/RUL + conformal),
+    \code{run_hybrid.py} (stacking ablation), \code{run_pcs.py} (Physics-Consistency
+    Score), \code{tune_detection.py} (validation sweep).
+\end{description}
+
+The data flow is linear: \code{conf/*.yaml} (the contracts) feed the model and generator;
+runners and \code{make_*} scripts write \code{data/processed/*} artifacts;
+\code{make_report_assets.py} turns artifacts into report evidence; the tests gate every
+stage.
 
 \subsection{Test suite (\texttt{tests/})}
 
-Sixteen tests, all run in CI on every change: environment smoke (the vendored pyCycle example
-end-to-end); design-point convergence and acceptance windows; anchor convergence, fuel-flow
-and OPR tolerances, and N1/N2 redlines; the Study self-consistency property (healthy
-off-design at design N1 reproduces the design point); ICM physical signs and rank-3 cockpit
-underdetermination; and the corrections module (ISA values, $\theta/\delta$, exponent-fit
-recovery on synthetic data with known truth).
+Thirty-six tests, all run in CI on every change: environment smoke (the vendored pyCycle
+example end-to-end); design-point convergence and acceptance windows; anchor convergence,
+fuel-flow and OPR tolerances, and N1/N2 redlines; the Study self-consistency property; ICM
+physical signs and rank-3 cockpit underdetermination; the corrections module (ISA,
+$\theta/\delta$, exponent-fit recovery on synthetic truth); trajectory physics (wash
+sawtooth ratios and regrowth, FOD steps, reproducibility, split integrity); the sensor and
+snapshot models (noise statistics, quantization, drift ramps, dropout fraction, end-to-end
+consistency); traditional-pipeline primitives (Holt trend and innovations, CUSUM
+step-not-trend, gap-detector ramp capture, WLS recovery, Kalman observation-space
+convergence, Theil--Sen); and AI primitives (feature fill, window alignment, device
+selection, autoencoder separation, GRU countdown learning).
 
 \section{Comparison metrics}
 

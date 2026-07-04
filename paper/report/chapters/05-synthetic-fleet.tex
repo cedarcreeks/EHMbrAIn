@@ -68,7 +68,7 @@ with the margin computed by projecting $\mathbf{x}(n)$ through the takeoff-hot I
 --- the same linearization as the snapshots. New-engine margins are drawn per engine
 ($85\pm6$\,\si{\degreeCelsius}). \Cref{fig:egtm} shows the resulting fleet behavior: the
 canonical fast-early / slow-late erosion with wash sawtooth, and lives spanning
-10\,500--20\,700 cycles.
+roughly 10\,000--20\,700 cycles (v1.1 exact figures in \cref{tab:fleet}).
 
 \begin{figure}[htbp]
   \centering
@@ -98,7 +98,7 @@ level, ambient offset drawn from a climate distribution) and a cruise snapshot
 the catalog: per-channel Gaussian noise (absolute or percentage $\sigma$), quantization to the
 recording resolution, additive drift ramps on the affected engines (37 of 100 --- matching the
 catalog's per-sensor probabilities summing to 0.36), and missing data as isolated losses plus
-ACARS outage bursts (4.1\,\% of snapshots). Every row carries, alongside the measured values:
+ACARS outage bursts ($\approx$4\,\% of snapshots). Every row carries, alongside the measured values:
 the true channel values, the full ground-truth health vector, the EGT margin, the remaining
 useful life, the isolation label, and drift flags. \Cref{tab:fleet} summarizes the frozen
 dataset.
@@ -164,8 +164,9 @@ parameter --- a 7-class isolation problem.
 onset as a fraction of the \emph{maximum simulation horizon} (30\,000 cycles) rather than of
 the engine's actual life ($\sim$16\,000): most episodes landed beyond end of life and only
 15/100 engines showed one. The fix computes a chronic-only provisional life first, then places
-the onset as a fraction of it (two-pass generation); the final fleet has 49/100 acute engines
-with all six target parameters represented.
+the onset as a fraction of it (two-pass generation); the v1.0 fleet then carried 49/100 acute engines
+with all six target parameters represented (v1.1 extends this further,
+\cref{sec:fleet-v11}).
 
 \textbf{Second pass: passed.} On the corrected fleet the trivial classifier achieves
 \textbf{54.0\,\%} accuracy (macro-F1 0.30) on the gated isolation task --- under the 60\,\%

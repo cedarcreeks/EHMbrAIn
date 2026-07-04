@@ -3,11 +3,12 @@
 
 \begin{quote}\itshape
 This chapter in brief: the AI suite consumes exactly the same deviations as the traditional
-pipeline and is scored by the same protocol. In its untuned v0 form it already wins the
-prognosis contest decisively --- 4--6$\times$ lower RUL error with calibrated uncertainty
-intervals --- while its detection and diagnosis attempts surface two instructive failures,
-and the first physics-informed hybrid experiment produces a pre-registration-grade
-\emph{negative} result. All of it is reported.
+pipeline and is scored by the same protocol. Untuned, it wins the prognosis contest
+(3--6$\times$ lower RUL error, calibrated uncertainty intervals) and loses detection and
+diagnosis to the traditional pipeline on the subtle v1.1 faults; the first physics-informed
+hybrid experiment produces a replicated \emph{negative} result, the new explainability
+metric returns a null on a weak classifier, and milestone H4 is consequently not declared.
+All of it is reported.
 \end{quote}
 
 \section{Fairness by construction}
@@ -29,13 +30,12 @@ segfaults alongside torch-MPS on macOS. One runtime, no crash, same model family
 
 A two-layer GRU consumes a downsampled 1\,280-cycle deviation history and regresses the
 remaining useful life (capped at 12\,000 cycles, the standard prognostics practice).
-\Cref{fig:rul-compare} and \cref{tab:ai-vs-trad} give the v0 face-off against the
-margin-extrapolation prognosis of \cref{ch:trad}:
+\Cref{fig:rul-compare} and \cref{tab:ai-vs-trad} give the face-off (v0 settings, fleet
+v1.1) against the margin-extrapolation prognosis of \cref{ch:trad}:
 
 \begin{itemize}
-  \item \textbf{Several-fold lower RMSE} at every evaluation point (\cref{tab:ai-vs-trad};
-    on fleet v1.1: 1\,678 cycles at half-life and 842 at 90\,\% against the traditional
-    pipeline's thousands).
+  \item \textbf{3--6$\times$ lower RMSE} at every evaluation point (\cref{tab:ai-vs-trad}:
+    1\,678 vs.\ 9\,926 cycles at half-life, 842 vs.\ 2\,718 at 90\,\%).
   \item \textbf{The optimism bias is gone.} The traditional median error of thousands of
     cycles at half-life ---late retirement predictions, the dangerous direction--- collapses
     to near zero; the GRU learns the acceleration of late-life degradation that a linear
