@@ -1,0 +1,76 @@
+\chapter{Overcoming the limitations: the F8 program}
+\label{ch:overcoming}
+
+\begin{quote}\itshape
+This chapter in brief: the limitations declared throughout this document are not footnotes
+--- they are the frontier. Each becomes a research line with a discovery hypothesis (the
+full ten-line program lives in the project plan). This chapter reports the lines executed
+so far, starting with the one that unlocks three others: replacing the linearized generator
+with a differentiable neural twin.
+\end{quote}
+
+\section{The program in one view}
+\label{sec:f8-program}
+
+Ten declared limitations, ten research lines. The ordering is by synergy, not severity: a
+\textbf{differentiable surrogate of the twin} (L1) unlocks nonlinear fleet generation (L2),
+the two physics-injection mechanisms H4 left untested --- exact-gradient physics losses and
+twin-residual features --- (L6), and fast analysis-by-synthesis diagnosis. Mission-mix
+generation (L2) then feeds the report-schedule findings of \cref{ch:tomography} with data
+rather than geometry alone. The remaining lines (real-station EGT, mechanism-level labels,
+architecture sweeps, sensor-drift estimation, N-CMAPSS, map-shape calibration) queue behind
+those. Every line inherits the house discipline: a pre-registrable hypothesis and a gate.
+
+\section{L1: a differentiable neural twin --- gate passed}
+\label{sec:f8-l1}
+
+\paragraph{Why.} The fleet generator is a linearization --- audited to be at the noise
+floor for fleet-realistic health states (\cref{sec:audit-nonlin}), but a declared
+approximation nonetheless, and one whose error grows exactly where interesting things
+happen (end of life, large faults). The full pyCycle model is exact but costs seconds per
+snapshot and offers no gradients. The goal: a model with pyCycle's fidelity at
+microseconds per evaluation, differentiable end to end.
+
+\paragraph{How.} 2\,400 full pyCycle solves sampled across the design range (all ten
+health parameters in $\pm3.5\,\%$, commanded N1 across the cruise band; 8 parallel
+workers, zero failed solves, $\sim$14 minutes on the M5). The architecture that passed is
+the house pattern at model scale: \textbf{the linearization plus a learned residual} --- a
+three-layer MLP corrects what the linear model misses, inheriting its smoothness where
+physics is nearly linear. A pure MLP was tried first and could not match the
+linearization's precision on N2; the residual form fixed that immediately.
+
+\paragraph{The gate, including its two wrong drafts.} The acceptance gate went through
+three disclosed revisions --- each a lesson in evaluation design. Draft one compared the
+surrogate's \emph{maximum} error against the linearization's \emph{P95} (a statistic
+mismatch). Draft two fixed the statistics but kept the fleet audit's numbers as the
+baseline --- the \emph{wrong population}: the audit measured small, fleet-realistic health
+states, while the surrogate's test set spans the full $\pm3.5\,\%$ design range, where the
+linearization is an order of magnitude worse (N2 nonlinear residual: 0.42\,\% there versus
+0.035\,\% in the audit). The final gate evaluates both models \emph{on the same held-out
+test set} and demands strict like-for-like improvement.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{L1 gate: surrogate versus linearization on the same 400 held-out full-physics
+  solves (median and P95 of $|$error$|$, percent of channel value). Auto-generated from
+  the surrogate report.}
+  \label{tab:surrogate}
+  \input{tables/table_surrogate}
+\end{table}
+
+\paragraph{Result.} \Cref{tab:surrogate}: the surrogate beats the linearization by
+13--19$\times$ on every cockpit channel --- N2 at 0.008\,\% median where the linear model
+sits at 0.12\,\%, EGT at 0.03\,\% versus 0.54\,\%. In exchange for 14 minutes of solve
+generation, the project now owns a twin that evaluates in microseconds, differentiates
+exactly, and is more faithful to the physics than the generator that produced every result
+so far --- which is precisely what makes the next lines possible.
+
+\paragraph{What this unlocks.} L2 regenerates the fleet through the surrogate ---
+nonlinear snapshots at linear-generator cost, retiring the project's oldest declared
+limitation (a takeoff-family surrogate is being trained with the same recipe). L6 then
+re-opens hypothesis H4 with the two mechanisms stacking never tested: twin-residual
+features (measured minus surrogate-predicted at the estimated health --- an information
+channel the raw deviations genuinely lack once generation is nonlinear) and
+physics-constrained losses using the surrogate's exact gradients. H4 was refuted for the
+concatenation shortcut; whether \emph{any} physics injection helps is still an open,
+now-testable question.
