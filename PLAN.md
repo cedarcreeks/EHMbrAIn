@@ -635,3 +635,30 @@ Cada una se convierte en línea de investigación con hipótesis de descubrimien
 Orden sugerido por sinergia: L1 (sustituto diferenciable — desbloquea L2, L6, F7-drift) → L2+F7
 juntos → L4, L7 (tareas nuevas sobre flota v2) → L3, L5, L9 → L8, L10. Cada línea con
 hipótesis pre-registrable y gate propio, misma disciplina H0–H6.
+
+
+---
+
+## F9 — Completitud conceptual del report (directriz 2026-07-04)
+
+**Directriz del usuario**: desarrollar TODOS los conceptos planteados vagamente — sin modelo
+matemático ni explicación guía — hasta el estándar del resto del documento.
+
+**Procedimiento** (pasada sistemática, capítulo a capítulo):
+1. Inventario: barrer el report buscando conceptos usados sin (a) definición formal,
+   (b) modelo matemático, (c) explicación guía para el lector novato. Candidatos conocidos:
+   conformal prediction / APS (se usa, nunca se deriva: cuantil conforme, garantía de
+   cobertura, construcción del set adaptativo), test de McNemar (b/c discordantes, binomial
+   exacta), Wilcoxon signed-rank, corrección de Holm, bootstrap BCa, delta de Cliff,
+   distancia de Mahalanobis + shrinkage Ledoit-Wolf, Theil-Sen (mediana de pendientes),
+   CUSUM (derivación log-likelihood), suavizado Holt (ecuaciones de nivel/tendencia),
+   Kalman-GPA (predicción/actualización completas), PCS (proyección H+ y coseno),
+   GRU (ecuaciones de puertas), Optuna/TPE (qué optimiza), gradiente descendente/backprop
+   (está en primer ML pero sin ecuación), SVD/rango/ángulos de firma (parcial en ch4).
+2. Para cada concepto: recuadro o subsección con — modelo matemático completo con notación
+   del documento · explicación guía en 1-2 párrafos (por qué funciona, qué rompe si falta) ·
+   ejemplo numérico trabajado cuando quepa · referencia canónica.
+3. Gate F9: relectura completa — ningún término técnico usado antes de definirse; verificar
+   con el índice de notación (ch. 0) actualizado.
+4. Norma nueva N6: todo concepto nuevo que entre al report a partir de ahora entra CON su
+   modelo matemático y explicación guía (no se acumula deuda conceptual).
