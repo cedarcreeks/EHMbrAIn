@@ -53,7 +53,15 @@ cd paper/report && latexmk -pdf -outdir=build report.tex
 
 TeXstudio users: set the bibliography tool to Biber (Options → Configure → Build).
 
-## Replicate everything (~11 min on an Apple M5)
+## Replicate everything (one command)
+
+```bash
+make all        # full pipeline -> verdicts -> case studies -> report PDF
+make test       # 37 gate tests
+uv run streamlit run dashboard/app.py   # interactive fleet/engine/verdicts views
+```
+
+Or stage by stage (~15 min on an Apple M5, plus tuning):
 
 ```bash
 uv sync && uv run pytest                          # environment + 36 gate tests
@@ -88,4 +96,4 @@ Full mapping of scripts to report tables/figures: report ch. 3, "Replication gui
 - [x] **H3** — traditional EHM pipeline with test-fleet metrics (floor numbers, pre-tuning)
 - [ ] **H4** — AI suite delivered (prognosis 3–6×, conformal, PCS); gate NOT declared — detection/diagnosis pending the F5 tuned round
 - [x] **H5** — pre-registered verdicts: H1/H3/H5 confirmed, H2/H4 refuted; FD001 ranking check passed
-- [ ] **H6** — case studies, dashboard, final report
+- [x] **H6** — five case studies, Streamlit dashboard, `make all` replication, conclusions

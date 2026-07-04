@@ -1,0 +1,44 @@
+# EHMbrAIn — gate H6: full replication with one command.
+# Foreground required (torch-MPS). Reference machine: Apple M5 (~15 min + tuning).
+PY := uv run python
+
+all: model fleet audits pipelines f5 evidence report
+
+model:
+	$(PY) scripts/run_design_point.py
+	$(PY) scripts/run_anchors.py
+	$(PY) scripts/make_decks.py
+	$(PY) scripts/make_corrected_baseline.py
+	$(PY) scripts/make_icm.py
+
+fleet:
+	$(PY) scripts/make_fleet.py
+
+audits:
+	$(PY) scripts/audit_dataset.py
+	$(PY) scripts/audit_nonlinearity.py
+
+pipelines:
+	$(PY) scripts/run_trad.py
+	$(PY) scripts/run_ai.py
+	$(PY) scripts/run_hybrid.py
+	$(PY) scripts/run_pcs.py
+
+f5:
+	$(PY) scripts/tune_f5.py trad 50
+	$(PY) scripts/tune_f5.py ai 50
+	$(PY) scripts/f5_confirm.py
+	$(PY) scripts/sim_to_real.py
+
+evidence:
+	$(PY) scripts/make_case_studies.py
+	$(PY) scripts/benchmark_pipeline.py model decks fleet audits trad
+	$(PY) scripts/make_report_assets.py
+
+report:
+	cd paper/report && latexmk -pdf -outdir=build report.tex && cp build/report.pdf report.pdf
+
+test:
+	uv run pytest -q
+
+.PHONY: all model fleet audits pipelines f5 evidence report test

@@ -1,0 +1,65 @@
+\chapter{Conclusions and future work}
+\label{ch:conclusions}
+
+\begin{quote}\itshape
+This chapter in brief: what was built, what the pre-registered evidence says, what an
+adopting organization should do differently on Monday, and what remains honestly open.
+\end{quote}
+
+\section{What was built}
+
+From nothing but certified public data, this work produced: a calibrated thermodynamic twin
+of the CFM56-7B26 whose fuel-flow predictions sit within 3\,\% of certification test-bed
+measurements (C1's foundation); \textbf{SynCFM56}, a 100-engine run-to-failure fleet with
+complete per-flight ground truth in airline snapshot format, gated by three audits that
+failed and were fixed twice (C1); a traditional EHM pipeline built to industrial shape and a
+matched AI suite consuming identical inputs (C2's fairness); conformal uncertainty for
+prognosis (C4); the Physics-Consistency Score machinery (C5); the sensor-set observability
+analysis (C6's core); an external-benchmark ranking check (C7); and a pre-registered,
+Holm-corrected adjudication of five hypotheses under a symmetric 50-trial tuning budget (C2)
+--- all reproducible on one desktop machine in minutes and documented to be readable without
+prior specialization.
+
+\section{What the evidence says}
+
+Three confirmations, two refutations (\cref{tab:verdicts}), and the split is the message:
+
+\begin{itemize}
+  \item \textbf{Learning wins where patterns accumulate}: prognosis (3--6$\times$ lower RUL
+    error, calibrated 6$\times$-narrower intervals, ranking replicated on C-MAPSS) and ---
+    after honest tuning --- detection timing (12$\times$ earlier at equal false alarms).
+  \item \textbf{Physics wins where information is scarce}: the ICM rule matched or beat the
+    learner on confusable isolation, and bolting physics-derived features onto a learner
+    (H4) made it worse. Physics' real contribution was \emph{diagnosis of the limits}: the
+    influence-matrix geometry predicted, before any learning ran, exactly where every method
+    would fail.
+  \item \textbf{Sensors bound everyone}: the confusable wall (H2) is informational, not
+    algorithmic. The extended gas-path set quintuples the worst signature angle; no model
+    recovers what probes never measured.
+\end{itemize}
+
+\section{Guidance for adoption}
+
+The five-point checklist of \cref{sec:res-industry} stands as the operational summary:
+prognosis first, tuned change-detection second, sensors before models for isolation,
+distrust of untuned comparisons, and pre-registration as a procurement demand. To it the
+case studies add a sixth: \textbf{protect the sensor estate} --- the drifting thermocouple
+of Case C corrupts every consumer downstream, learned or classical.
+
+\section{Honest limitations}
+
+The world here is synthetic and linearized (audited to the noise floor, but still a model
+of a model); the mission mix is two snapshot conditions with scatter; the EGT is a
+station-4.5 proxy; chronic labels correlate with age by construction; the AI family is one
+compact architecture per task, not the state of the art; and H4's verdict covers one of
+three planned hybrid mechanisms. None of these caveats is hidden in fine print --- each is
+in the decision register or the relevant chapter.
+
+\section{Future work}
+
+(1) The two untested hybrid mechanisms --- twin-residual features and physics-constrained
+losses --- under the same pre-registered discipline; (2) the PCS evaluated on a competent
+classifier, now that fleet v1.1 removes the sample-starvation excuse; (3) N-CMAPSS DS02 as
+the heavyweight sim-to-real extension; (4) mission-mix and transient realism in the
+generator; (5) the extended-sensor fleet, turning the C6 observability analysis into a
+measured acquisition trade study; (6) public release of SynCFM56 with a DOI.

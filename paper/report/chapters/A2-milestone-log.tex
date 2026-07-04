@@ -1,0 +1,67 @@
+\chapter{Milestone log}
+\label{ch:milestones}
+
+\begin{quote}\itshape
+The project's dated gate-by-gate record, kept as written at each milestone (entries are
+historical documents; later chapters supersede their numbers where noted).
+\end{quote}
+
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Milestones reached (updated at every gate).}
+  \label{tab:milestone-log}
+  \begin{tabular}{lp{0.11\textwidth}p{0.62\textwidth}}
+    \toprule
+    Milestone & Date & Evidence \\
+    \midrule
+    H0 & 2026-07-03 & Reproducible environment (uv, Python 3.11, pyCycle 4.4 with
+      \code{numpy<2}); a complete example cycle converging locally and in CI; repository
+      skeleton and smoke test. \\
+    H1 (partial) & 2026-07-03 & WP1.1 and WP1.2 complete: design point inside all five
+      acceptance windows (\cref{tab:design}); SLS anchors calibrated against TCDS + EEDB with
+      all three gated anchors in tolerance (\cref{tab:anchors}); calibration contract with
+      verified values. \\
+    H1 (WP1.3--1.4) & 2026-07-03 & Baseline decks over the flight envelope with leave-one-out
+      quality report (\cref{tab:deck-loo}); health-parameter injection validated by the
+      off-design/design self-consistency check; ICM at both snapshot conditions with SVD
+      observability analysis --- minimum cockpit signature angle 1.3$^{\circ}$, seven
+      confusable pairs (\cref{tab:confusable}); tabular-vs-CEA cross-check within 0.7\,\%
+      (\cref{tab:cea}); twelve automated tests green. \\
+    \textbf{H1 closed} & 2026-07-03 & Correction exponents fitted from the model land on
+      textbook values (\cref{tab:corrected}); corrected-space baseline collapses LOO tails by
+      an order of magnitude; ICM extended to a six-point envelope grid with stable
+      observability (\cref{tab:icm-grid}); computations parallelized per norm N1 (decks
+      $2.9\times$, ICM $6\times$ faster); sixteen automated tests green. \\
+    \textbf{H2 closed} & 2026-07-03 & SynCFM56 v1.0 frozen (\cref{tab:fleet}): 100 engines,
+      1.58M snapshot rows, deterministic regeneration. Nonlinearity at the noise floor
+      (\cref{tab:nonlin}); difficulty gate failed at 81.6\,\% with chronic labels, passed at
+      54.0\,\% after the acute-episode design change (\cref{sec:audit-difficulty}); realism
+      checks all positive; onset bug found and fixed by the audits; 25 automated tests green. \\
+    \textbf{H3 closed} & 2026-07-03 & Traditional pipeline end-to-end on the test fleet
+      (\cref{tab:trad}): detection recall 0.5 at 98-cycle median delay, isolation 0\,\% on
+      the confusable subset, smearing index 0.85, RUL optimism funnel measured
+      (\cref{fig:rul-funnel}); two detector-design lessons recorded; all defaults registered
+      in \cref{ch:decisions} and exposed to the F5 budget; 31 automated tests green. \\
+    F4 addendum & 2026-07-04 & PCS machinery implemented with a
+      recorded null result on the weak v1.1 classifier (\cref{sec:pcs}); Mahalanobis
+      detector validation sweep found a structural, not threshold, gap
+      (\cref{sec:det-sweep}); H4 explicitly not declared --- resolution moved into the F5
+      tuned round. \\
+    F4 v0 & 2026-07-04 & AI suite end-to-end on MPS (\cref{tab:ai-vs-trad}): RUL RMSE
+      4--6$\times$ below traditional with near-zero bias; conformal coverage
+      0.85/0.95/1.00 at 0.9 nominal; naive-AE recall-0 and engine-level sample-starvation
+      findings recorded; stacking hybrid \emph{negative} result (\cref{fig:hybrid}) logged
+      pre-freeze; 36 automated tests green. \\
+    \textbf{F5 verdicts} & 2026-07-04 & Tuned under the frozen 50-trial budget; single
+      confirmatory pass; H1 confirmed (detection flips to AI: recall 0.48 vs 0.13, delay
+      499 vs 6033 cy), H2 refuted (31\,\% = 31\,\%: the observability wall binds both),
+      H3 confirmed (Cliff's $\delta$ 0.89), H4 refuted, H5 confirmed (coverage 0.883,
+      half-width 5.9$\times$ tighter). \cref{tab:verdicts}; 37 tests green. \\
+    \textbf{H5 closed} & 2026-07-04 & Sim-to-real on C-MAPSS FD001 (disclosed N-CMAPSS
+      substitution): RUL ranking preserved, 14.9 vs 42.1 cycles RMSE
+      (\cref{sec:sim-to-real}). All five hypotheses adjudicated; evidence reproducible end
+      to end. \\
+    \bottomrule
+  \end{tabular}
+\end{table}

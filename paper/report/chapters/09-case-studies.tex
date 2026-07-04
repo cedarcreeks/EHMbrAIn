@@ -1,0 +1,99 @@
+\chapter{Case studies: five engines, told in operations language}
+\label{ch:cases}
+
+\begin{quote}\itshape
+This chapter in brief: five real engines from the test fleet, each illustrating one
+situation a fleet manager actually faces, told with the monitoring plots in front of us and
+both pipelines' answers on record. Every engine, number and verdict comes from
+\texttt{scripts/make\_case\_studies.py} and the tuned F5 configurations --- nothing staged.
+\end{quote}
+
+\section*{Case A --- Engine 17: ordinary aging, and why wash scheduling works}
+
+Engine 17 lives 18\,323 cycles with no acute fault and no sensor trouble: the baseline
+customer of any monitoring system. Its EGT margin (\cref{fig:case-a}) shows textbook fleet
+physics --- fast early erosion, sixteen wash recoveries, the long slow slide to retirement.
+Operationally, this is the case where the \emph{traditional} toolkit earns its keep at
+near-zero cost: margin trending plus the wash log explains everything visible, and nothing
+here needs a neural network. A monitoring roadmap should leave this workflow alone.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{case_a_fouling}
+  \caption{Case A: EGT margin of engine 17. Gray verticals: compressor washes.}
+  \label{fig:case-a}
+\end{figure}
+
+\section*{Case B --- Engine 89: the hot-section burner, where prognosis pays}
+
+Engine 89 drew a severe hot-section multiplier (2.0$\times$ fleet nominal) and retires at
+11\,470 cycles --- the short-life tail every planner fears. At the half-life review the
+tuned margin extrapolation was telling maintenance control ``about 6\,300 cycles more than
+reality''; the GRU's error at the same moment was 2\,234 cycles, tightening to 1\,396 by the
+90\,\% point (\cref{fig:case-b}). Six thousand optimistic cycles is the difference between
+an orderly shop-visit slot and a schedule scramble; this single engine is the H3 verdict
+made concrete.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{case_b_prognosis}
+  \caption{Case B: EGT margin of engine 89 with the three review points (50/70/90\,\% of
+  life) marked.}
+  \label{fig:case-b}
+\end{figure}
+
+\section*{Case C --- Engine 0: the lying thermocouple}
+
+Engine 0 carries a drifting EGT sensor that accumulates a $+9$\,K bias by end of life
+(\cref{fig:case-c}). Every deviation-based consumer downstream --- trending, GPA, margin
+estimation --- ingests that bias as if the gas path were 9\,K hotter than it is: a
+phantom deterioration of roughly a third of a typical year's real margin loss. Neither
+family in this study estimates sensor bias explicitly (the augmented-state Kalman of
+\cref{sec:gpa} is the classical remedy; a queued extension). The operational lesson
+survives any modeling choice: \textbf{cross-channel consistency checks and periodic probe
+calibration are monitoring infrastructure, not optional hygiene} --- the smartest algorithm
+inherits its sensors' honesty.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{case_c_drift}
+  \caption{Case C: measured-minus-true EGT of engine 0 (smoothed): the drift ramp the
+  monitoring system cannot see from this channel alone.}
+  \label{fig:case-c}
+\end{figure}
+
+\section*{Case D --- Engine 13: bird at cycle 5\,727, alarm at 5\,749}
+
+A foreign-object event costs engine 13 about 1.4\,\% of compressor efficiency in one
+flight. The cruise EGT deviation steps visibly (\cref{fig:case-d}) and the tuned traditional
+CUSUM --- fed by Holt innovations, per the chapter-6 lesson --- alarms \textbf{22 cycles}
+after the event: for a daily utilization of 4--6 cycles, that is a borescope request within
+the week. Step events are the classical detector's home turf and this case shows the
+industrial stack at its honest best.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{case_d_fod}
+  \caption{Case D: engine 13's cruise EGT deviation (smoothed), the FOD event (dashed) and
+  the traditional alarm (dotted), 22 cycles later.}
+  \label{fig:case-d}
+\end{figure}
+
+\section*{Case E --- Engine 0 again: the confusable fault, live}
+
+Late in life (cycle 14\,061) engine 0 develops a genuine HPC-efficiency fault --- one pole
+of the 1.3$^{\circ}$ confusable pair. Asked at onset$+500$, the tuned ICM rule answers
+\emph{hpc.eta}: correct. The tuned AI classifier answers \emph{hpt.eta} --- precisely the
+confusable partner (\cref{fig:case-e}). On the earlier, subtler LPC episode of the same
+engine, both families miss in different directions. This is the H2 refutation embodied: at
+these signature angles the cockpit channels genuinely cannot separate the pair, and which
+family lands the point is close to coin-flip territory. The purchase order that fixes this
+case is written to a sensor vendor, not a software one.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.78\textwidth]{case_e_confusable}
+  \caption{Case E: ground truth of the faulted parameter and its confusable partner on
+  engine 0 (onset dashed). The AI attributed the step to the partner.}
+  \label{fig:case-e}
+\end{figure}

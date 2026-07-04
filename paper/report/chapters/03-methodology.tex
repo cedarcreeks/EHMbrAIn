@@ -340,8 +340,8 @@ end to end (\cref{tab:compute}; per-stage breakdown measured by
     claim in this document.
 \end{enumerate}
 
-\paragraph{Pipeline (in order).} Each command writes versioned artifacts under
-\code{data/processed/}; the mapping to report evidence is:
+\paragraph{Pipeline (in order).} \code{make all} runs everything below and rebuilds this
+document (gate H6); the stage-by-stage mapping to report evidence is:
 
 \begin{center}\footnotesize
 \begin{tabular}{>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}}
@@ -364,6 +364,7 @@ end to end (\cref{tab:compute}; per-stage breakdown measured by
   \code{scripts/tune_f5.py} + \code{scripts/f5_confirm.py} & tuned configs; H1--H5 verdicts & \cref{tab:verdicts} \\
   \code{scripts/sim_to_real.py} & external-benchmark ranking check & \cref{sec:sim-to-real} \\
   \code{scripts/benchmark_pipeline.py} & compute times (norm N5) & \cref{tab:compute} \\
+  \code{scripts/make_case_studies.py} & five case-study figures + facts & \cref{ch:cases} \\
   \code{scripts/make_report_assets.py} & \emph{every} figure and table above & this document \\
   \bottomrule
 \end{tabular}
