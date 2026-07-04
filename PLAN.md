@@ -20,6 +20,23 @@ benchmark abierto (NO TFM; redefinido 2026-07-04).
 **Defaults asumidos:** sensores de cabina (N1, N2, EGT, WF) como caso base + ablación con set
 extendido (P25/T25, PS3/T3) · flota ~100 motores run-to-failure.
 
+## 0-bis-A. Requisito permanente del documento (directriz usuario 2026-07-04, norma N7)
+
+**Para TODO el documento, sin excepción**: explicaciones sobre el origen de los datos, qué
+representan, cómo se generan y qué es synthetic data; explicaciones sobre las metodologías;
+detalles sobre cada técnica de IA. El report debe ser un **handbook completo** y a la vez
+servir como **tesis doctoral**: un trabajo con **todos los ingredientes que intervienen bien
+presentados y caracterizados** (origen · significado físico/matemático · modelo formal ·
+explicación guiada · rol en el argumento). Aplica retroactivamente (checklist §F9) y a todo
+texto futuro desde el primer borrador. Ningún capítulo se considera terminado si un
+ingrediente entra sin caracterizar.
+
+Estado de ejecución: hecho — cap. datos/procedencia+synthetic data, maquinaria estadística
+completa (ch3), matemática de pipeline tradicional (ch6), matemática+tabla de caracterización
+de las 9 técnicas IA (ch7), axiomas de comparación justa (ch3), stacked-WLS (ch10), primer ML
+(ch3). Pendiente — ch2 GPA/termodinámica al estándar, ch5 mecanismos de degradación con
+modelo, revisión ch8-11, gate de relectura final (ningún término antes de definirse).
+
 ## 0-bis. Principio rector: transferibilidad a la industria
 
 Cada fase debe responder, además de su pregunta científica, una pregunta operativa que un
