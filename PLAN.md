@@ -2,16 +2,49 @@
 
 **Plan maestro v2 (detalle extremo) — 2026-07-03**
 
-> Proyecto académico (paper / TFM) que demuestra la potencia del **Engine Health Monitoring (EHM)**
-> basado en IA frente al EHM tradicional, usando **Gas Path Analysis (GPA)** sobre el turbofan
+> Trabajo de investigación profunda que compara el **Engine Health Monitoring (EHM)** basado en
+> IA frente al EHM tradicional, usando **Gas Path Analysis (GPA)** sobre el turbofan
 > **CFM56-7B** (Boeing 737NG). No existen datos reales de degradación ni modelo de performance
 > disponible: el proyecto **construye ambos** — un gemelo termodinámico en pyCycle y un generador
 > de flota sintética degradada con verdad-terreno — y los libera como benchmark abierto.
+>
+> **Misión (redefinida 2026-07-04): generar conocimiento TRANSFERIBLE a la industria.** El
+> objetivo no es solo mover la frontera del conocimiento sino que una organización de ingeniería
+> pueda *usar* los resultados: decidir si integrar IA en su práctica de EHM, cuándo, con qué
+> sensores y a qué coste. Sin lenguaje que haga el trabajo inaccesible. Doble audiencia
+> (industria + investigación) declarada en el report, cap. 1 "Audience and register".
 
 **Decisiones cerradas:** motor CFM56-7B · herramienta pyCycle · alcance IA completo (detección +
-diagnóstico + RUL + híbrido physics-informed) · entregable paper/TFM académico.
+diagnóstico + RUL + híbrido physics-informed) · entregable: informe de investigación accesible +
+benchmark abierto (NO TFM; redefinido 2026-07-04).
 **Defaults asumidos:** sensores de cabina (N1, N2, EGT, WF) como caso base + ablación con set
 extendido (P25/T25, PS3/T3) · flota ~100 motores run-to-failure.
+
+## 0-bis. Principio rector: transferibilidad a la industria
+
+Cada fase debe responder, además de su pregunta científica, una pregunta operativa que un
+responsable de flota pueda accionar:
+
+| Fase | Pregunta científica | Pregunta operativa (transferencia) |
+|---|---|---|
+| F1 | ¿Es fiel el gemelo? | ¿Qué se puede construir SOLO con datos públicos certificados (TCDS, EEDB)? — receta replicable para cualquier motor |
+| F2 | ¿Es válido el dataset? | ¿Cómo auditar un dataset sintético antes de fiarse de él? (las 3 auditorías son un protocolo reutilizable) |
+| F3 | ¿Qué rinde el EHM clásico medido contra verdad-terreno? | ¿Dónde NO hace falta IA? (el tradicional gana eventos a coste casi nulo) |
+| F4 | ¿Qué aporta la IA y dónde? | ¿Qué tarea justifica la inversión? (prognosis 3-6×) ¿Cuáles no todavía? |
+| F5 | ¿Sobreviven las hipótesis al pre-registro? | Números citables sin escepticismo + mapa sensores×dato×ruido = guía de adquisición |
+| F6 | — | Casos narrados en lenguaje de operación (EGT margin, retiradas, lavados) + coste-beneficio parametrizado |
+
+Reglas derivadas (ya operativas, ahora explícitas):
+1. **Métricas operativas junto a las estadísticas** — falsas alarmas por 1000 vuelos, ciclos de
+   aviso previo, margen EGT recuperado; no solo F1/AUC/RMSE.
+2. **Registro de decisiones** (apéndice del report): una organización que replique esto sabe qué
+   elección fue medida, cuál literatura, cuál convención y cuál perilla ajustable.
+3. **Scoreboard honesto aunque incomode** — "la IA no gana en detección todavía" es información
+   de compra tan valiosa como "gana 3-6× en prognosis".
+4. **Todo reproducible con hardware de escritorio** (un portátil + GPU de consumo): si solo corre
+   en un clúster, no es transferible.
+5. **Datasheet + catálogo de fallos versionados**: el generador es adaptable a otro motor
+   cambiando el contrato YAML, no reescribiendo código.
 
 ---
 
