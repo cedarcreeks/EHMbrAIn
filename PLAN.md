@@ -610,3 +610,28 @@ aislamiento conformal como salida de ambigüedad calibrada.
 
 Hipótesis H7.1–H7.4, WPs 7.0–7.6, prereg-v2, misma disciplina de gates: detalle completo en
 `docs/f7-proposal.md`.
+
+
+---
+
+## F8 — Programa de superación de limitaciones (directriz 2026-07-04)
+
+**Directriz del usuario**: las limitaciones declaradas no son notas al pie — son la frontera.
+Cada una se convierte en línea de investigación con hipótesis de descubrimiento.
+
+| # | Limitación declarada | Vía de superación | Posible descubrimiento |
+|---|---|---|---|
+| L1 | Generación linealizada (baseline+ICM·x) | Sustituto neuronal DIFERENCIABLE de pyCycle (entrenado con solves reales; error < auditoría actual) → generación no lineal a coste ~0 | El sustituto habilita análisis-por-síntesis (diagnóstico = inversión del twin) y pérdidas físicas exactas — el mecanismo híbrido no probado de H4 |
+| L2 | 2 condiciones de snapshot + scatter | Generador de mix de misión (múltiples reportes/vuelo, FL/Mach variados) — sinergia directa con F7 (calendario diseñado) | Cuantificar el valor diagnóstico marginal de CADA reporte del calendario (curva valor-vs-coste de datos) |
+| L3 | EGT proxy en estación 4.5 | Añadir canal T49.5 (interetapa LPT) del propio modelo + shunt de display como sesgo conocido | ¿Cambia el mapa de confusabilidad con la estación real? (la geometría ICM depende de dónde mides) |
+| L4 | Etiquetas crónicas = proxy de edad | Tareas a nivel de MECANISMO usando las contribuciones por-mecanismo ya almacenadas | Separabilidad fouling-vs-erosión: ¿distinguible el lavable de lo permanente sin evento de lavado? |
+| L5 | Una arquitectura por tarea | Barrido TCN/Transformer bajo presupuesto F5-style | ¿La ventaja RUL es del aprendizaje o del GRU? (robustez de conclusión) |
+| L6 | H4 = solo mecanismo stacking | Los 2 restantes: residuos-del-twin (vía L1) y pérdida con restricción física | ¿Existe ALGÚN híbrido que gane? Si no: resultado fuerte contra la etiqueta "physics-informed" |
+| L7 | Deriva de sensor sin estimar | Kalman de estado aumentado + tarea IA de detección de sesgo (cross-channel) | ¿Quién detecta antes el termopar mentiroso? (Caso C resuelto) |
+| L8 | Sim-to-real solo FD001 | N-CMAPSS DS02 (pipeline de descarga/HDF5 dedicado) | Transferencia con física de vuelo real por ciclo |
+| L9 | PCS nulo (clasificador débil) | Re-evaluar PCS sobre el learner F7 (competente) | ¿La métrica separa razonamiento físico de ruido cuando hay señal? (validación de C5) |
+| L10 | Mapas genéricos escalados | Calibrar parámetros de FORMA de mapa contra la curva EEDB completa (4 puntos + working line) | ¿Cuánta forma de mapa es recuperable solo de datos públicos? |
+
+Orden sugerido por sinergia: L1 (sustituto diferenciable — desbloquea L2, L6, F7-drift) → L2+F7
+juntos → L4, L7 (tareas nuevas sobre flota v2) → L3, L5, L9 → L8, L10. Cada línea con
+hipótesis pre-registrable y gate propio, misma disciplina H0–H6.
