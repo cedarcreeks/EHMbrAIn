@@ -7,11 +7,12 @@ surrogate exists to beat), and median well below sensor noise. If the gate
 passes, the surrogate supersedes the linear generator for L2/L6 work and
 provides exact gradients for physics-informed losses.
 
-Foreground (MPS). Output: data/processed/f8/surrogate.pt + surrogate_report.json
-Usage: uv run python scripts/f8_surrogate.py
+Foreground (MPS). Output: data/processed/f8/surrogate[_takeoff].pt + report json
+Usage: uv run python scripts/f8_surrogate.py [cruise|takeoff]
 """
 
 import json
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -51,14 +52,19 @@ class Surrogate(nn.Module):
         return self.net(x)
 
 
-def linear_prediction(X, n1_cmd):
-    """The F1 linearization: baseline(u) * (1 + H(u) x / 100), cruise family.
+def linear_prediction(X, u, family='cruise'):
+    """The F1 linearization: baseline(u) * (1 + H(u) x / 100).
     The surrogate learns only the RESIDUAL above this — inheriting the linear
     model's smoothness on near-linear channels (N2) while correcting the
-    nonlinear ones (WF, EGT tails)."""
-    Ha, cha, ba = load_icm('cruise')
-    Hb, _, bb = load_icm('cruise_lowpwr')
-    w = (n1_cmd - 4666.0) / (4400.0 - 4666.0)
+    nonlinear ones (WF, EGT tails). Cruise interpolates in N1; takeoff in dTs."""
+    if family == 'cruise':
+        Ha, cha, ba = load_icm('cruise')
+        Hb, _, bb = load_icm('cruise_lowpwr')
+        w = (u - 4666.0) / (4400.0 - 4666.0)
+    else:
+        Ha, cha, ba = load_icm('takeoff')
+        Hb, _, bb = load_icm('takeoff_hot')
+        w = u / 30.0                       # dTs C over the 0-30 C bracket (extrapolates)
     rows = [cha.index(c) for c in CHANNELS if c in cha]
     names = [c for c in CHANNELS if c in cha]
     out = np.zeros((len(X), len(CHANNELS)), np.float32)
@@ -75,14 +81,18 @@ def linear_prediction(X, n1_cmd):
 
 
 def main():
-    df = pd.read_parquet(F8 / 'surrogate_data.parquet')
+    family = sys.argv[1] if len(sys.argv) > 1 else 'cruise'
+    suffix = '' if family == 'cruise' else '_takeoff'
+    df = pd.read_parquet(F8 / f'surrogate_data{suffix}.parquet')
     xcols = [p.replace('.', '_') for p in HEALTH_PARAMS]
     X = df[xcols].to_numpy(np.float32)
-    n1_cmd = df['N1_cmd'].to_numpy(np.float32)
-    n1 = ((n1_cmd - 4533.0) / 133.0)[:, None]
-    Xin = np.concatenate([X, n1], axis=1)
+    ucol = 'N1_cmd' if family == 'cruise' else 'dTs_C'
+    u_raw = df[ucol].to_numpy(np.float32)
+    u_mu, u_sd = (4533.0, 133.0) if family == 'cruise' else (7.5, 16.0)
+    un = ((u_raw - u_mu) / u_sd)[:, None]
+    Xin = np.concatenate([X, un], axis=1)
     Y = df[CHANNELS].to_numpy(np.float32)
-    Ylin = linear_prediction(X, n1_cmd)
+    Ylin = linear_prediction(X, u_raw, family)
     R = Y - Ylin                       # residual target
     y_mu, y_sd = R.mean(0), R.std(0) + 1e-9
     Yn = (R - y_mu) / y_sd
@@ -149,11 +159,11 @@ def main():
 
     torch.save({'state_dict': net.state_dict(), 'y_mu': y_mu, 'y_sd': y_sd,
                 'channels': CHANNELS, 'health_params': HEALTH_PARAMS,
-                'n1_norm': (4533.0, 133.0), 'bypass': bypass,
+                'family': family, 'u_norm': (u_mu, u_sd), 'bypass': bypass,
                 'architecture': 'linearization + learned residual '
                                 '(near-linear channels bypassed)'},
-               F8 / 'surrogate.pt')
-    (F8 / 'surrogate_report.json').write_text(json.dumps(report, indent=2))
+               F8 / f'surrogate{suffix}.pt')
+    (F8 / f'surrogate_report{suffix}.json').write_text(json.dumps(report, indent=2))
     print(json.dumps(report['gate'], indent=1))
     print('GATE PASS:', report['gate_pass'])
 
