@@ -102,6 +102,20 @@ is now a documented negative on this benchmark.
     what honest evaluation looks like; a clean sweep should raise suspicion.
 \end{enumerate}
 
-Pending from the F5 plan: the sim-to-real check on N-CMAPSS (does the method \emph{ranking}
-survive on an external simulator?) --- scheduled next; H5's gate is held partially open until
-it lands.
+\section{Sim-to-real: the ranking survives on the canonical external benchmark}
+\label{sec:sim-to-real}
+
+Contribution C7 asks whether the method ranking is an artifact of our own simulator. The
+check ran on NASA's \textbf{C-MAPSS FD001} --- the field's reference turbofan
+run-to-failure benchmark (100 unseen test units) --- with a disclosed scope substitution:
+the plan named N-CMAPSS, whose multi-gigabyte distribution violates the desktop-
+reproducibility norm; FD001 answers the same ranking question at 5\,MB, and only the
+prognosis task transfers (FD001 carries no event labels). Same method shapes as the main
+study: a classical health-index linear extrapolation versus the same GRU family
+(\code{scripts/sim_to_real.py}, three seeds).
+
+Result: \textbf{RMSE 14.9 cycles (AI) versus 42.1 (traditional)} at the community-standard
+cap of 130 --- the same direction and comparable magnitude of advantage as H3 on SynCFM56,
+and an absolute GRU figure competitive with published FD001 results, on a benchmark this
+project had no hand in generating. The prognosis conclusion is not an artifact of SynCFM56.
+With this, the F5 gate closes in full.

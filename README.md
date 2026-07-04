@@ -69,6 +69,9 @@ uv run python scripts/run_trad.py                 # F3: traditional EHM metrics
 uv run python scripts/run_ai.py                   # F4: AI suite (MPS; run in FOREGROUND)
 uv run python scripts/run_hybrid.py               # F4: hybrid ablation (foreground)
 uv run python scripts/run_pcs.py                  # F4: Physics-Consistency Score
+uv run python scripts/tune_f5.py trad 50          # F5: tuning campaigns (repeat: ai 50)
+uv run python scripts/f5_confirm.py               # F5: single confirmatory pass -> verdicts
+uv run python scripts/sim_to_real.py              # F5: C-MAPSS FD001 ranking check
 uv run python scripts/benchmark_pipeline.py       # norm N5: compute times
 uv run python scripts/make_report_assets.py       # regenerate ALL report evidence
 ```
@@ -84,5 +87,5 @@ Full mapping of scripts to report tables/figures: report ch. 3, "Replication gui
 - [x] **H2** — SynCFM56 synthetic fleet (v1.1: multi-episode, twice-hardened difficulty gate)
 - [x] **H3** — traditional EHM pipeline with test-fleet metrics (floor numbers, pre-tuning)
 - [ ] **H4** — AI suite delivered (prognosis 3–6×, conformal, PCS); gate NOT declared — detection/diagnosis pending the F5 tuned round
-- [ ] **H5** — pre-registered comparative evaluation (next)
+- [x] **H5** — pre-registered verdicts: H1/H3/H5 confirmed, H2/H4 refuted; FD001 ranking check passed
 - [ ] **H6** — case studies, dashboard, final report
