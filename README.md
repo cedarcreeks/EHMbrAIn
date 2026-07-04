@@ -80,9 +80,9 @@ Full mapping of scripts to report tables/figures: report ch. 3, "Replication gui
 ## Status
 
 - [x] **H0** — environment runs an end-to-end pyCycle cycle; repo skeleton in place
-- [ ] **H1** — calibrated CFM56-7B performance model + influence coefficient matrix
-- [ ] **H2** — SynCFM56 synthetic fleet dataset v1.0
-- [ ] **H3** — traditional EHM baseline pipeline
-- [ ] **H4** — AI EHM suite
-- [ ] **H5** — pre-registered comparative evaluation
-- [ ] **H6** — case studies, dashboard, paper
+- [x] **H1** — calibrated CFM56-7B26 model + baseline decks + influence coefficient matrix
+- [x] **H2** — SynCFM56 synthetic fleet (v1.1: multi-episode, twice-hardened difficulty gate)
+- [x] **H3** — traditional EHM pipeline with test-fleet metrics (floor numbers, pre-tuning)
+- [ ] **H4** — AI suite delivered (prognosis 3–6×, conformal, PCS); gate NOT declared — detection/diagnosis pending the F5 tuned round
+- [ ] **H5** — pre-registered comparative evaluation (next)
+- [ ] **H6** — case studies, dashboard, final report
