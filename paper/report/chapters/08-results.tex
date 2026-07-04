@@ -1,0 +1,107 @@
+\chapter{Confirmatory results: the pre-registered verdicts}
+\label{ch:results}
+
+\begin{quote}\itshape
+This chapter in brief: both families were tuned under the frozen 50-trial budget, the test
+fleet was evaluated exactly once, and the five pre-registered hypotheses were adjudicated.
+Three confirmed, two refuted --- and the two surprises (detection flipping to the AI after
+tuning; physics features refusing to help) teach more than the expected wins. Every number
+here is confirmatory; every earlier number in chapters 6--7 was exploratory and is superseded
+for decision-making purposes.
+\end{quote}
+
+\section{Protocol executed as frozen}
+\label{sec:results-protocol}
+
+Per \code{docs/prereg-v1.md}: 50 Optuna trials per family
+(\code{scripts/tune_f5.py}, TPE seed 0, objectives on validation only, per-task winners from
+the frozen pool), then one --- and only one --- evaluation of the tuned configurations on the
+20 test engines (\code{scripts/f5\_confirm.py}), then the verdict machinery (one-sided exact
+McNemar for paired binary outcomes, Wilcoxon signed-rank paired by engine, Holm correction
+across the tested hypotheses, BCa-grade effect sizes). Two execution notes, both disclosed in
+the scripts and the decision register: no traditional trial met the FA\,$\leq$\,1 validation
+budget, so its detection winner was selected by the lexicographic infeasibility rule (fewest
+false alarms, then highest recall); and AI models fit on training engines only, which keeps
+the conformal calibration on validation statistically valid. The full F5 execution ---
+100 tuning trials plus the confirmatory pass --- cost about 36 minutes on the Apple M5
+reference machine (measured at execution; the resumable campaign design prevents a meaningful
+cold-start re-benchmark).
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The five pre-registered verdicts (single confirmatory pass, test split,
+  Holm-corrected). Auto-generated from \texttt{data/processed/f5/verdicts.json}.}
+  \label{tab:verdicts}
+  \input{tables/table_verdicts}
+\end{table}
+
+\section{H1 confirmed: the story is the tuning, not the model}
+\label{sec:res-h1}
+
+The v0 chapters called the AI's detection failure ``a design gap, not a threshold gap''
+(\cref{sec:det-sweep}) --- and the frozen search space contained exactly the suspected lever:
+the detector's feature-window lengths. Given 50 trials, the tuner stretched the averaging
+windows and the whitened-residual detector went from 0.06 recall (exploratory) to
+\textbf{0.48 confirmatory recall at a 499-cycle median delay} --- twelve times earlier than
+the tuned traditional detector, at the same false-alarm count (1\,=\,1), McNemar Holm-$p$
+0.008. Meanwhile the traditional side's tuned selection --- picked by the frozen
+infeasibility rule on a validation split with only two clean engines --- generalized poorly
+(0.13 test recall, worse than its untuned v0). Two transferable lessons: window length is
+the first knob any change detector lives or dies by; and threshold selection on small clean
+validation samples is fragile for \emph{any} method --- budget clean engines accordingly.
+
+\section{H2 refuted --- the observability wall binds everyone}
+\label{sec:res-h2}
+
+On the thirteen confusable test episodes the tuned families tie exactly: 31\,\% each, and
+the disagreement pattern is perfectly symmetric (four episodes only the AI gets right, four
+only the traditional rule does). The wall the influence-matrix geometry predicted in
+\cref{sec:icm} --- fault signatures 1.3$^{\circ}$ apart in a rank-3 measurement space ---
+binds both families equally. The transferable conclusion is bought hardware, not software:
+\textbf{if confusable-fault isolation matters operationally, add gas-path instrumentation}
+(the extended sensor set multiplies the minimum signature angle by five,
+\cref{tab:icm-grid}); no amount of modeling recovers information the sensors never captured.
+
+\section{H3 and H5 confirmed --- prognosis is where the AI pays}
+\label{sec:res-h3h5}
+
+The tuned GRU confirms the exploratory pattern with pre-registered force: RMSE
+1\,694\,/\,1\,042\,/\,858 cycles at 50/70/90\,\% of life against the tuned margin
+extrapolation's 3\,816\,/\,4\,544\,/\,1\,981; NASA scores one to two orders of magnitude
+lower; Cliff's $\delta = 0.89$ (a nearly clean sweep at engine level); Holm-$p$
+$8.6\times10^{-6}$. And the uncertainty statement that matters to a planner --- H5 --- comes
+with it: the conformal 90\,\% interval covers 88.3\,\% empirically at a $\pm1\,957$-cycle
+half-width, versus the slope-band's over-covering 98.3\,\% at $\pm11\,509$. In operational
+terms: \textbf{a maintenance window six times narrower, with honest stated confidence} ---
+the difference between a plannable shop-visit forecast and a shrug.
+
+\section{H4 refuted --- physics features are not free wins}
+\label{sec:res-h4}
+
+The stacked hybrid lost at every data fraction (2\,852 vs 1\,902 cycles at 10\,\%), exactly
+as the exploratory runs showed and now on the pre-registered record. The mechanism bears
+repeating for practitioners tempted by ``physics-informed'' as a label: smeared state
+estimates are noise-bearing, mutually correlated features whose information the learner
+already had. Physics injection needs an information channel the raw data lacks --- the two
+untested mechanisms (twin-residual features, physics-constrained losses) remain open
+questions, but the popular default of concatenating estimator outputs onto a network input
+is now a documented negative on this benchmark.
+
+\section{What an engineering organization should take from this}
+\label{sec:res-industry}
+
+\begin{enumerate}
+  \item \textbf{Deploy learning for prognosis first.} The 3--6$\times$ RUL advantage with
+    calibrated intervals is the clear business case (maintenance slotting, lease planning).
+  \item \textbf{Detection: modern change-detection with tuned windows} --- the AI's win came
+    from window search, a cheap, auditable mechanism, not from depth.
+  \item \textbf{Isolation: buy sensors, not models.} The confusable wall is informational.
+  \item \textbf{Distrust untuned comparisons in either direction} --- both families moved
+    dramatically under the same budget; v0 scoreboards inverted.
+  \item \textbf{Demand pre-registration of vendor claims.} This chapter's split verdict is
+    what honest evaluation looks like; a clean sweep should raise suspicion.
+\end{enumerate}
+
+Pending from the F5 plan: the sim-to-real check on N-CMAPSS (does the method \emph{ranking}
+survive on an external simulator?) --- scheduled next; H5's gate is held partially open until
+it lands.

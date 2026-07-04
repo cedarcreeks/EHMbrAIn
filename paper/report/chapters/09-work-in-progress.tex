@@ -19,6 +19,12 @@ sensor-noise floor injected in phase F2 and are common-mode to both EHM pipeline
 intent ---a baseline whose error does not distort the comparison--- is met. Optional
 refinement (grid densification near block boundaries) is queued as non-blocking.
 
+\section{Phase F5: executed --- verdicts in}
+
+\Cref{ch:results} carries the confirmatory outcome: H1, H3, H5 confirmed; H2, H4 refuted
+(\cref{tab:verdicts}). Remaining under the F5 umbrella: the N-CMAPSS sim-to-real ranking
+check.
+
 \section{Phase F5: pre-registration frozen}
 
 The confirmatory protocol is frozen at git tag \code{prereg-v1}
@@ -88,6 +94,11 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
       0.85/0.95/1.00 at 0.9 nominal; naive-AE recall-0 and engine-level sample-starvation
       findings recorded; stacking hybrid \emph{negative} result (\cref{fig:hybrid}) logged
       pre-freeze; 36 automated tests green. \\
+    \textbf{F5 verdicts} & 2026-07-04 & Tuned under the frozen 50-trial budget; single
+      confirmatory pass; H1 confirmed (detection flips to AI: recall 0.48 vs 0.13, delay
+      499 vs 6033 cy), H2 refuted (31\,\% = 31\,\%: the observability wall binds both),
+      H3 confirmed (Cliff's $\delta$ 0.89), H4 refuted, H5 confirmed (coverage 0.883,
+      half-width 5.9$\times$ tighter). \cref{tab:verdicts}; 37 tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -140,6 +151,11 @@ gate and the onset bug both audits surfaced) and the H2 declaration.
       0.85/0.95/1.00 at 0.9 nominal; naive-AE recall-0 and engine-level sample-starvation
       findings recorded; stacking hybrid \emph{negative} result (\cref{fig:hybrid}) logged
       pre-freeze; 36 automated tests green. \\
+    \textbf{F5 verdicts} & 2026-07-04 & Tuned under the frozen 50-trial budget; single
+      confirmatory pass; H1 confirmed (detection flips to AI: recall 0.48 vs 0.13, delay
+      499 vs 6033 cy), H2 refuted (31\,\% = 31\,\%: the observability wall binds both),
+      H3 confirmed (Cliff's $\delta$ 0.89), H4 refuted, H5 confirmed (coverage 0.883,
+      half-width 5.9$\times$ tighter). \cref{tab:verdicts}; 37 tests green. \\
     \bottomrule
   \end{tabular}
 \end{table}

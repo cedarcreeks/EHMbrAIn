@@ -62,10 +62,52 @@ measurable acceptance criterion:
   \item[\textbf{F6.}] Case studies, interactive dashboard, and final writing. Gate H6.
 \end{enumerate}
 
+\section{Machine learning without prior background}
+\label{sec:ml-primer}
+
+Nothing in this document assumes machine-learning training. Six ideas carry everything:
+
+\begin{description}
+  \item[Learning from data.] A machine-learning model is a mathematical function with many
+    adjustable numbers inside (its \emph{parameters}). ``Training'' means showing it examples
+    (here: deviation histories with known outcomes, because the fleet is synthetic) and
+    letting an algorithm nudge those numbers until the function's outputs match the known
+    answers. Nobody programs the rules; the rules emerge from the examples.
+  \item[Train / validation / test.] Three disjoint groups of engines with three jobs.
+    \emph{Training} engines are the textbook the model studies. \emph{Validation} engines
+    are practice exams: used to choose between model variants and settings, never to adjust
+    parameters directly. \emph{Test} engines are the final exam, sat exactly once --- any
+    peeking turns the grade into fiction. The same discipline is applied to the traditional
+    pipeline's thresholds.
+  \item[Overfitting.] A model with enough capacity can memorize its textbook --- perfect on
+    training engines, useless on new ones. That is why every number that matters in this
+    document comes from engines the models never saw, and why splitting by \emph{engine}
+    (not by flight) is non-negotiable: flights of the same engine are near-duplicates.
+  \item[Neural networks, in one paragraph.] A neural network is a chain of simple layers:
+    each layer multiplies its inputs by adjustable weights, sums them, and passes the result
+    through a mild nonlinearity. Stacked layers can approximate very general input--output
+    relationships. Training adjusts the weights by \emph{gradient descent}: compute how
+    wrong the output is, compute in which direction each weight should move to reduce that
+    error, take a small step, repeat over the dataset for a number of \emph{epochs}
+    (passes). A \emph{recurrent} network (like the GRU used here) additionally carries a
+    small memory from one time step to the next, so it can read a sequence --- an engine's
+    deviation history --- the way a reader accumulates context along a sentence.
+  \item[Hyperparameters and tuning.] Settings the training process itself does not adjust
+    --- network size, learning-rate, window lengths, alert thresholds --- are
+    \emph{hyperparameters}. Choosing them by trial and error on validation data is
+    \emph{tuning}; automating that search is what Optuna does. Both EHM families received
+    exactly 50 tuning trials (\cref{sec:safeguards}): the comparison is between tuned
+    practitioners, not between a tuned one and a default one.
+  \item[Seeds and variance.] Training involves randomness (initial weights, sampling
+    order). A \emph{seed} fixes that randomness so runs are repeatable; training with
+    several seeds and reporting the spread separates a real effect from a lucky draw ---
+    which is exactly how the hybrid experiment's negative result was established.
+\end{description}
+
 \section{The machine-learning toolbox, briefly}
 \label{sec:ai-toolbox}
 
-For self-containedness, the AI techniques named above in one paragraph each:
+With those six ideas in hand, the specific techniques, one paragraph each:
 
 \begin{description}
   \item[Autoencoder (anomaly detection).] A neural network trained to compress and then
