@@ -136,6 +136,33 @@ Supporting infrastructure named later: \emph{DVC} versions datasets the way git 
 \emph{MLflow} records every training run (configuration, metrics, artifacts) so experiments
 are traceable and repeatable.
 
+\section{Designing a fair comparison, as method}
+\label{sec:fair-design}
+
+The comparison itself is an instrument, and it was designed before any contestant ran.
+Three principles, stated as axioms because every later choice traces to one of them:
+
+\begin{description}
+  \item[Symmetry.] Both families see \emph{identical} inputs (same snapshots, same
+    deviations against the same published baseline), are scored by \emph{identical}
+    metrics on \emph{identical} splits, and receive \emph{identical} optimization
+    budgets (50 tuning trials each, \cref{sec:stats-math}). Any asymmetry --- richer
+    features for one side, hand-tuning for the other --- silently converts a method
+    comparison into an effort comparison. The literature's chronic disease
+    (\cref{ch:introduction}) is exactly that conversion.
+  \item[Evidence hierarchy.] Numbers exist in two castes, never mixed: \emph{exploratory}
+    (produced while designing, debugging, iterating --- chapters 6--7) and
+    \emph{confirmatory} (produced once, after a frozen pre-registration, on data touched
+    exactly once --- chapters 8 and 10). Only the second caste supports verdicts. The
+    discipline is borrowed from clinical trials, where the cost of self-deception is
+    measured in lives; here it is merely measured in wrong fleet decisions.
+  \item[Gates over milestones.] Progress is declared by \emph{passing pre-stated
+    acceptance criteria}, not by finishing work. Gates are allowed to fail (the
+    difficulty audit failed twice, hypothesis H7.3 died on its frozen thresholds), and a
+    failed gate triggers redesign or an honest refutation --- never a quiet threshold
+    adjustment. A project that cannot fail its own gates is advertising, not research.
+\end{description}
+
 \section{The statistical machinery, in full}
 \label{sec:stats-math}
 

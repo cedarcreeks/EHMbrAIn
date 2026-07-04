@@ -639,7 +639,31 @@ hipótesis pre-registrable y gate propio, misma disciplina H0–H6.
 
 ---
 
-## F9 — Completitud conceptual del report (directriz 2026-07-04)
+## F9 — Estándar handbook/tesis doctoral para TODO el report (directriz 2026-07-04, ampliada)
+
+**Directriz ampliada del usuario**: las reglas de completitud no son solo para conceptos
+sueltos — el documento entero debe ser handbook completo Y tesis doctoral: todos los
+ingredientes que intervienen bien presentados y caracterizados (origen de los datos, qué
+representan, cómo se generan, qué es synthetic data, metodologías explicadas, cada técnica
+de IA detallada). Norma permanente N7.
+
+**Checklist de elevación por capítulo** (pasada retroactiva):
+- [x] ch. nuevo "Data: origin, meaning, and the synthetic-data method" — ecosistema real de
+  datos EHM (ACARS/QAR/shop), significado físico de cada canal, qué es dato sintético +
+  taxonomía + defensas, cadena de procedencia TikZ, anatomía de una fila
+- [x] ch3 maquinaria estadística completa (parte 1 hecha)
+- [x] ch6/ch7/ch10 matemática de cada técnica (parte 1 hecha)
+- [ ] ch7: autoencoder con ecuaciones, SHAP/Shapley fórmula, tabla de caracterización de
+  TODOS los ingredientes IA (modelo/tarea/entradas/parámetros/entrenamiento/modos de fallo)
+- [ ] ch3: sección "diseño de un benchmark justo como método" (axiomas de equidad,
+  jerarquía de evidencia exploratorio/confirmatorio, filosofía de gates)
+- [ ] ch2: revisar GPA/termodinámica al estándar (derivaciones guiadas, ejemplos)
+- [ ] ch4: revisar calibración (qué es TCDS/EEDB en detalle — ahora en ch. datos, enlazar)
+- [ ] ch5: enlazar con ch. datos; caracterizar cada mecanismo de degradación con su modelo
+- [ ] ch8-11: revisar que cada resultado remite a la maquinaria definida
+- [ ] Gate F9: relectura completa — ningún término antes de definirse; notación al día
+
+## F9 (original) — Completitud conceptual del report (directriz 2026-07-04)
 
 **Directriz del usuario**: desarrollar TODOS los conceptos planteados vagamente — sin modelo
 matemático ni explicación guía — hasta el estándar del resto del documento.

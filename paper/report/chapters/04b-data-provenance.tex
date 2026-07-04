@@ -1,0 +1,214 @@
+\chapter{Data: origin, meaning, and the synthetic-data method}
+\label{ch:data}
+
+\begin{quote}\itshape
+This chapter in brief: before any method is judged, the reader deserves to know exactly
+what the data \emph{is} --- what an airline actually measures, what each recorded number
+physically represents, what ``synthetic data'' means as a scientific instrument, and the
+complete provenance chain from certified test-bed measurements to the rows the algorithms
+consume. Nothing downstream makes sense without this chapter; nothing in it requires more
+than \cref{ch:background}.
+\end{quote}
+
+\section{What engine-health data exists in the real world}
+\label{sec:real-data}
+
+An airline's engine-monitoring data ecosystem has three tiers, and knowing them explains
+every design choice in SynCFM56:
+
+\begin{description}
+  \item[ACARS snapshot reports (the tier this project mimics).] The Aircraft
+    Communications Addressing and Reporting System transmits short, structured telegrams
+    from aircraft to ground over VHF or satellite. For engine monitoring, the avionics
+    capture a \emph{stabilized frame} --- a few seconds of averaged sensor values once
+    per flight phase --- typically one report at takeoff and one in cruise. Each report
+    carries on the order of 15--30 parameters per engine. This is the data tier on which
+    classical EHM (and most airline practice) actually runs: \textbf{two rows per engine
+    per flight}, not continuous signals. Its economics shaped it: ACARS transmission
+    historically cost money per kilobyte, and a stabilized snapshot compresses a flight
+    into exactly what trend monitoring needs.
+  \item[Continuous recordings (QAR/CEOD).] The Quick Access Recorder and its modern
+    full-flight equivalents record hundreds of parameters at 1--16\,Hz for the whole
+    flight. Rich, but heavy: gigabytes per aircraft-day, often not downloaded every
+    flight, historically processed only after events. Modern ``big data'' EHM programs
+    increasingly exploit this tier; most published fleet experience still lives in tier
+    one.
+  \item[Shop and maintenance records.] Borescope findings, module performance at overhaul,
+    parts scrapped, wash logs. This is where \emph{ground truth} about component condition
+    is glimpsed --- but only at maintenance events, only qualitatively, and recorded in
+    systems never designed for machine learning.
+\end{description}
+
+Two structural facts follow. First, \textbf{real fleets provide almost no usable ground
+truth}: between shop visits (years apart), nobody knows the true efficiency of an
+installed HPT to a tenth of a percent --- there is no oracle to score a diagnosis
+against. Second, \textbf{failures are rare and unlabeled}: a dataset of ten thousand
+real flights may contain zero acute gas-path faults, and when one occurs, its onset time
+and root cause are reconstructed after the fact, imperfectly. These two facts --- no
+truth, no labels --- are why this project generates its data, and they define exactly
+what the generation must provide.
+
+\section{What each measured channel physically represents}
+\label{sec:channel-meaning}
+
+The eight channels recorded in every SynCFM56 snapshot are the industry-standard gas-path
+set. What each number \emph{is}, physically, and why monitoring cares:
+
+\begin{description}
+  \item[N1 {[}rpm{]} --- fan / low-pressure spool speed.] The big front rotor. On the
+    CFM56-7B it is also the \emph{thrust-setting parameter}: the crew (or FADEC) commands
+    a target N1, so N1 is an input, not a symptom --- which is why its deviation is zero
+    by construction in our generator and why GPA treats it as the operating-point anchor.
+  \item[N2 {[}rpm{]} --- core / high-pressure spool speed.] The compressor--turbine core.
+    At fixed N1 and ambient, a shifting N2 re-balances the work split between spools ---
+    a sensitive, low-noise indicator of where in the core something changed.
+  \item[WF {[}kg/s{]} --- fuel flow.] The engine's operating cost, measured directly. At
+    fixed thrust, deteriorating components demand more fuel; a 1\,\% fleet-wide WF shift
+    is a fuel-bill line item, which is why airlines track it to a tenth of a percent.
+  \item[EGT {[}K{]} --- exhaust gas temperature.] Measured by a ring of thermocouples
+    behind the low-pressure turbine. It is the engine's \emph{thermal headroom gauge}:
+    certification fixes a redline, a new engine at rated thrust on a hot day sits some
+    tens of kelvin below it (the \emph{EGT margin}), and every bit of deterioration
+    spends that margin. When margin reaches zero the engine must come off wing ---
+    EGT margin \emph{is} the industry's remaining-life currency, which is why RUL in
+    this project is defined through it.
+  \item[P25, T25 {[}bar, K{]} --- booster exit / HPC inlet.] The interface between the
+    low and high spools; movements here separate ``front of the engine'' from ``core''
+    hypotheses.
+  \item[PS3, T3 {[}bar, K{]} --- HPC exit.] The highest-pressure station, feeding the
+    combustor. PS3 is the classic discriminator between compressor efficiency loss and
+    flow-capacity loss --- the pair the cockpit set famously confuses
+    (\cref{sec:icm}).
+\end{description}
+
+The \emph{cockpit subset} (N1, N2, WF, EGT) is what every operator has without optional
+instrumentation packages; the extended set adds the four station probes. The
+observability gulf between those two sets is quantified in \cref{sec:icm} and becomes an
+acquisition-decision tool in \cref{ch:tomography}.
+
+\section{What synthetic data is --- and when it is science}
+\label{sec:synthetic}
+
+\emph{Synthetic data} is data produced by a model rather than measured from the target
+system~\cite{Jordon2022,Nikolenko2021}. Four families are in common use: physics-based
+simulation (a mechanistic model generates observations --- this project, and NASA's
+C-MAPSS/N-CMAPSS~\cite{Saxena2008,AriasChao2021}); generative statistical models (GANs,
+VAEs, diffusion models fitted to real data); augmentation (perturbing real samples); and
+hybrid pipelines. The motivations are always some subset of: \textbf{ground truth}
+(impossible to obtain otherwise --- our case), \textbf{rarity} (failures too scarce to
+learn from), \textbf{privacy/access} (airline data is commercially sensitive), and
+\textbf{control} (factorial experiments no fleet would ever fly).
+
+Synthetic data earns scientific standing only by confronting its central liability:
+\emph{the model that generates the data embeds assumptions, and any method evaluated on
+it might exploit those assumptions rather than solve the real problem}. This project's
+defenses are layered and were built \emph{before} the headline experiments:
+
+\begin{enumerate}
+  \item \textbf{Anchor the generator to certified measurements.} The twin behind the
+    generator is calibrated against type-certificate and emissions-databank measurements
+    (\cref{sec:calibration}) --- its fuel-flow \emph{predictions} land within
+    3\,\% of test-bed values it was never fitted to.
+  \item \textbf{Separate self-consistency from fidelity.} Estimator scoring against
+    ground truth is exact by construction; whether the generated physics matches the
+    \emph{full nonlinear} model is an audited empirical question
+    (\cref{sec:audit-nonlin}), not an assumption.
+  \item \textbf{Make the dataset hard on purpose.} The difficulty gate (a deliberately
+    weak classifier must \emph{fail}) exists because a synthetic dataset's most common
+    disease is being accidentally easy; ours failed that gate twice and was physically
+    redesigned both times (\cref{sec:audit-difficulty}).
+  \item \textbf{Check the ranking externally.} The central prognosis conclusion was
+    re-tested on a benchmark this project did not generate (\cref{sec:sim-to-real}).
+  \item \textbf{Say what does not transfer.} Absolute performance numbers (an RMSE of
+    858 cycles) are properties of this simulated world and its noise settings;
+    what transfers is \emph{rankings, mechanisms and geometry} --- which method wins
+    where and why, and the observability structure that any CFM56-class cockpit set
+    shares. Every operational claim in this document is of the second kind.
+\end{enumerate}
+
+\section{The provenance chain, end to end}
+\label{sec:provenance}
+
+Every number in SynCFM56 descends from public, certified measurements through an
+auditable chain (\cref{fig:provenance}):
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[
+      font=\footnotesize,
+      box/.style={draw, rounded corners=2pt, align=center, inner sep=5pt,
+                  minimum height=9mm},
+      lbl/.style={font=\scriptsize\itshape, midway, above},
+      >=Stealth, node distance=5mm and 9mm]
+    \node[box, fill=gray!12] (src) {Certified public data\\ EASA TCDS E.004 $\cdot$ ICAO EEDB\\ \scriptsize (measured fuel flows, ratings, redlines)};
+    \node[box, right=of src] (twin) {pyCycle twin\\ \scriptsize design point + off-design,\\ \scriptsize thrust-matched calibration};
+    \node[box, right=of twin] (art) {F1 artifacts\\ \scriptsize baseline decks $z_0(u)$\\ \scriptsize ICM grid $\mathbf{H}(u)$};
+    \node[box, below=of art] (gen) {Fleet generator\\ \scriptsize + fault catalog (YAML)\\ \scriptsize + seed 20260703};
+    \node[box, left=of gen] (data) {\textbf{SynCFM56 v1.1}\\ \scriptsize snapshots $\cdot$ events $\cdot$ index\\ \scriptsize 1.55 M rows, truth attached};
+    \node[box, left=of data, fill=gray!12] (use) {Consumers\\ \scriptsize audits $\cdot$ traditional $\cdot$ AI\\ \scriptsize F5/F7 verdicts};
+    \draw[->] (src) -- node[lbl]{calibrate} (twin);
+    \draw[->] (twin) -- node[lbl]{probe} (art);
+    \draw[->] (art) -- (gen);
+    \draw[->] (gen) -- node[lbl]{emit} (data);
+    \draw[->] (data) -- (use);
+  \end{tikzpicture}
+  \caption{Data provenance: from certified test-bed measurements to the rows the
+  algorithms consume. Every arrow is a versioned script; every box is a versioned
+  artifact.}
+  \label{fig:provenance}
+\end{figure}
+
+\begin{enumerate}
+  \item \textbf{Certified measurements.} A \emph{type-certificate data sheet} is the
+    regulator's public record of what an engine type demonstrated during certification:
+    rated thrusts, temperature and speed limits. The \emph{ICAO Engine Emissions
+    Databank} adds something quantitatively precious: sea-level test-bed \textbf{measured
+    fuel flows} at the four thrust settings of the landing--takeoff certification cycle
+    (100/85/30/7\,\% of rated thrust), for the exact -7B26 variant. These are real,
+    traceable measurements of real hardware --- the project's only contact with physical
+    reality, and deliberately its foundation.
+  \item \textbf{The calibrated twin} (\cref{ch:model}) reproduces those measurements
+    thrust-matched, then serves as the physics oracle.
+  \item \textbf{The compressed physics}: baseline decks (healthy behavior over the
+    envelope) and the ICM grid (first-order response to every health deviation) ---
+    small, versioned artifacts that make fleet-scale generation tractable.
+  \item \textbf{The generator} (\cref{ch:fleet}) draws each engine's degradation
+    personality from the fault catalog --- the versioned YAML contract that is the
+    \emph{single source of truth} for every physical and statistical assumption:
+    mechanism rates, wash schedules, fault magnitudes, sensor noise, drift and dropout.
+    Changing the world means editing that file and bumping the dataset version, never
+    editing code.
+  \item \textbf{The emitted dataset}: three tables. \code{snapshots.parquet} --- one row
+    per flight cycle with the two reports; \code{events.parquet} --- the maintenance
+    and fault log (washes with recovery fractions, foreign-object damage, acute episode
+    onsets/parameters/magnitudes); \code{fleet_index.json} --- per-engine life, split
+    assignment, severity multipliers, drift channel.
+\end{enumerate}
+
+\section{Anatomy of a SynCFM56 row}
+\label{sec:row-anatomy}
+
+Each snapshot row carries four kinds of columns, and the distinction is load-bearing:
+
+\begin{description}
+  \item[Measured channels (\code{to_*}, \code{cr_*}).] What the airline would see: truth
+    passed through the sensor model --- Gaussian noise per the catalog, quantization to
+    recording resolution, drift ramps on affected engines, dropout. \emph{Both EHM
+    families see only these.}
+  \item[True channels (\code{*_true}).] The same quantities before the sensor model ---
+    kept for audits and for measuring how much each method loses to noise, never shown
+    to any pipeline under evaluation.
+  \item[Operating conditions (\code{to_dTs_C}, \code{cr_N1_cmd}).] The condition each
+    report was taken at --- ambient temperature offset at takeoff, commanded N1 in
+    cruise. Legitimate inputs (an airline knows them), and the raw material of
+    \cref{ch:tomography}.
+  \item[Ground truth (\code{x_*}, \code{egtm_C}, \code{rul}, labels).] The ten true
+    health-parameter deviations, the true EGT margin, the true remaining useful life,
+    the acute-fault isolation label, chronic condition labels and drift flags ---
+    the oracle that real fleets lack, used \emph{only} for scoring and for training
+    labels where the task legitimately supplies them.
+\end{description}
+
+This four-way split is the whole point of the synthetic method: the first three column
+groups reproduce the epistemic situation of a real airline (noisy measurements plus known
+conditions), while the fourth provides the referee that reality cannot.

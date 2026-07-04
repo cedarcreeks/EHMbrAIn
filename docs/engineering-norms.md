@@ -58,3 +58,16 @@ definition/mathematical model in the document's notation, a guiding
 explanation for the novice reader, and (where it fits) a worked numeric
 example. The F9 sweep (PLAN §F9) retrofits this to every concept introduced
 before the norm existed; from now on the debt is never accumulated.
+
+
+## N7 — Handbook / doctoral standard for the WHOLE report
+
+The report is simultaneously a complete handbook and a doctoral-grade
+thesis. Standard applying to every chapter, retroactively and forever:
+every ingredient that participates in the work enters well presented and
+characterized — its origin (where it comes from, who measured or defined
+it), its physical or mathematical meaning, its formal model (norm N6), a
+guided explanation a novice can follow, and its role in the argument.
+Data gets provenance; techniques get mechanics; decisions get reasons;
+numbers get generation scripts. The F9 program executes the retroactive
+sweep chapter by chapter; new text enters at standard from day one.

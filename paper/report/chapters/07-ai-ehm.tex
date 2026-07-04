@@ -80,6 +80,50 @@ the GRU learns per-feature, per-situation timescales from data. The final hidden
 feeds a linear head; training minimizes mean squared error (RUL, in kilocycles, capped)
 or class-weighted cross-entropy (diagnosis) by gradient descent.
 
+\subsection{The autoencoder, and the equation of its failure}
+\label{sec:math-ae}
+
+An autoencoder learns to compress and reconstruct: an encoder maps the input window
+$\mathbf{V} \in \mathbb{R}^{L \times c}$ to a low-dimensional code
+$\mathbf{c} = E_\phi(\mathbf{V})$, a decoder maps it back,
+$\hat{\mathbf{V}} = D_\psi(\mathbf{c})$, and training minimizes reconstruction error on
+\emph{healthy} data only:
+\begin{equation}
+  \min_{\phi, \psi}\ \mathbb{E}_{\text{healthy}}
+  \bigl\|\mathbf{V} - D_\psi(E_\phi(\mathbf{V}))\bigr\|_2^2 .
+  \label{eq:autoencoder}
+\end{equation}
+The detection logic: a model that has only ever compressed healthy patterns should
+reconstruct faulty ones poorly, so the residual
+$\|\mathbf{V} - \hat{\mathbf{V}}\|$ becomes an anomaly score. The v0 failure
+(\cref{sec:ai-failures}) is visible in the equation: if the code is wide enough, the
+cheapest solution to \cref{eq:autoencoder} is an approximate \emph{identity map} ---
+reproduce whatever comes in, healthy or not --- and the score goes flat. The competing
+detector won precisely by \emph{not} learning a reconstruction at all: Mahalanobis
+distance scores directly against the healthy distribution (\cref{eq:mahalanobis}), with
+nothing to shortcut.
+
+\subsection{SHAP: Shapley values for feature attribution}
+\label{sec:math-shap}
+
+For one prediction $f(\mathbf{f})$, SHAP assigns feature $j$ its \emph{Shapley value}
+--- its average marginal contribution over all orders in which features could be
+revealed to the model:
+\begin{equation}
+  \phi_j \;=\; \sum_{S \subseteq F \setminus \{j\}}
+  \frac{|S|!\,\bigl(|F| - |S| - 1\bigr)!}{|F|!}\,
+  \Bigl[\, f\bigl(S \cup \{j\}\bigr) - f(S) \,\Bigr],
+  \label{eq:shapley}
+\end{equation}
+where $f(S)$ is the model's expected output when only the features in $S$ are known
+(the rest marginalized over background data). The weights are the unique assignment
+satisfying the fairness axioms of cooperative game theory --- efficiency (the $\phi_j$
+sum to the prediction minus the baseline), symmetry, and null-player. The exact sum is
+exponential in $|F|$; the permutation estimator samples feature orderings instead. In
+this project the attribution vector $\boldsymbol{\phi}$ is not the end product but the
+\emph{input} to the Physics-Consistency Score, which asks whether
+$\boldsymbol{\phi}$'s implied health direction agrees with the influence matrix.
+
 \subsection{Gradient boosting over histograms (diagnosis)}
 \label{sec:math-gbdt}
 
@@ -95,6 +139,33 @@ with learning rate $\nu$ and histogram-binned split search for speed. Boosted tr
 remain the strongest general learners on small tabular datasets --- hundreds of episodes,
 engineered step features --- which is why this task got trees while sequence tasks got
 the GRU.
+
+\subsection{Every AI ingredient, characterized}
+\label{sec:ai-ingredients}
+
+\begin{table}[htbp]
+  \centering\scriptsize
+  \caption{The complete AI inventory: every learned component, its task, inputs,
+  training data, tuned hyperparameters and known failure modes. Specification table
+  (design, not results); performance lives in \cref{ch:results}.}
+  \label{tab:ai-ingredients}
+  \setlength{\tabcolsep}{4pt}%
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.13\textwidth}>{\raggedright\arraybackslash}p{0.11\textwidth}>{\raggedright\arraybackslash}p{0.19\textwidth}>{\raggedright\arraybackslash}p{0.21\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}}
+    \toprule
+    Component & Task & Inputs & Trained on / tuned by & Known failure modes \\
+    \midrule
+    Window autoencoder (\cref{eq:autoencoder}) & detection (v0, retired) & 100-cycle deviation windows & healthy segments; MSE & identity-map collapse (observed, documented) \\
+    Mahalanobis + Ledoit--Wolf\newline(\cref{eq:mahalanobis}, \cref{eq:ledoitwolf}) & detection & step features over short/long windows & healthy training segments; window lengths + percentile + persistence via Optuna & window too short for subtle ramps (v0's structural gap, fixed by F5 tuning) \\
+    Hist\-Gradient\-Boosting (\cref{eq:gbdt}) & diagnosis & step + slope + level features at query time & labeled episode samples; depth/lr/iters via Optuna & confusable pairs (information-bounded, \cref{sec:icm}) \\
+    GRU regressor (\cref{eq:gru}) & RUL & downsampled deviation sequences & train engines, capped RUL target; hidden, layers, lr, epochs, window via Optuna & optimism beyond training-life range; single-architecture limitation (L5) \\
+    GRU classifier over WLS projections (\cref{eq:stacked-wls}) & multi-flight isolation (F7) & per-block $\hat{\mathbf{x}}_t$ + operating conditions & train episodes, class-weighted CE & raw-input variant fails (12\,\%); needs the physics projection \\
+    Split conformal (\cref{eq:conformal}) & uncertainty & any predictor's residuals & validation split (calibration) & guarantee is marginal, not per-engine \\
+    APS sets (\cref{eq:conformal}) & isolation ambiguity (F7) & classifier softmax & validation episodes & set size inflates under distribution shift \\
+    SHAP + PCS (\cref{eq:shapley}) & explanation consistency & trained classifier + background data & --- (post hoc) & meaningless on a weak classifier (v0 null, by design of the metric) \\
+    Neural surrogate (\cref{tab:surrogate}) & differentiable twin (F8) & health vector + condition & 2\,400 pyCycle solves/family; seed selection on holdout & extrapolation beyond $\pm3.5\,\%$ design range untested \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \section{Prognosis: the headline result}
 
