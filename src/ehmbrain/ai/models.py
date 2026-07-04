@@ -57,7 +57,13 @@ def train_torch(model, X, y=None, epochs=30, bs=256, lr=1e-3, dev=None,
     dev = dev or device()
     model = model.to(dev)
     X = torch.as_tensor(X, dtype=torch.float32)
-    Y = X if y is None else torch.as_tensor(y, dtype=torch.float32)
+    if y is None:
+        Y = X
+    else:
+        y_arr = np.asarray(y)
+        Y = torch.as_tensor(y_arr, dtype=torch.long
+                            if np.issubdtype(y_arr.dtype, np.integer)
+                            else torch.float32)
     loss_fn = loss_fn or nn.MSELoss()
     opt = torch.optim.AdamW(model.parameters(), lr=lr)
     n = len(X)
