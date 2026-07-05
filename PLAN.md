@@ -755,7 +755,7 @@ de IA detallada). Norma permanente N7.
 - [ ] ch3: sección "diseño de un benchmark justo como método" (axiomas de equidad,
   jerarquía de evidencia exploratorio/confirmatorio, filosofía de gates)
 - [ ] ch2: revisar GPA/termodinámica al estándar (derivaciones guiadas, ejemplos)
-- [ ] ch4: revisar calibración (qué es TCDS/EEDB en detalle — ahora en ch. datos, enlazar)
+- [x] ch4: enlazado a cadena de procedencia (§sec:provenance caracteriza TCDS/EEDB)
 - [ ] ch5: enlazar con ch. datos; caracterizar cada mecanismo de degradación con su modelo
 - [ ] ch8-11: revisar que cada resultado remite a la maquinaria definida
 - [ ] Gate F9: relectura completa — ningún término antes de definirse; notación al día
