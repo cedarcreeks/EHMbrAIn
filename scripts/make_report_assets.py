@@ -811,6 +811,29 @@ def f10_assets():
     print('  f10 assets done')
 
 
+def fig_optuna_convergence():
+    """Running-best validation RUL RMSE vs trial - the symmetric 50-trial budget."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f5' / 'optuna_history.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    INK, BLUE, GRAY = '#212529', '#4263EB', '#868E96'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.4, 2.9))
+    for fam, lbl, col in (('trad', 'traditional', GRAY), ('ai', 'AI', BLUE)):
+        vals = [v for v in d[fam]['rul_rmse'] if v]
+        best = np.minimum.accumulate(vals)
+        ax.plot(np.arange(1, len(best) + 1), best, color=col, lw=1.6, label=lbl)
+    ax.set_xlabel('Optuna trial'); ax.set_ylabel('best validation RUL RMSE [cycles]')
+    ax.legend(frameon=False, fontsize=8)
+    ax.set_title('symmetric 50-trial budget, both families', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'optuna_convergence.pdf'); plt.close(fig)
+    print('  optuna convergence figure done')
+
+
 def fig_detection_delays():
     """Detection lead-time strip plot: one dot per detected episode."""
     import matplotlib.pyplot as plt
@@ -1222,6 +1245,7 @@ def artifact_assets():
     fig_confusable_angles()
     fig_isolation_confusion()
     fig_detection_delays()
+    fig_optuna_convergence()
     fig_rul_distribution()
     f8_result_figures()
     f8_l5_assets()

@@ -30,6 +30,15 @@ the conformal calibration on validation statistically valid. The full F5 executi
 reference machine (measured at execution; the resumable campaign design prevents a meaningful
 cold-start re-benchmark).
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{optuna_convergence}
+  \caption{The symmetric tuning budget in action: best validation RUL RMSE against Optuna
+  trial, both families given the same 50 trials. Each search converges within its budget; the
+  comparison is between two tuned practitioners, not a tuned one and a default. Auto-generated.}
+  \label{fig:optuna}
+\end{figure}
+
 \begin{table}[htbp]
   \centering\small
   \caption{The five pre-registered verdicts (single confirmatory pass, test split,

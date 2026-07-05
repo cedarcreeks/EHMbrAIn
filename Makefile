@@ -29,6 +29,7 @@ f5:
 	$(PY) scripts/tune_f5.py trad 50
 	$(PY) scripts/tune_f5.py ai 50
 	$(PY) scripts/f5_confirm.py
+	$(PY) scripts/dump_optuna_history.py
 	$(PY) scripts/sim_to_real.py
 
 f8:
