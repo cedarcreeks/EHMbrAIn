@@ -83,20 +83,17 @@ verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en o
 | F6 casos+dashboard+make all | ✅ H6 | ch9; dashboard/app.py; Makefile |
 | F7 tomografía puntos operación | ✅ prereg-v2 | H7.2'✓ (+48pp learned MOPA) H7.4'✓ / H7.3✗ umbrales; calendario reportes +79 %; ch10 |
 | F8/L1 sustituto diferenciable | ✅ gate | ambas familias 4-19× mejor; surrogate.pt/_takeoff.pt; ch11 |
-| F9/N7 handbook-tesis | 🔶 partes 1-2 | ch datos nuevo; matemática ch3/6/7/10; 72 pp |
+| F9/N7 handbook-tesis | 🔶 partes 1-3 | ch datos nuevo; matemática ch3/6/7/10; degradación ch5; 73 pp; falta revisión ch8-11 + gate relectura |
 
 ### COLA DE TRABAJO (en orden)
 
 **1. F9 checklist restante (norma N7, requisito §0-bis-A):**
-   - ch2 (02-background.tex): GPA y termodinámica al estándar handbook — derivación guiada
-     de Δz=Hx+Sb+v desde primeros principios, ejemplo numérico de smearing 2×2, qué es un
-     mapa de compresor explicado para novato.
-   - ch5 (05-synthetic-fleet.tex): cada mecanismo de degradación con su modelo matemático
-     (fouling exponencial saturante dx/dn, erosión lineal, break-in bilineal, hot-section
-     acelerando; ecuación del sawtooth exacto por segmentos ya está en texto — formalizar).
-   - ch8-11: revisión — cada resultado remite a maquinaria definida (grep términos).
-   - GATE F9: relectura completa; ningún término técnico usado antes de definirse;
-     notación ch0 al día. Criterio: pasada de grep + lectura por capítulo.
+   - ✅ ch2 GPA/termo (ya estaba al estándar), ch4 enlazado, ch5 mecanismos formalizados
+     (§sec:degradation-models), ch3 estadística+axiomas, ch6/7/10 matemática, ch datos nuevo.
+   - [ ] ch8-11: revisión final — cada resultado remite a maquinaria definida (grep términos).
+   - [ ] GATE F9: relectura completa; ningún término técnico usado antes de definirse;
+     notación ch0 al día. Criterio: pasada de grep + lectura por capítulo. (Parcial: fix
+     etiqueta duplicada eq:kalman→eq:kalman-update hecho; 0 marcadores ?? en PDF verificado.)
 **2. F8/L2 — flota v2 no lineal:** integrar surrogate.pt + surrogate_takeoff.pt como
    emisor de snapshots en datagen (sustituir linealización en snapshots.py con flag de
    versión; catálogo fleet.version 2.0); regenerar; re-auditorías (nonlinearity vs pyCycle
