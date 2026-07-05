@@ -1016,3 +1016,39 @@ resultados (solo prosa). Gate F-FLOW: relectura donde un lector técnico-pero-no
 seguir el hilo sin atascarse.
 Norma nueva **N8**: toda prosa nueva entra ya fluida y con intuición junto al rigor; no se
 acumula deuda de legibilidad.
+
+---
+
+## F-VIZ — Máxima evidencia en forma gráfica (directriz usuario 2026-07-05)
+
+**Requisito**: con la cantidad de experimentos hechos, mostrar TANTOS resultados/evidencias
+como sea posible en forma de gráficos. Hoy: 22 artefactos JSON de resultados vs solo 18
+figuras — muchos resultados viven solo en tablas. Convertir en figura todo lo que gane con
+presentación gráfica. TODAS autogeneradas (norma N4), diseño limpio (skill dataviz: paleta
+accesible, legible en claro/oscuro no aplica—es PDF—, ejes/leyendas claras, sin basura).
+
+**Inventario de figuras candidatas** (artefacto → figura):
+- f5/verdicts + trad/ai metrics → distribución de errores RUL por-motor (violín/box trad vs
+  IA a 50/70/90 %); histograma de lead-time de detección; matriz de confusión de aislamiento
+  (trad y IA lado a lado); scatter cobertura conformal vs nominal.
+- f5/selected_* → curvas de convergencia Optuna (mejor valor vs trial) por familia.
+- f7/verdicts_f7 → barras learned-MOPA vs stacked-WLS por ventana; tamaño de conjunto
+  conformal por par (u-rompible vs fundamental).
+- f8/arch_verdict → barras GRU/TCN/Transformer vs baseline (L5) — tabla ya, hacer figura.
+- f8/recoverable_verdict → scatter predicho vs verdad de fracción recuperable (L4).
+- f8/drift_verdict → serie temporal sesgo estimado vs verdadero (L7, un motor); scatter
+  recuperación por motor.
+- f8/h4_v2_verdict → barras pure vs hybrid por fracción de datos (L6) — tabla ya, figura.
+- f8/surrogate_report → distribución de error surrogate vs linealización por canal (L1).
+- f8/pcs_validation → distribuciones PCS competente/confuso/control (L9).
+- fleet/audit_nonlinearity → barras error por canal vs suelo de ruido (v1) — mejora ch5.
+- fleet_v2/audit_v2_fidelity → barras v1 vs v2 vs pyCycle (L2) — tabla ya, figura.
+- icm/icm_report → ya hay heatmap; añadir barras de ángulos de firma / valores singulares.
+- decks/deck_report → colas LOO por condición (F1).
+- econ/impact → ya hay; posible curva de sensibilidad tipo tornado ampliada.
+
+**Regla**: figura solo si aporta sobre la tabla (distribución, tendencia, comparación
+visual, estructura) — no duplicar por duplicar; donde la tabla es más clara (una cifra),
+dejar tabla. Cada figura con caption autoexplicativo + atribución de generador (N4). Priorizar
+las que muestran DISTRIBUCIONES e INCERTIDUMBRE (no solo medias) — refuerza la honestidad.
+Coordinar con F-FLOW (las figuras rompen el choppy y ayudan al lector novato).
