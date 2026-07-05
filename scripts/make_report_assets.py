@@ -811,6 +811,50 @@ def f10_assets():
     print('  f10 assets done')
 
 
+def fig_confusable_angles():
+    """Confusable-pair signature angles at cruise: cockpit vs extended sensors,
+    with the 15-degree confusable threshold. The H2 wall and its sensor cure."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'icm' / 'icm_report.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    cr = d['points']['cruise']
+    params = d['health_params']
+    He = np.array(cr['H_extended'])            # (n_ext_channels, 10)
+    chx = d['channels_extended']
+    cock = d['channels_cockpit']
+    rc = [chx.index(c) for c in cock]
+    idx = {p: i for i, p in enumerate(params)}
+
+    def ang(rows, a, b):
+        Hs = He[rows]
+        u, v = Hs[:, idx[a]], Hs[:, idx[b]]
+        return np.degrees(np.arccos(np.clip(abs(u @ v) /
+                          (np.linalg.norm(u) * np.linalg.norm(v)), 0, 1)))
+    pairs = [(a, b) for a, b, _ in cr['confusable_cockpit_15deg']][:6]
+    labels = [f"{a}\n{b}" for a, b in pairs]
+    cockA = [ang(rc, a, b) for a, b in pairs]
+    extA = [ang(list(range(len(chx))), a, b) for a, b in pairs]
+    INK, BLUE, RED = '#212529', '#4263EB', '#A61E4D'
+    plt.rcParams.update({'font.size': 8.5, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    xs = np.arange(len(pairs))
+    fig, ax = plt.subplots(figsize=(6.2, 2.9))
+    ax.bar(xs - 0.2, cockA, 0.4, label='cockpit sensors', color=RED)
+    ax.bar(xs + 0.2, extA, 0.4, label='extended sensors', color=BLUE)
+    ax.axhline(15, color=INK, ls='--', lw=1)
+    ax.annotate('confusable threshold ($15^\\circ$)', (len(pairs) - 1, 15.5),
+                ha='right', fontsize=7)
+    ax.set_xticks(xs); ax.set_xticklabels(labels, fontsize=6.5)
+    ax.set_ylabel('signature angle [deg]')
+    ax.legend(frameon=False, fontsize=7)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'confusable_angles.pdf'); plt.close(fig)
+    print('  confusable-angles figure done')
+
+
 def fig_rul_distribution():
     """Per-engine confirmatory RUL error distribution, traditional vs AI."""
     import matplotlib.pyplot as plt
@@ -1104,6 +1148,7 @@ def artifact_assets():
     f8_assets()
     f8_l2_assets()
     f8_l6_assets()
+    fig_confusable_angles()
     fig_rul_distribution()
     f8_result_figures()
     f8_l5_assets()

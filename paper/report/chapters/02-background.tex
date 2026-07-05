@@ -274,6 +274,21 @@ linear GPA~\cite{Li2002}.
 A singular-value decomposition (SVD) of the ICM quantifies this weakness (rank, condition
 number, angles between fault signatures) and defines the ``confusable'' subset used by
 hypothesis H2: fault pairs whose signatures are less than $15^{\circ}$ apart.
+\Cref{fig:confusable-angles} shows this for the real engine at cruise: with the cockpit set
+several pairs fall below the $15^{\circ}$ line --- the HPC-versus-HPT efficiency pair sits at
+barely $1.3^{\circ}$, all but indistinguishable --- while the extended gas-path sensors lift
+every pair well clear of it. The angle is geometry, not yet a result; whether it translates
+into isolation accuracy is what hypothesis H2 tests (\cref{sec:res-h2}) and what the sensor
+analysis of \cref{ch:breakthrough} returns to.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.86\textwidth]{confusable_angles}
+  \caption{Signature angles of the cockpit-confusable fault pairs at cruise. Below the dashed
+  $15^{\circ}$ line the pair is confusable; the cockpit set (red) leaves several pairs there,
+  the extended set (blue) rescues them. Auto-generated.}
+  \label{fig:confusable-angles}
+\end{figure}
 
 \section{The physics of degradation}
 \label{sec:degradation}
