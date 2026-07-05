@@ -8,7 +8,8 @@ airline would see and the hidden truth. Three audits gate the result; one failed
 and forced a redesign, told here in full.
 \end{quote}
 
-This chapter documents phase F2: the generator that turns the F1 twin into a 100-engine
+\Cref{ch:data} established what the data \emph{is} and where it comes from; this chapter
+documents phase F2: the generator that turns the F1 twin into a 100-engine
 run-to-failure fleet with complete ground truth, the audits that gate it (one of which failed
 on first pass and forced a design change --- documented in full in \cref{sec:audits}), and the
 declaration of milestone H2.
@@ -47,21 +48,86 @@ Each engine draws a degradation ``personality'' from the fault catalog
 mechanism, a wash schedule, Poisson-arriving foreign-object damage, optional sensor drifts, and
 ---in roughly half the fleet--- one \emph{acute fault episode} (\cref{sec:audit-difficulty}
 explains why these exist). The mechanisms follow the physical profiles of
-\cref{tab:degradation}: saturating-exponential fouling, slow linear erosion, bilinear
-break-in of tip clearances, linearly accelerating hot-section deterioration.
+\cref{tab:degradation}. Each is a closed-form function of flight cycle $n$, scaled by a
+per-engine severity multiplier $m$ (drawn log-normal, so the fleet spans easy and hard
+degraders) and applied to the component's efficiency/flow entries of $\mathbf{x}(n)$.
 
-Two implementation details worth recording:
-\begin{itemize}
-  \item \textbf{Wash sawtooth, exact.} Between washes the fouling level relaxes exponentially
-    toward its asymptote; each wash multiplies the current level by $(1-r)$ with recovery $r$
-    drawn per event. The trajectory is computed segment-wise with the exact exponential
-    solution. A tempting shortcut --- permanently subtracting the removed amount --- was
-    implemented first and rejected: it makes the trajectory approach
-    $\mathrm{asymptote} - \mathrm{removed}$ and under-predicts late-life fouling.
-  \item \textbf{Composability of truth.} The generator stores not only the total
-    $\mathbf{x}(n)$ but each mechanism's separate contribution, so any later analysis can ask
-    not just ``how degraded'' but ``degraded by \emph{what}''.
-\end{itemize}
+\subsection{The degradation models, formally}
+\label{sec:degradation-models}
+
+Let $n$ index flight cycles and $m$ be the engine's severity multiplier for the mechanism.
+Each mechanism contributes to the health vector as follows (the exact forms in
+\code{trajectories.py}, so the report and the generator cannot diverge --- norm N4).
+
+\paragraph{Fouling --- saturating exponential with an exact wash sawtooth.} Dirt
+accumulates toward an asymptote with time constant $\tau$ (cycles), and each compressor
+wash instantaneously removes a fraction $r_k$ of the \emph{current} deposit. Working with a
+normalized level $s(n) \in [0,1]$ (the per-parameter magnitude is applied afterwards), the
+trajectory is computed \emph{segment-wise} between washes at cycles $w_1 < w_2 < \cdots$:
+\begin{equation}
+  s(n) = 1 + \bigl(s_k^{+} - 1\bigr)\, e^{-(n - w_k)/\tau}
+  \quad\text{for } n \in [w_k, w_{k+1}), \qquad
+  s_k^{+} = (1 - r_k)\, s(w_k^{-}),
+  \label{eq:fouling}
+\end{equation}
+where $s(w_k^{-})$ is the level just before the wash and $s_k^{+}$ just after. The
+contribution to a component's parameter is $m\,a\,s(n)$ with $a$ the asymptotic magnitude
+(e.g.\ $\Delta\Gamma_{\text{HPC}} = -4\,\%$). The subtlety this equation encodes is that
+regrowth always aims at the \emph{same} asymptote: a tempting shortcut --- permanently
+subtracting the removed amount --- would make the trajectory approach
+$\text{asymptote} - \text{removed}$ and under-predict late-life fouling (the second
+implementation detail below).
+
+\paragraph{Erosion --- slow linear.} Abrasive wear removes material at a constant rate
+$\rho$ (percent per kilocycle):
+\begin{equation}
+  \Delta\eta(n) = m\,\rho\,\frac{n}{1000}.
+  \label{eq:erosion}
+\end{equation}
+
+\paragraph{Tip-clearance opening --- bilinear.} Clearances open fast during an initial
+break-in of $n_b$ cycles, then continue at a slower steady rate $\rho_\ell$:
+\begin{equation}
+  \Delta\eta(n) = m\Bigl[\, c\, \min\!\bigl(\tfrac{n}{n_b}, 1\bigr)
+  \;+\; \rho_\ell\, \frac{\max(n - n_b,\, 0)}{1000} \,\Bigr],
+  \label{eq:bilinear}
+\end{equation}
+with $c$ the break-in magnitude --- the ``fast initially, then slow'' profile of
+\cref{tab:degradation}.
+
+\paragraph{Hot-section deterioration --- linearly accelerating.} Creep and oxidation
+compound, so the linear rate is multiplied by an accelerating factor with exponent $p$:
+\begin{equation}
+  \Delta\eta(n) = m\,\rho\,\frac{n}{1000}\,
+  \Bigl[\,1 + \bigl(\tfrac{n}{10^4}\bigr)^{p}\,\Bigr],
+  \label{eq:hotsection}
+\end{equation}
+which produces the late-life upturn in EGT margin that ends most engines' lives.
+
+\paragraph{Foreign-object damage --- Poisson step.} Impacts arrive as a Poisson process;
+each deposits a permanent efficiency step $\Delta\eta_{\text{step}}$ on the struck
+component from its arrival cycle onward (a Heaviside step). This is the acute counterpart
+to the smooth chronic mechanisms.
+
+\paragraph{Acute fault episode --- ramp then hold.} An acute fault ramps a single health
+parameter over $n_r$ cycles from onset $n_0$, then holds:
+\begin{equation}
+  \Delta x_j(n) = M\,\operatorname{clip}\!\Bigl(\tfrac{n - n_0}{n_r},\, 0,\, 1\Bigr),
+  \label{eq:acute}
+\end{equation}
+with magnitude $M$ --- these are the episodes the difficulty gate
+(\cref{sec:audit-difficulty}) requires, and up to three may occur per engine in v1.1.
+
+The total health state is the sum of all active mechanisms, $\mathbf{x}(n) = \sum_{\text{mech}}
+\mathbf{x}^{\text{mech}}(n)$, and each mechanism's contribution is stored separately (the
+composability property below) so any later analysis can ask not just how degraded an engine
+is but \emph{by what}.
+
+One implementation detail beyond the equations is worth recording. \textbf{Composability of
+truth}: the generator stores not only the total $\mathbf{x}(n)$ but each mechanism's separate
+contribution (\cref{eq:fouling,eq:erosion,eq:bilinear,eq:hotsection,eq:acute} evaluated
+independently), so any later analysis can ask not just ``how degraded'' but ``degraded by
+\emph{what}'' --- the property the mechanism-level tasks of \cref{ch:overcoming} will exploit.
 
 End of life is declared when the EGT margin at the hot-day takeoff reference reaches zero,
 with the margin computed by projecting $\mathbf{x}(n)$ through the takeoff-hot ICM's EGT row

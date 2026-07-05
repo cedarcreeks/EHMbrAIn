@@ -128,7 +128,7 @@ The filter alternates prediction and update:
       \bigl(\mathbf{H}_n \mathbf{P}_{n|n-1}\mathbf{H}_n^{\!\top} + \mathbf{R}\bigr)^{-1}, \nonumber\\
   & \hat{\mathbf{x}}_n = \hat{\mathbf{x}}_{n-1} + \mathbf{K}_n\bigl(\Delta\mathbf{z}_n - \mathbf{H}_n\hat{\mathbf{x}}_{n-1}\bigr), \qquad
     \mathbf{P}_n = (\mathbf{I} - \mathbf{K}_n\mathbf{H}_n)\,\mathbf{P}_{n|n-1}.
-  \label{eq:kalman}
+  \label{eq:kalman-update}
 \end{align}
 The gain $\mathbf{K}_n$ is the optimal compromise between trusting the prediction
 (small $q$: health cannot jump) and trusting the measurement (small $\mathbf{R}$): with
