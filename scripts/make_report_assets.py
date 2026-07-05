@@ -905,6 +905,31 @@ def fig_isolation_confusion():
     print('  isolation confusion figure done')
 
 
+def fig_lrul():
+    """L-RUL: 90%-life RUL RMSE, Theil-Sen vs similarity vs AI."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f8' / 'lrul_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())['rmse_90']
+    INK, BLUE, GRAY, TEAL = '#212529', '#4263EB', '#868E96', '#1098AD'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y', 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(4.8, 2.9))
+    names = ['Theil--Sen\\n(operational)', 'similarity\\n(advanced)', 'AI GRU']
+    vals = [v['theilsen'], v['similarity'], v['ai']]
+    for i, (val, col) in enumerate(zip(vals, [GRAY, TEAL, BLUE])):
+        ax.bar(i, val, color=col)
+        ax.annotate(f'{val:.0f}', (i, val), ha='center', va='bottom', fontsize=8)
+    ax.set_xticks(range(3)); ax.set_xticklabels(names, fontsize=8)
+    ax.set_ylabel('RUL RMSE at 90\\% life [cycles]')
+    ax.set_title('advanced classical narrows the gap; AI still wins', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'lrul_compare.pdf'); plt.close(fig)
+    print('  lrul figure done')
+
+
 def fig_wall():
     """L-H2/L-H2b: confusable isolation accuracy, cockpit/virtual/real."""
     import matplotlib.pyplot as plt
@@ -1269,6 +1294,7 @@ def artifact_assets():
     f8_l2_assets()
     f8_l6_assets()
     fig_wall()
+    fig_lrul()
     fig_confusable_angles()
     fig_isolation_confusion()
     fig_detection_delays()

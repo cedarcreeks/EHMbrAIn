@@ -298,6 +298,38 @@ however sophisticated, can substitute a virtual sensor for the missing measureme
 certificate of \cref{ch:breakthrough} says exactly what the current sensors can and cannot
 know, and this line shows that boundary is real.
 
+\section{L-RUL: does an advanced classical prognostic narrow H3?}
+\label{sec:f8-lrul}
+
+The traditional RUL of \cref{ch:results} used linear Theil--Sen extrapolation --- operational
+practice, not the research frontier (\cref{sec:math-theilsen}). So part of the H3 gap could be
+``AI beats a linear extrapolator'' rather than ``AI beats the best classical prognostic.''
+This line settles how much, under pre-registration (\code{docs/prereg-v10.md}, tag
+\code{prereg-v10}), by pitting Theil--Sen against a \emph{similarity-based} prognostic --- the
+C-MAPSS-standard classical method, which matches a test engine's recent degradation curve
+against the run-to-failure library of the training engines and so can follow the nonlinear,
+accelerating shape a line cannot (\cref{fig:lrul}).
+
+Both hypotheses confirm, and the honest reading is a refinement, not a reversal.
+\textbf{H-RUL.1 confirmed}: the advanced method nearly halves the traditional error at
+$90\,\%$ life, $1\,981 \to 1\,118$ cycles --- much of the linear extrapolator's deficit was
+its inability to bend. \textbf{H-RUL.2 also confirmed}: the AI still wins, $858$ versus
+$1\,118$ (Wilcoxon $p = 0.002$). So H3 survives against a genuinely strong classical baseline,
+but its margin should be stated honestly at two scales: the AI is $\sim$2.3$\times$ better than
+the RUL an operator fields \emph{today} (Theil--Sen), and $\sim$1.3$\times$ better than the
+best \emph{advanced} classical prognostic. The learning advantage in prognosis is real ---
+the GRU captures late-life curvature and cross-channel structure the similarity match does
+not --- but it is a $30\,\%$ edge over a good classical method, not an order of magnitude.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.52\textwidth]{lrul_compare}
+  \caption{RUL error at 90\,\% life for the operational (Theil--Sen), advanced classical
+  (similarity-based) and AI prognostics. The advanced method closes most of the gap to the
+  AI, which still leads. Auto-generated.}
+  \label{fig:lrul}
+\end{figure}
+
 \section{The F8 program so far}
 \label{sec:f8-summary}
 
@@ -323,6 +355,7 @@ program looks like when its gates are allowed to fail.
     L7 & Can an augmented Kalman fix a drifting sensor? & \textbf{Partly} --- tracks the drift, cannot un-corrupt the cockpit diagnosis (\cref{sec:f8-l7}) \\
     L9 & Can the PCS metric be validated? & \textbf{Partly} --- tracks correctness weakly; no strongly-physical classifier to test against (\cref{sec:f8-l9}) \\
     L-H2 & Does breaking the wall need a \emph{real} sensor? & \textbf{Yes} --- real station sensors lift confusable isolation 0.15$\to$0.92; a virtual one adds nothing (\cref{sec:f8-lh2}) \\
+    L-RUL & Does an advanced classical prognostic narrow H3? & \textbf{Yes, but} --- it halves the traditional error (1981$\to$1118); the AI still wins 858 (\cref{sec:f8-lrul}) \\
     \bottomrule
   \end{tabular}
 \end{table}

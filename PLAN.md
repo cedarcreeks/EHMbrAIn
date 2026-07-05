@@ -1078,7 +1078,7 @@ Coordinar con F-FLOW (las figuras rompen el choppy y ayudan al lector novato).
 
 ---
 
-## F8/L-RUL — Prognóstico tradicional avanzado: ¿estrecha H3? (propuesta 2026-07-05)
+## F8/L-RUL — ✅ HECHO (prereg-v10, 2026-07-06): similarity-based (clásico avanzado) casi halva el error tradicional (1981→1118 @90%) PERO la IA sigue ganando (858, Wilcoxon p=0.002). H3 sobrevive baseline fuerte: margen ~2.3× vs práctica, ~1.3× vs avanzado clásico. ch11 §L-RUL + fig. Propuesta original:
 
 **Origen**: escrutinio del usuario — el RUL tradicional actual (Theil-Sen lineal) es
 NORMA OPERATIVA de industria, no SOTA de investigación en prognosis. H3 ("IA 3-6× mejor")
