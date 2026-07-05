@@ -1027,9 +1027,11 @@ autogeneradas de sus JSON, gráfico EN VEZ de tabla donde el visual aporta):
 - fig:rul-dist (ch8) — box per-motor error RUL trad vs IA (dispersión+sesgo, no solo media)
 - fig:surrogate/fig:v2-fidelity/fig:arch/fig:h4v2/fig:recoverable (ch11) — L1/L2/L5/L6/L4
 Tablas tab:surrogate/v2-fidelity/arch/h4v2/recoverable → figuras.
-PENDIENTE F-VIZ (necesitan guardar datos por-episodio o menor valor): lead-time detección
-(dist), matriz confusión aislamiento, convergencia Optuna, tamaños conjunto conformal F7.
-Los parciales (L7/L9) se quedan en tabla (no concluyentes → no sobrevender).
+AMPLIADO (2ª tanda): fig:iso-confusion (ch8, matriz confusión H2), fig:det-delays (ch8,
+strip lead-time H1), fig:rul-dist (ch8, box RUL H3) → **ch8 resultados TOTALMENTE visualizado
+(los 3 veredictos titulares)**. Total 9 figuras concluyentes nuevas. Scripts fig_isolation.py,
+fig_rul_distribution.py + volcados en f5_confirm/f8_l4. PENDIENTE menor: convergencia Optuna,
+tamaños conjunto conformal F7 (menor valor). Los parciales (L7/L9) se quedan en tabla.
 
 ### Inventario original:
 
