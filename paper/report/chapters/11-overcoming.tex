@@ -138,3 +138,35 @@ be pre-registered against this record.
 surrogate's value is as a fast, exact-gradient \emph{generator} and analysis-by-synthesis
 tool (L2, and the mechanism-level and drift-estimation lines still queued), not as a feature
 factory for a learner that already had the signal.
+
+\section{L9: can the Physics-Consistency Score be validated?}
+\label{sec:f8-l9}
+
+Contribution C5, the Physics-Consistency Score (\cref{sec:pcs}), was a null result on the
+weak v0 classifier. L9 asks the fair question under pre-registration
+(\code{docs/prereg-v5.md}, tag \code{prereg-v5}): when a classifier reasons more physically,
+does PCS rise? Three diagnosis classifiers are scored --- one on the \emph{extended} sensor
+set (where the ICM makes faults more separable, \cref{sec:bt-honesty}), one on the cockpit
+set (the v0 setting), and a negative control trained on \emph{shuffled} labels
+(\cref{tab:pcs}).
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{L9 PCS validation: isolation accuracy and mean PCS for a competent, a confused,
+  and a label-shuffled classifier. Auto-generated.}
+  \label{tab:pcs}
+  \input{tables/table_pcs}
+\end{table}
+
+The verdict is split and, characteristically, deflating in an informative way.
+\textbf{H9.2 confirmed}: for the extended classifier PCS is higher on the episodes it gets
+right ($0.27$) than on those it gets wrong ($0.24$), so the metric does carry a little
+signal about physical correctness. But \textbf{H9.1 is refuted as frozen}: the competent
+classifier's PCS ($0.25$) does not significantly exceed the shuffled control's ($0.21$,
+Mann--Whitney $p = 0.17$), and the control even edges the honest cockpit classifier. The
+reason is the deeper finding, not a bug: \emph{no available classifier is strongly physical},
+because acute isolation stays hard even on the extended set (accuracy $0.39$) --- the H2 wall
+again. Without a genuinely physical reasoner to validate against, PCS cannot be shown to be
+more than weakly informative here. C5 is therefore only partially validated; a clean test
+would need a positive control (e.g.\ the extended-sensor WLS estimate, physical by
+construction), which is left as pre-registrable future work rather than claimed post hoc.
