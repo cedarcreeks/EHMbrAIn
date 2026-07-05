@@ -158,6 +158,21 @@ the same pairwise-slope population to margin exhaustion: steeper slopes give the
 edge, shallower the late edge. When the median slope is non-negative the method honestly
 abstains (no crossing is predicted).
 
+\paragraph{A fair-baseline caveat, stated plainly.} This is the one place where the
+``traditional'' family is represented by \emph{operational practice} rather than \emph{research
+state of the art}. Linear margin extrapolation is what airlines actually do, so it is the
+right baseline for the industry-transfer framing of this document; but the research frontier
+of classical prognostics is richer --- particle filters, Bayesian degradation models, and
+similarity-based matching against a run-to-failure library, none of which are linear. A
+Theil--Sen line cannot bend to follow the accelerating hot-section decay
+(\cref{eq:hotsection}) the way a learner can, so part of the RUL gap in \cref{ch:results} (H3)
+is surely the AI beating a \emph{linear} extrapolator, not the best possible traditional
+prognostic. An advanced classical method would narrow that gap --- though, because the AI does
+capture the late-life curvature, it would be unlikely to close it. Quantifying exactly how
+much is a pre-registered future line (PLAN \S F8/L-RUL); until it runs, H3 should be read as
+``AI versus the traditional RUL an operator fields today,'' which is the honest and the
+operationally relevant claim, but not the strongest conceivable traditional one.
+
 \section{Two detector-design lessons}
 \label{sec:det-lessons}
 \label{sec:trad-lessons}

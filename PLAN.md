@@ -1075,3 +1075,25 @@ evidencia de un experimento SOLO cuando es CONCLUYENTE; figura solo si aporta so
 la tabla es más clara (una cifra), dejar tabla. Cada figura con caption autoexplicativo + atribución de generador (N4). Priorizar
 las que muestran DISTRIBUCIONES e INCERTIDUMBRE (no solo medias) — refuerza la honestidad.
 Coordinar con F-FLOW (las figuras rompen el choppy y ayudan al lector novato).
+
+---
+
+## F8/L-RUL — Prognóstico tradicional avanzado: ¿estrecha H3? (propuesta 2026-07-05)
+
+**Origen**: escrutinio del usuario — el RUL tradicional actual (Theil-Sen lineal) es
+NORMA OPERATIVA de industria, no SOTA de investigación en prognosis. H3 ("IA 3-6× mejor")
+es justo contra la práctica, pero un método clásico avanzado estrecharía la brecha.
+Reconocido honestamente en ch6 (§Theil-Sen caveat) + registro decisiones.
+
+**Diseño (prereg-v10)**: implementar un prognóstico tradicional AVANZADO — candidatos:
+(a) filtro de partículas sobre un modelo de degradación no lineal del margen (captura la
+aceleración de sección caliente), (b) similarity-based (emparejar la trayectoria de margen
+contra librería run-to-failure del train), (c) Bayesian degradation con actualización.
+Mismo presupuesto de tuning que la IA (equidad). Evaluar en test: RMSE RUL a 50/70/90 %.
+**Hipótesis H-RUL.1**: el tradicional avanzado estrecha la brecha vs Theil-Sen (RMSE 90 %
+< 1981) PERO la IA sigue superándolo (McNemar/Wilcoxon) → H3 se sostiene con un baseline más
+fuerte. Honesto en ambos sentidos: si el avanzado IGUALA a la IA, H3 se debilita a "IA =
+mejor prognóstico clásico avanzado" (hallazgo importante); si no, H3 se refuerza mucho.
+**Valor**: cierra el único punto donde el baseline era de-práctica no de-frontera; convierte
+H3 de "IA vs práctica" a "IA vs lo mejor clásico". Nota: la IA captura la curvatura tardía
+que el lineal no, así que se espera estrechamiento pero no cierre.
