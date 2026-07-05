@@ -78,6 +78,10 @@ def main():
     shrink = {p: float(np.median(crb_pred[p]) / max(np.median(crb_ext[p]), 1e-9))
               for p in EFF}
     med_shrink = float(np.median(list(shrink.values())))
+    per_dir_full = {p: {'cockpit': round(np.median(crb_pred[p]), 3),
+                        'extended': round(np.median(crb_ext[p]), 3),
+                        'kf_err': round(np.median(kf_err[p]), 3)}
+                    for p in HEALTH_PARAMS}
 
     verdict = {
         'H10.1_honesty': {
@@ -93,6 +97,7 @@ def main():
             'cockpit_vs_extended_crb_shrink_efficiencies': shrink,
             'median_shrink': med_shrink,
             'confirmed': bool(med_shrink >= 2.0)},
+        'per_direction_full': per_dir_full,
     }
     (OUT / 'verdicts_f10.json').write_text(json.dumps(verdict, indent=2))
     print(f"H10.1 honesty:   rho={rho:.3f} p={pv:.4f}  -> {verdict['H10.1_honesty']['confirmed']}")
