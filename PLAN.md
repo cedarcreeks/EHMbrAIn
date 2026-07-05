@@ -848,6 +848,35 @@ pecar de optimista. Reglas de construcción (no violar):
 
 ---
 
+
+## ⟪REVALUACIÓN L-H2 / L-H2b (2026-07-05, tras crítica del usuario)⟫
+
+**Crítica del usuario (válida en parte)**: demostrar "más sensores = mejor" tiene poco valor
+si la industria no va a añadir sondas en servicio (caro, a veces inviable — sección caliente,
+certificación). SOPESADO:
+- **L-H2 (positivo, sensores reales mejoran aislamiento): DEMOTADO.** F10 ya lo probó
+  geométricamente (CRB, identificabilidad 45×); re-correrlo es confirmatorio y su marco
+  "retrofit" es operativamente débil. NO priorizar.
+- **L-H2b (virtual NO sustituye): ELEVADO y REENCUADRADO** como PROTECCIÓN DE COMPRA / techo
+  honesto, no como "añade hardware". Vale INDEPENDIENTE del retrofit: dice a operadores/OEMs
+  que ningún vendor de IA/soft-sensor puede "desbloquear" diagnóstico de los datos actuales
+  (desigualdad de procesamiento de datos, medido). Encaja con el principio §0-bis regla 3
+  (scoreboard honesto = información de compra). Barato (geometría ya medida).
+- **Matices a documentar (honestidad, no optimismo)**:
+  (a) Muchas sondas de estación (PS3/T25) YA existen para CONTROL FADEC — la brecha puede ser
+      qué se GRABA/transmite (fontanería de datos, barata), no hardware. VERIFICAR en fuentes
+      públicas antes de afirmarlo; si no se verifica, NO afirmarlo.
+  (b) Audiencia OEM (ch1): "qué sensor rescata qué fallo" es accionable en DISEÑO aunque el
+      retrofit sea inviable.
+  (c) El entregable real para quien NO añade sensores es el certificado F10 (qué es
+      cognoscible con lo que ya tienes) — "compra sensores" es solo una rama.
+- **Forma final recomendada**: NO una fase de "romper H2 comprando sensores". SÍ una
+  subsección corta (en ch13 breakthrough o ch10) titulada tipo "The wall is informational:
+  neither a smarter algorithm nor a virtual sensor substitutes for a missing measurement",
+  con la medición virtual(rango 3)/real(rango 4) y el matiz de que el certificado F10 es la
+  respuesta para el operador que no reinstrumenta. PRE-REGISTRO solo si se ejecuta la
+  comparación de aislamiento; el argumento geométrico no lo necesita.
+
 ## F8/L-H2 — Romper el muro H2 con sensores extendidos (propuesta 2026-07-05)
 
 **Pregunta del usuario**: ¿H2 sigue sin romperse, hay plan? SÍ hay plan, y la factibilidad
