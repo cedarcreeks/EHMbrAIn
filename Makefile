@@ -49,6 +49,7 @@ f8:
 
 evidence:
 	$(PY) scripts/make_case_studies.py
+	$(PY) scripts/fig_rul_distribution.py
 	$(PY) scripts/benchmark_pipeline.py model decks fleet audits trad
 	$(PY) scripts/make_report_assets.py
 

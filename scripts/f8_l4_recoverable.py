@@ -108,7 +108,7 @@ def main():
         'n_train': int(len(ytr)), 'n_test': int(len(yte)),
         'truth_mean': float(yte.mean()), 'truth_std': float(yte.std()),
         'test_r2': float(r2), 'spearman': float(rho), 'p_value': float(p),
-        'baseline_r2': 0.0,
+        'baseline_r2': 0.0, 'pred': pred.tolist(), 'truth': yte.tolist(),
         'H4L.1_estimable': {'confirmed': bool(r2 > 0.30 and rho > 0.5 and p < 0.05)},
     }
     (OUT / 'recoverable_verdict.json').write_text(json.dumps(verdict, indent=2))

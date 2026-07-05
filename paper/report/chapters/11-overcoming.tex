@@ -189,20 +189,21 @@ trajectory alone?
 \textbf{H4L.1 confirmed, decisively.} A histogram gradient-boosting regressor on
 trailing-window shape features (level, slope, curvature and sawtooth roughness of the cockpit
 deviations) predicts the recoverable fraction with test $R^2 = 0.86$ and Spearman
-$\rho = 0.86$ ($p < 10^{-4}$), against a mean-predictor baseline of zero (\cref{tab:recoverable}).
+$\rho = 0.86$ ($p < 10^{-4}$), against a mean-predictor baseline of zero (\cref{fig:recoverable}).
 The mechanism is honest and physical: fouling betrays itself through the wash sawtooth its
 recoveries leave in the deviation history, so an engine's own past wash responses reveal how
 much the next wash will buy. This is the batch's first clean positive limitation-overcoming
 result --- and an actionable one, converting the composability of the synthetic ground truth
 into a wash-planning tool an operator could use.
 
-\begin{table}[htbp]
-  \centering\small
-  \caption{L4: estimating the recoverable (washable) fraction of lost EGT margin from
-  deviation-trajectory shape, test split. Auto-generated.}
-  \label{tab:recoverable}
-  \input{tables/table_recoverable}
-\end{table}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.44\textwidth]{l4_recoverable}
+  \caption{L4: predicted versus true recoverable fraction of lost EGT margin on the test
+  split (dashed = perfect). The estimator reads the wash-restorable share off the deviation
+  trajectory with $R^2 = 0.86$. Auto-generated.}
+  \label{fig:recoverable}
+\end{figure}
 
 \section{L9: can the Physics-Consistency Score be validated?}
 \label{sec:f8-l9}

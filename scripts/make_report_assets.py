@@ -811,6 +811,37 @@ def f10_assets():
     print('  f10 assets done')
 
 
+def fig_rul_distribution():
+    """Per-engine confirmatory RUL error distribution, traditional vs AI."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f5' / 'rul_errors.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    INK, BLUE, GRAY = '#212529', '#4263EB', '#868E96'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'figure.dpi': 150})
+    fracs = ['0.5', '0.7', '0.9']
+    fig, ax = plt.subplots(figsize=(5.6, 2.9))
+    pos = np.arange(len(fracs))
+    for off, fam, col in ((-0.17, 'traditional', GRAY), (0.17, 'ai', BLUE)):
+        data = [np.array(d[fam][f]) for f in fracs]
+        bp = ax.boxplot(data, positions=pos + off, widths=0.28, patch_artist=True,
+                        showfliers=False, medianprops=dict(color=INK))
+        for b in bp['boxes']:
+            b.set(facecolor=col, alpha=0.6)
+    ax.axhline(0, color=INK, lw=0.7, ls='--')
+    ax.set_xticks(pos); ax.set_xticklabels(['50\\%', '70\\%', '90\\%'])
+    ax.set_xlabel('life fraction at prediction')
+    ax.set_ylabel('RUL error [cycles]  (+ = optimistic)')
+    from matplotlib.patches import Patch
+    ax.legend([Patch(facecolor=GRAY, alpha=0.6), Patch(facecolor=BLUE, alpha=0.6)],
+              ['traditional', 'AI'], frameon=False, fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'rul_distribution.pdf'); plt.close(fig)
+    print('  rul distribution figure done')
+
+
 def f8_result_figures():
     """Conclusive F8 results as figures (from existing verdict artifacts)."""
     import matplotlib.pyplot as plt
@@ -878,6 +909,20 @@ def f8_result_figures():
         ax.set_ylabel('median error vs pyCycle [\\%]')
         ax.legend(frameon=False, fontsize=7)
         fig.tight_layout(); fig.savefig(FIG_DIR / 'l1_surrogate.pdf'); plt.close(fig)
+    # L4: recoverable-fraction predicted vs truth (R^2 = 0.86)
+    rp = F8 / 'recoverable_verdict.json'
+    if rp.exists():
+        v = json.loads(rp.read_text())
+        if 'pred' in v:
+            fig, ax = plt.subplots(figsize=(3.4, 3.2))
+            ax.scatter(v['truth'], v['pred'], s=10, color=BLUE, alpha=0.5)
+            lim = [0, max(max(v['truth']), max(v['pred'])) * 1.05]
+            ax.plot(lim, lim, color=INK, lw=0.8, ls='--')
+            ax.set_xlim(lim); ax.set_ylim(lim)
+            ax.set_xlabel('true recoverable fraction')
+            ax.set_ylabel('predicted')
+            ax.set_title(f"$R^2 = {v['test_r2']:.2f}$", fontsize=9)
+            fig.tight_layout(); fig.savefig(FIG_DIR / 'l4_recoverable.pdf'); plt.close(fig)
     print('  f8 result figures done')
 
 
@@ -1059,6 +1104,7 @@ def artifact_assets():
     f8_assets()
     f8_l2_assets()
     f8_l6_assets()
+    fig_rul_distribution()
     f8_result_figures()
     f8_l5_assets()
     f8_l4_assets()
