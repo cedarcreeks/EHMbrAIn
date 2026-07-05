@@ -46,6 +46,10 @@ STAGES = {
         ('surrogate_train', 'f8_surrogate.py', [], True),
         ('fleet_v2', 'make_fleet.py', ['surrogate'], False),
         ('h4_v2_hybrid', 'f8_l6_hybrid.py', [], True),
+        ('l4_recoverable', 'f8_l4_recoverable.py', [], False),
+        ('l5_architectures', 'f8_l5_arch.py', [], True),
+        ('l7_drift', 'f8_l7_drift.py', [], False),
+        ('l9_pcs', 'f8_l9_pcs.py', [], True),
     ],
     'f10': [('identifiability_certificate', 'f10_certificate.py', [], False)],
 }

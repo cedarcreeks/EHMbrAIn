@@ -40,6 +40,10 @@ f8:
 	$(PY) scripts/audit_dataset.py fleet_v2
 	$(PY) scripts/audit_v2_fidelity.py 60
 	$(PY) scripts/f8_l6_hybrid.py
+	$(PY) scripts/f8_l4_recoverable.py
+	$(PY) scripts/f8_l5_arch.py
+	$(PY) scripts/f8_l7_drift.py
+	$(PY) scripts/f8_l9_pcs.py
 	$(PY) scripts/f10_certificate.py
 	$(PY) scripts/econ_impact.py
 

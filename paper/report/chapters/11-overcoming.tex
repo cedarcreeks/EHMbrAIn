@@ -256,3 +256,31 @@ mimics, so the filter can \emph{track} the drift but cannot \emph{un-corrupt} th
 The lesson is the one Case C already implied and the certificate (\cref{ch:breakthrough})
 formalizes: against a lying sensor, a smarter algorithm buys awareness, not accuracy ---
 the fix is instrumentation (cross-channel redundancy or the extended set), not filtering.
+
+\section{The F8 program so far}
+\label{sec:f8-summary}
+
+\Cref{tab:f8-summary} collects the seven executed lines and their verdicts. The shape of the
+table is the point: capability-extending lines (L1, L2, L4, L5) succeed, while lines that
+probe the confusable-isolation wall (L7, L9) return partial results that reinforce it, and
+the one physics-injection line (L6) is a clean negative. The honest ledger is what a research
+program looks like when its gates are allowed to fail.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The executed F8 limitation-overcoming lines and their pre-registered verdicts.}
+  \label{tab:f8-summary}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.06\textwidth}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}}
+    \toprule
+    Line & Question & Verdict \\
+    \midrule
+    L1 & A differentiable twin at pyCycle fidelity? & \textbf{Yes} --- 13--19$\times$ closer than the linearization (\cref{sec:f8-l1}) \\
+    L2 & A nonlinear fleet from it? & \textbf{Yes} --- SynCFM56 v2, 3--7$\times$ more faithful, gates re-passed (\cref{sec:f8-l2}) \\
+    L5 & Is the RUL win architecture-robust? & \textbf{Yes} --- GRU, TCN, Transformer all beat traditional (\cref{sec:f8-l5}) \\
+    L4 & Is the recoverable margin fraction estimable? & \textbf{Yes} --- $R^2 = 0.86$ from trajectory shape (\cref{sec:f8-l4}) \\
+    L6 & Does a twin-residual feature help RUL (H4)? & \textbf{No} --- refuted a second, independent way (\cref{sec:f8-l6}) \\
+    L7 & Can an augmented Kalman fix a drifting sensor? & \textbf{Partly} --- tracks the drift, cannot un-corrupt the cockpit diagnosis (\cref{sec:f8-l7}) \\
+    L9 & Can the PCS metric be validated? & \textbf{Partly} --- tracks correctness weakly; no strongly-physical classifier to test against (\cref{sec:f8-l9}) \\
+    \bottomrule
+  \end{tabular}
+\end{table}

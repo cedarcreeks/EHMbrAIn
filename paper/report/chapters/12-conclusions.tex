@@ -93,12 +93,18 @@ sets --- plus one honestly refuted threshold hypothesis. The limitations-overcom
 with a differentiable neural twin 13--19$\times$ more faithful (\cref{tab:surrogate}); L2
 regenerated the fleet through it (SynCFM56 v2, 3--7$\times$ closer to full physics,
 difficulty gate re-passed); and L6 used v2 to re-open H4 with a twin-residual feature and
-\textbf{refuted it a second, independent way} (\cref{tab:h4v2}) --- two different
-physics-injection mechanisms now fail to improve prognosis, hardening the negative into a
-transferable warning about the ``physics-informed'' label. The remaining lines (real-station
-EGT, mechanism-level labels, architecture breadth, sensor-drift estimation, N-CMAPSS DS02,
-map-shape calibration) are characterized with hypotheses and gates in the plan, each a
-pre-registrable study in its own right.
+\textbf{refuted it a second, independent way} (\cref{tab:h4v2}). Four further lines followed,
+each pre-registered: L5 showed the RUL advantage is \emph{architecture-robust} (a TCN and a
+Transformer beat the traditional baseline as well as the GRU, \cref{sec:f8-l5}); L4
+established that the \emph{recoverable fraction} of lost margin is estimable from trajectory
+shape ($R^2 = 0.86$, a wash-planning tool, \cref{sec:f8-l4}); L7 built the augmented-state
+Kalman for sensor drift, which tracks the drift but cannot un-corrupt the cockpit diagnosis
+(\cref{sec:f8-l7}); and L9 could only partially validate the PCS metric, because no available
+classifier is strongly enough physical to test it against (\cref{sec:f8-l9}). The pattern is
+the project's in miniature: two clean positives that extend capability, two partial results
+that reinforce the observability wall. The three heaviest remaining lines (real-station EGT,
+N-CMAPSS DS02, map-shape calibration) are characterized with hypotheses and gates in the
+plan.
 
 \section{Future work}
 
