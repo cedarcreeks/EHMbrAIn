@@ -9,6 +9,83 @@ adopting organization should do differently on Monday, and what remains honestly
 \keyidea{What transfers off this simulator is not the absolute numbers but the rankings, mechanisms and geometry --- which method wins where and why, and the observability structure any CFM56-class cockpit set shares. Every operational claim in this document is of that second, transferable kind.}
 
 
+\section{What this study answers, and how}
+\label{sec:questions-answered}
+
+Before the narrative summary, the ledger: every question the study set out to answer, its
+answer, and where the evidence lives. The negatives and the partial results are listed with
+the same weight as the confirmations --- an honest ledger is one where refutations are as
+visible as wins.
+
+\begin{center}\footnotesize
+\setlength{\tabcolsep}{4pt}
+\textbf{Scientific questions (pre-registered hypotheses).}\\[2pt]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}@{}}
+  \toprule
+  Question & Answer & Where \\
+  \midrule
+  Does AI detect faults earlier than trend monitoring? & \textbf{Yes}, once tuned: 12$\times$
+    earlier at equal false alarms (recall 0.48 vs 0.13) & \cref{sec:res-h1} (H1) \\
+  Does AI isolate confusable faults better? & \textbf{No}: 31\,\%=31\,\%; the wall is
+    informational, not algorithmic & \cref{sec:res-h2} (H2) \\
+  Does AI predict remaining life better? & \textbf{Yes}: 3--6$\times$ lower error, and robust
+    across architectures & \cref{sec:res-h3h5}, \cref{sec:f8-l5} (H3) \\
+  Does injecting physics into the learner help? & \textbf{No}, twice: estimate-stacking and
+    twin-residual both hurt & \cref{sec:res-h4}, \cref{sec:f8-l6} (H4) \\
+  Is the AI's uncertainty better calibrated? & \textbf{Yes}: 6$\times$ tighter interval at
+    honest coverage & \cref{sec:res-h3h5} (H5) \\
+  Can observability be bought without new hardware? & \textbf{Partly}: report-schedule design
+    $+79$\,\%; learned fusion triples classical & \cref{ch:tomography} (H7) \\
+  Can we certify what a diagnosis honestly knows? & \textbf{Yes}, validated against truth
+    ($\rho=0.70$) & \cref{ch:breakthrough} (H10) \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\footnotesize
+\setlength{\tabcolsep}{4pt}
+\textbf{Operational questions (what an organization can act on).}\\[2pt]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}@{}}
+  \toprule
+  Question & Answer & Where \\
+  \midrule
+  Where is AI \emph{not} needed? & Event-shaped faults --- the traditional stack wins at
+    near-zero cost & \cref{ch:trad}, \cref{ch:cases} \\
+  Which task justifies the AI investment? & Prognosis (the 3--6$\times$, with calibrated
+    intervals) & \cref{ch:results} \\
+  What can today's sensors know? & Exactly the identifiable subspace the certificate maps &
+    \cref{ch:breakthrough} \\
+  Which sensor rescues which fault? & Station probes: HPC efficiency $45\times$; isolation
+    0.15$\to$0.92 & \cref{sec:bt-honesty}, \cref{sec:f8-lh2} \\
+  Can a virtual sensor or clever algorithm substitute a physical one? & \textbf{No} --- it
+    adds no information (rank unchanged) & \cref{sec:f8-lh2} \\
+  How much will a compressor wash recover? & Estimable from trajectory shape, $R^2=0.86$ &
+    \cref{sec:f8-l4} \\
+  What is it worth economically? & Median \$3\,M/yr for 100 engines, wide interval, honest
+    downside & \cref{ch:economics} \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\footnotesize
+\setlength{\tabcolsep}{4pt}
+\textbf{Method questions (how credible science is done here).}\\[2pt]
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.30\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}>{\raggedright\arraybackslash}p{0.18\textwidth}@{}}
+  \toprule
+  Question & Answer & Where \\
+  \midrule
+  How to compare AI and traditional without cheating? & Identical data, metrics, splits and
+    tuning budget, frozen by pre-registration & \cref{sec:fair-design} \\
+  How to trust a synthetic dataset? & Three audits and a difficulty gate that is allowed to
+    fail (and did) & \cref{sec:audits} \\
+  How to build the benchmark from public data alone? & Certified TCDS/EEDB measurements
+    $\rightarrow$ calibrated twin & \cref{ch:model}, \cref{ch:data} \\
+  How to prove an uncertainty statement is honest? & Validate it against ground truth ---
+    only a synthetic-truth benchmark can & \cref{sec:bt-honesty} \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
 \section{What was built}
 
 From nothing but certified public data, this work produced: a calibrated thermodynamic twin

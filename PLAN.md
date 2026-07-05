@@ -952,7 +952,7 @@ EGT virtual que discrepa del medido delata el termopar), a documentar como matiz
 
 ---
 
-## F-QA — Sección final "Qué preguntas responde este estudio y cómo" (directriz usuario 2026-07-05)
+## F-QA — ✅ HECHO (2026-07-06): sección "What this study answers, and how" al inicio de ch12 — 3 tablas (científica/operativa/método), pregunta→respuesta→dónde, negativos y parciales con igual peso. Spec original:
 
 **Requisito**: el report debe cerrar con una sección que mapee, explícitamente, cada pregunta
 que el estudio responde → la respuesta → CÓMO se responde (experimento, evidencia, capítulo).
