@@ -57,15 +57,17 @@ def engine_features(e, bm):
     return np.column_stack([_ffill(F[:, j]) for j in range(F.shape[1])])
 
 
-def load_fleet_features():
-    """Per-engine dict: features, split, acute info, life. Cached in-process."""
-    index = json.loads((FLEET / 'fleet_index.json').read_text())
-    events = pd.read_parquet(FLEET / 'events.parquet')
+def load_fleet_features(fleet_dir=None):
+    """Per-engine dict: features, split, acute info, life. Cached in-process.
+    fleet_dir defaults to the frozen v1.1 fleet; pass the v2 dir for F8/L6."""
+    fdir = Path(fleet_dir) if fleet_dir is not None else FLEET
+    index = json.loads((fdir / 'fleet_index.json').read_text())
+    events = pd.read_parquet(fdir / 'events.parquet')
     bm = BaselineModel()
     out = {}
     snap_cols = (['engine_id', 'cycle', 'split', 'cr_N1_cmd', 'to_dTs_C',
                   'to_EGT_degK'] + [f'cr_{c}' for c in COCKPIT])
-    df = pd.read_parquet(FLEET / 'snapshots.parquet', columns=snap_cols)
+    df = pd.read_parquet(fdir / 'snapshots.parquet', columns=snap_cols)
     for rec in index['engines']:
         eid = rec['engine_id']
         e = df[df.engine_id == eid].sort_values('cycle').reset_index(drop=True)

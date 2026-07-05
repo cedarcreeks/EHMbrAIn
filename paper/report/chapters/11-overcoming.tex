@@ -95,10 +95,43 @@ engines, measured noise matching the catalog).
   \input{tables/table_v2_fidelity}
 \end{table}
 
-\paragraph{What v2 unlocks.} L6 re-opens hypothesis H4 with the two mechanisms stacking
-never tested: twin-residual features (measured minus surrogate-predicted at the estimated
-health --- an information channel the raw deviations genuinely lack now that generation is
-nonlinear and the surrogate is \emph{not} the generator's own inverse) and
-physics-constrained losses using the surrogate's exact gradients. H4 was refuted for the
-concatenation shortcut; whether \emph{any} physics injection helps is an open,
-now-testable question.
+\section{L6: H4 re-opened --- and refuted a second way}
+\label{sec:f8-l6}
+
+The F5 stacking hybrid failed by concatenating smeared GPA \emph{estimates}
+(\cref{sec:res-h4}). L6 tries the mechanism that failure suggested: not the estimate but
+the \emph{residual}. Per snapshot, the linear WLS residual
+$\mathbf{r} = (\mathbf{I} - \mathbf{H}_{\text{ref}}\mathbf{M})\,\Delta\mathbf{z}$
+(with $\mathbf{M}$ the regularized WLS operator, \cref{eq:wls}) is the part of the
+measurement the linear GPA \emph{cannot} explain. On v1 this was near zero by construction
+(generator and GPA shared the linearization); on v2 the generator is the nonlinear
+surrogate, so the residual carries real information --- the twin-residual feature. The RUL
+GRU input grows from four channels to seven, and the experiment is frozen exactly as F5's
+H4 was (\code{docs/prereg-v3.md}, tag \code{prereg-v3}): pure vs hybrid at 10/25/100\,\%
+of training engines, three seeds, single confirmatory pass, thresholds fixed \emph{before}
+running.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{H4 on v2 (RUL RMSE, cycles, mean of three seeds). The physics feature does not
+  help --- it hurts under scarcity. Auto-generated from the frozen verdict.}
+  \label{tab:h4v2}
+  \input{tables/table_h4v2}
+\end{table}
+
+\Cref{tab:h4v2}: the hybrid is \emph{worse} where it was supposed to help most (2\,099 vs
+1\,944 cycles at 10\,\% data, 1\,268 vs 1\,233 at 25\,\%) and statistically
+indistinguishable at full data; the Wilcoxon test runs the wrong way ($p = 0.99$ against the
+hybrid). \textbf{H4 is now refuted a second, independent way.} Two different physics-injection
+mechanisms --- estimate-stacking and residual-augmentation --- both fail to improve RUL, on
+both the linear and the nonlinear fleet. The transferable finding hardens: for this
+prognosis task the raw corrected deviations already contain the remaining-life signal, and
+bolting on physics-derived features adds variance, not information. Under the frozen
+protocol, mechanism M3 (a physics-constrained loss) is therefore \emph{deferred}: with two
+negatives in hand, the burden of proof has shifted, and any future M3 attempt should itself
+be pre-registered against this record.
+
+\paragraph{The differentiable twin's real payoff.} L6's negative does not diminish L1: the
+surrogate's value is as a fast, exact-gradient \emph{generator} and analysis-by-synthesis
+tool (L2, and the mechanism-level and drift-estimation lines still queued), not as a feature
+factory for a learner that already had the signal.
