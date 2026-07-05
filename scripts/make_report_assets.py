@@ -591,7 +591,8 @@ def table_compute():
     order = ['design_point', 'sls_anchors', 'baseline_decks', 'corrected_baseline',
              'icm_grid', 'fleet_generation', 'audit_dataset', 'audit_nonlinearity',
              'traditional_pipeline', 'ai_suite', 'hybrid_ablation', 'pcs',
-             'surrogate_data_cruise', 'surrogate_train', 'fleet_v2', 'h4_v2_hybrid']
+             'surrogate_data_cruise', 'surrogate_train', 'fleet_v2', 'h4_v2_hybrid',
+             'identifiability_certificate']
     rows = []
     total = 0.0
     for name in order:

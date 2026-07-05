@@ -85,6 +85,7 @@ verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en o
 | F8/L1 sustituto diferenciable | ✅ gate | ambas familias 4-19× mejor; surrogate.pt/_takeoff.pt; ch11 |
 | F8/L2 flota v2 no lineal | ✅ | fleet_v2/ 3-7× más fiel que v1; dificultad 58.0%<60; realismo OK; ch11 §L2 |
 | F8/L6 H4 re-abierto (prereg-v3) | ✅ REFUTADO 2ª vez | twin-residual peor con datos escasos; H4 doblemente refutada; ch11 §L6 |
+| **F10 BREAKTHROUGH certificado identificabilidad (prereg-v4)** | ✅ H10.1✓ H10.3✓ / H10.2✗-frozen | ρ=0.70 certificado honesto validado vs verdad; hpc.eta rescatada 45× por sensores estación; ch13; C8 |
 | F9/N7 handbook-tesis | 🔶 partes 1-3 | ch datos nuevo; matemática ch3/6/7/10; degradación ch5; 73 pp; falta revisión ch8-11 + gate relectura |
 
 ### COLA DE TRABAJO (en orden)
