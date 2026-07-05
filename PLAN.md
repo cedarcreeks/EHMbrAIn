@@ -901,7 +901,7 @@ certificación). SOPESADO:
   respuesta para el operador que no reinstrumenta. PRE-REGISTRO solo si se ejecuta la
   comparación de aislamiento; el argumento geométrico no lo necesita.
 
-## F8/L-H2 — Romper el muro H2 con sensores extendidos (propuesta 2026-07-05)
+## F8/L-H2 — ✅ HECHO (prereg-v9): real rompe el muro (0.15→0.92, +77pp p=0.001), virtual NO (0.15, p=1.000) — desigualdad de procesamiento demostrada; ch11 §L-H2; sondas FADEC ya existen. Propuesta original:
 
 **Pregunta del usuario**: ¿H2 sigue sin romperse, hay plan? SÍ hay plan, y la factibilidad
 está MEDIDA: en el set extendido (N2,WF,EGT + P25,T25,PS3,T3) el par que definía el muro
