@@ -53,6 +53,15 @@ infeasibility rule on a validation split with only two clean engines --- general
 the first knob any change detector lives or dies by; and threshold selection on small clean
 validation samples is fragile for \emph{any} method --- budget clean engines accordingly.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth]{detection_delays}
+  \caption{Detection lead time: one dot per detected episode, with the median bar. The AI
+  detects far more episodes (11 vs 3) and far sooner (median 499 vs 6\,033 cycles after
+  onset) at equal false alarms. Auto-generated.}
+  \label{fig:det-delays}
+\end{figure}
+
 \section{H2 refuted --- the observability wall binds everyone}
 \label{sec:res-h2}
 
@@ -64,6 +73,16 @@ binds both families equally. The transferable conclusion is bought hardware, not
 \textbf{if confusable-fault isolation matters operationally, add gas-path instrumentation}
 (the extended sensor set multiplies the minimum signature angle by five,
 \cref{tab:icm-grid}); no amount of modeling recovers information the sensors never captured.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{isolation_confusion}
+  \caption{Isolation confusion matrices on the test episodes: true fault (rows) versus
+  predicted (columns), traditional (left) and AI (right). Neither concentrates on the
+  diagonal --- both scatter faults onto confusable neighbours (e.g.\ toward \texttt{fan.eta}
+  and \texttt{hpc.eta}), the mechanism behind the H2 tie. Auto-generated.}
+  \label{fig:iso-confusion}
+\end{figure}
 
 \section{H3 and H5 confirmed --- prognosis is where the AI pays}
 \label{sec:res-h3h5}

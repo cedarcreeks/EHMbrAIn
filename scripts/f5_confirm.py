@@ -156,6 +156,7 @@ def main():
         return np.array(out)
 
     d_t, d_a = delays(trad_det_by), delays(ai_det_by)
+    (F5 / 'detection_delays.json').write_text(json.dumps({'traditional': d_t.tolist(), 'ai': d_a.tolist()}))
     b, cc, p1 = mcnemar_one_sided(h_a, h_t)
     rec_t, rec_a = float(h_t.mean()), float(h_a.mean())
     med_dt = float(np.median(d_t)) if len(d_t) else None

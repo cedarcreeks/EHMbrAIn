@@ -811,6 +811,77 @@ def f10_assets():
     print('  f10 assets done')
 
 
+def fig_detection_delays():
+    """Detection lead-time strip plot: one dot per detected episode."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f5' / 'detection_delays.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    INK, BLUE, GRAY = '#212529', '#4263EB', '#868E96'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(4.6, 3.0))
+    rng = np.random.default_rng(0)
+    for x, fam, col in ((0, 'traditional', GRAY), (1, 'ai', BLUE)):
+        y = np.array(d[fam])
+        jit = x + rng.uniform(-0.08, 0.08, len(y))
+        ax.scatter(jit, y, s=28, color=col, alpha=0.8, edgecolor='white', linewidth=0.5)
+        if len(y):
+            ax.plot([x - 0.2, x + 0.2], [np.median(y)] * 2, color=INK, lw=1.5)
+    ax.set_xticks([0, 1]); ax.set_xticklabels(
+        [f"traditional\\n({len(d['traditional'])} detected)",
+         f"AI\\n({len(d['ai'])} detected)"], fontsize=8)
+    ax.set_ylabel('detection delay after onset [cycles]')
+    ax.set_title('lower and more = better', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'detection_delays.pdf'); plt.close(fig)
+    print('  detection-delays figure done')
+
+
+def fig_isolation_confusion():
+    """Isolation confusion matrices (traditional & AI) - the H2 mechanism."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f5' / 'isolation.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    targets = ['fan.eta', 'lpc.eta', 'hpc.eta', 'hpt.eta', 'hpt.flow', 'lpt.eta']
+    cols = targets + ['other']
+    ci = {c: i for i, c in enumerate(cols)}
+    ti = {t: i for i, t in enumerate(targets)}
+
+    def matrix(rows):
+        M = np.zeros((len(targets), len(cols)))
+        for r in rows:
+            if r['true'] in ti:
+                M[ti[r['true']], ci.get(r['pred'], ci['other'])] += 1
+        return M
+
+    plt.rcParams.update({'font.size': 8, 'font.family': 'serif', 'figure.dpi': 150})
+    fig, axes = plt.subplots(1, 2, figsize=(7.0, 3.3))
+    for ax, (name, rows) in zip(axes, (('Traditional', d['traditional']),
+                                       ('AI', d['ai']))):
+        M = matrix(rows)
+        im = ax.imshow(M, cmap='Blues', vmin=0)
+        for i in range(M.shape[0]):
+            for j in range(M.shape[1]):
+                if M[i, j] > 0:
+                    ax.text(j, i, int(M[i, j]), ha='center', va='center',
+                            color='white' if M[i, j] > M.max() * 0.6 else '#212529',
+                            fontsize=7)
+        ax.set_xticks(range(len(cols)))
+        ax.set_xticklabels([c.replace('.', '\n') for c in cols], fontsize=6)
+        ax.set_yticks(range(len(targets)))
+        ax.set_yticklabels([t.replace('.', '\n') for t in targets], fontsize=6)
+        ax.set_title(name, fontsize=9)
+        ax.set_xlabel('predicted'); 
+        if name == 'Traditional':
+            ax.set_ylabel('true fault')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'isolation_confusion.pdf'); plt.close(fig)
+    print('  isolation confusion figure done')
+
+
 def fig_confusable_angles():
     """Confusable-pair signature angles at cruise: cockpit vs extended sensors,
     with the 15-degree confusable threshold. The H2 wall and its sensor cure."""
@@ -1149,6 +1220,8 @@ def artifact_assets():
     f8_l2_assets()
     f8_l6_assets()
     fig_confusable_angles()
+    fig_isolation_confusion()
+    fig_detection_delays()
     fig_rul_distribution()
     f8_result_figures()
     f8_l5_assets()
