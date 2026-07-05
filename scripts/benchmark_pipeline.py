@@ -41,6 +41,12 @@ STAGES = {
         ('pcs', 'run_pcs.py', [], True),
     ],
     'hybrid': [('hybrid_ablation', 'run_hybrid.py', [], True)],
+    'f8': [
+        ('surrogate_data_cruise', 'f8_surrogate_data.py', ['2400'], False),
+        ('surrogate_train', 'f8_surrogate.py', [], True),
+        ('fleet_v2', 'make_fleet.py', ['surrogate'], False),
+        ('h4_v2_hybrid', 'f8_l6_hybrid.py', [], True),
+    ],
 }
 
 

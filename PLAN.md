@@ -83,6 +83,8 @@ verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en o
 | F6 casos+dashboard+make all | ✅ H6 | ch9; dashboard/app.py; Makefile |
 | F7 tomografía puntos operación | ✅ prereg-v2 | H7.2'✓ (+48pp learned MOPA) H7.4'✓ / H7.3✗ umbrales; calendario reportes +79 %; ch10 |
 | F8/L1 sustituto diferenciable | ✅ gate | ambas familias 4-19× mejor; surrogate.pt/_takeoff.pt; ch11 |
+| F8/L2 flota v2 no lineal | ✅ | fleet_v2/ 3-7× más fiel que v1; dificultad 58.0%<60; realismo OK; ch11 §L2 |
+| F8/L6 H4 re-abierto (prereg-v3) | ✅ REFUTADO 2ª vez | twin-residual peor con datos escasos; H4 doblemente refutada; ch11 §L6 |
 | F9/N7 handbook-tesis | 🔶 partes 1-3 | ch datos nuevo; matemática ch3/6/7/10; degradación ch5; 73 pp; falta revisión ch8-11 + gate relectura |
 
 ### COLA DE TRABAJO (en orden)
@@ -94,18 +96,17 @@ verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en o
    - [ ] GATE F9: relectura completa; ningún término técnico usado antes de definirse;
      notación ch0 al día. Criterio: pasada de grep + lectura por capítulo. (Parcial: fix
      etiqueta duplicada eq:kalman→eq:kalman-update hecho; 0 marcadores ?? en PDF verificado.)
-**2. F8/L2 — flota v2 no lineal:** integrar surrogate.pt + surrogate_takeoff.pt como
-   emisor de snapshots en datagen (sustituir linealización en snapshots.py con flag de
-   versión; catálogo fleet.version 2.0); regenerar; re-auditorías (nonlinearity vs pyCycle
-   directo — debe bajar de P95≤1 % a ~0.2-0.4 %; dificultad <60 %; realismo); datasheet v2;
-   v1.1 queda CONGELADA como registro F5/F7 (no tocar).
-**3. F8/L6 — híbridos restantes sobre v2 (re-abre H4, prereg-v3):** mecanismo 2 features
-   residuo-twin (z_med − surrogate(x̂_kalman, u): en v2 el residuo ya no es espurio);
-   mecanismo 3 pérdida física con gradiente exacto del surrogate. Protocolo H4 (10/25/100 %,
-   3 semillas, Wilcoxon al 10 %). Congelar umbrales ANTES (lección H7.3: no calibrar
-   umbrales en dev pequeño).
-**4. F8 líneas L3-L10** según tabla §F8 (orden por sinergia tras L2/L6: L4, L7, L3, L5, L9,
-   L8 N-CMAPSS DS02, L10).
+**2. ✅ F8/L2 HECHO** — flota v2 (fleet_v2/), sustituto como emisor, 3-7× más fiel, gate
+   dificultad 58.0% re-pasado, realismo OK, datasheet v2, v1.1 congelada (hash verificado).
+**3. ✅ F8/L6 HECHO** — H4 re-abierto prereg-v3, twin-residual REFUTADO 2ª vez (peor con
+   datos escasos, Wilcoxon p=0.99). M3 (pérdida física) DIFERIDO tras 2 refutaciones —
+   requiere su propio prereg contra este registro.
+**4. F8 líneas RESTANTES (cada una = estudio pre-registrable propio, orden por sinergia):**
+   L9 PCS sobre clasificador competente F7 (valida C5, más barata) · L4 etiquetas por
+   mecanismo (fouling-vs-erosión) · L7 deriva sensor (Kalman aumentado + detección IA) ·
+   L3 EGT estación real T49.5 · L5 barrido TCN/Transformer · L8 N-CMAPSS DS02 (multi-GB) ·
+   L10 calibración forma de mapa. NO completadas esta sesión — documentadas en ch12 Future
+   work con hipótesis y gate.
 **5. F9 parte final + cierre:** re-benchmark N5 (tune/confirm/f7/f8 etapas), capítulo F8
    actualizado con L2/L6, conclusiones finales, posible Zenodo/DOI + paper corto (solo si
    usuario pide).

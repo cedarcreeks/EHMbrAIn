@@ -3,6 +3,7 @@
 PY := uv run python
 
 all: model fleet audits pipelines f5 evidence report
+full: all f8   # includes the F8 limitations program (L1/L2/L6)
 
 model:
 	$(PY) scripts/run_design_point.py
@@ -30,6 +31,16 @@ f5:
 	$(PY) scripts/f5_confirm.py
 	$(PY) scripts/sim_to_real.py
 
+f8:
+	$(PY) scripts/f8_surrogate_data.py 2400
+	$(PY) scripts/f8_surrogate_data.py 2400 takeoff
+	$(PY) scripts/f8_surrogate.py cruise
+	$(PY) scripts/f8_surrogate.py takeoff
+	$(PY) scripts/make_fleet.py surrogate
+	$(PY) scripts/audit_dataset.py fleet_v2
+	$(PY) scripts/audit_v2_fidelity.py 60
+	$(PY) scripts/f8_l6_hybrid.py
+
 evidence:
 	$(PY) scripts/make_case_studies.py
 	$(PY) scripts/benchmark_pipeline.py model decks fleet audits trad
@@ -41,4 +52,4 @@ report:
 test:
 	uv run pytest -q
 
-.PHONY: all model fleet audits pipelines f5 evidence report test
+.PHONY: all model fleet audits pipelines f5 f8 evidence report test

@@ -84,6 +84,8 @@ uv run python scripts/benchmark_pipeline.py       # norm N5: compute times
 uv run python scripts/make_report_assets.py       # regenerate ALL report evidence
 ```
 
+F8 limitations program (nonlinear v2 fleet, H4 re-refutation): `make f8` (or `make full`).
+
 macOS notes: torch-MPS runs must be foreground (backgrounded runs segfault);
 XGBoost is intentionally absent (OpenMP clash with torch-MPS — sklearn HistGB instead).
 Full mapping of scripts to report tables/figures: report ch. 3, "Replication guide".
