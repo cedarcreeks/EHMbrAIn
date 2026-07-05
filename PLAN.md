@@ -870,3 +870,29 @@ hallazgo igual de valioso.
 compresor o la turbina en el taller. Enlaza con la economía OEM (F10/F-ECON).
 Cabo que resuelve: la afirmación "buy sensors" del proyecto pasa de geométrica (ángulos, CRB)
 a demostrada (precisión de aislamiento medida).
+
+## F8/L-H2b — Sensores VIRTUALES no rompen el muro (contraste, propuesta 2026-07-05)
+
+**Pregunta del usuario**: ¿y si se añaden sensores virtuales? Respuesta MEDIDA: no rompen el
+muro, y es demostrable — desigualdad de procesamiento de datos. Un soft-sensor de PS3 estima
+PS3 desde N2/WF/EGT + modelo → vive en el espacio de las medidas de cabina → NO añade rango
+ni información independiente. Medición:
+- cabina sola: η_HPC~η_HPT = 1.32°, rango 3
+- cabina + PS3 **virtual** (proyección de la fila ICM de PS3 sobre el span de cabina): 2.26°,
+  **rango 3** (SIN cambio de rango — el pequeño cambio de ángulo es solo re-peso, no info)
+- cabina + PS3 **real**: 6.86°, **rango 4** (dimensión nueva)
+- fila ICM PS3: norma 1.68 reconstruible desde cabina (lo que el virtual acierta) + norma
+  1.06 FUERA del span (la info que SOLO una sonda física entrega).
+
+**Diseño (parte de prereg-v9, contraste controlado con L-H2)**: sobre la tarea de aislamiento
+real, comparar 3 condiciones: cabina / cabina+virtuales(gemelo predice PS3,T3 desde cabina) /
+cabina+reales. **Hipótesis H-H2.2 (CONFIRMADA sii)**: precisión de aislamiento confusable con
+virtuales ≈ cabina (no mejora significativa, McNemar p>0.05) MIENTRAS que con reales SÍ sube
+(H-H2.1) → demostración definitiva de que el muro es informacional: ni el algoritmo más listo
+ni un sensor sintético sustituyen a la información física ausente.
+
+**Valor**: es la afirmación más fuerte posible del proyecto — cierra el arco H2/H4/F10/F7
+(el muro es información, no modelo). Enlaza con: (a) por qué falló el híbrido twin-residual
+(H4/L6 — mismo motivo), (b) el certificado F10 (la info de Fisher la fija el set de sensores),
+(c) el uso LEGÍTIMO de virtuales = validación de sensores / detección de deriva (Caso C, L7:
+EGT virtual que discrepa del medido delata el termopar), a documentar como matiz honesto.
