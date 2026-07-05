@@ -49,13 +49,23 @@ def build_engine(args):
 
 
 def main():
-    n_engines = int(sys.argv[1]) if len(sys.argv) > 1 else None
+    # Usage: make_fleet.py [n_engines] [emitter]
+    #   emitter 'surrogate' -> fleet v2 to data/processed/fleet_v2/ (nonlinear
+    #   neural-twin physics); default 'linear' -> data/processed/fleet/ (v1.1,
+    #   FROZEN as the F5/F7 evaluation set — regenerating it must reproduce it).
+    n_engines = int(sys.argv[1]) if len(sys.argv) > 1 and sys.argv[1].isdigit() else None
+    emitter = 'surrogate' if 'surrogate' in sys.argv[1:] else 'linear'
     catalog = yaml.safe_load((REPO_ROOT / 'conf' / 'fault_catalog.yaml').read_text())
     if n_engines:
         catalog['fleet']['n_engines'] = n_engines
     n = catalog['fleet']['n_engines']
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    out_dir = OUT_DIR
+    if emitter == 'surrogate':
+        catalog['fleet']['emitter'] = 'surrogate'
+        catalog['fleet']['version'] = '2.0'
+        out_dir = OUT_DIR.parent / 'fleet_v2'
+    out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     dfs, all_events, index = [], [], []
     with ProcessPoolExecutor() as pool:
@@ -76,16 +86,16 @@ def main():
 
     snap = pd.concat(dfs, ignore_index=True)
     snap['split'] = snap['engine_id'].map(splits)
-    snap.to_parquet(OUT_DIR / 'snapshots.parquet', index=False)
-    pd.DataFrame(all_events).to_parquet(OUT_DIR / 'events.parquet', index=False)
-    (OUT_DIR / 'fleet_index.json').write_text(json.dumps(
+    snap.to_parquet(out_dir / 'snapshots.parquet', index=False)
+    pd.DataFrame(all_events).to_parquet(out_dir / 'events.parquet', index=False)
+    (out_dir / 'fleet_index.json').write_text(json.dumps(
         {'generated_s': time.time() - t0, 'n_engines': n, 'engines': index},
         indent=2, default=float))
 
     lives = [r['life_cycles'] for r in index]
     print(f'{n} engines, {len(snap):,} snapshot rows, '
           f'lives median {np.median(lives):.0f} [{min(lives)}-{max(lives)}], '
-          f'{time.time()-t0:.0f}s -> {OUT_DIR}')
+          f'{time.time()-t0:.0f}s -> {out_dir}')
 
 
 if __name__ == '__main__':

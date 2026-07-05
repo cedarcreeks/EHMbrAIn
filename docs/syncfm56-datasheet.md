@@ -64,4 +64,8 @@ committed (250 MB); the 48 KB ICM artifacts required for regeneration are versio
 
 Versioned with the repository. Changes to the catalog or generator bump the dataset version;
 v1.0 was the H2-gated release (2026-07-03); v1.1 (2026-07-04, multi-episode + rescaled
-magnitudes, re-audited) is the evaluation dataset for phases F3–F5.
+magnitudes, re-audited) is the FROZEN evaluation dataset for phases F3–F7 (its hashes anchor
+prereg-v1/v2). v2 (2026-07-05, F8/L2) regenerates the same trajectories through the
+differentiable neural-twin emitter — nonlinear snapshot physics, 3–7× closer to full pyCycle
+than v1's linearization (EGT median 0.04 % vs 0.31 %), difficulty gate re-passed at 58.0 %.
+v2 lives at data/processed/fleet_v2/; v1.1 is never overwritten.

@@ -54,3 +54,6 @@ paper/**/*.log
 !data/processed/
 data/processed/*
 !data/processed/icm/
+
+# v2 fleet parquets (regenerable, large)
+data/processed/fleet_v2/*.parquet

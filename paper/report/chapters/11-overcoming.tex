@@ -65,12 +65,40 @@ generation, the project now owns a twin that evaluates in microseconds, differen
 exactly, and is more faithful to the physics than the generator that produced every result
 so far --- which is precisely what makes the next lines possible.
 
-\paragraph{What this unlocks.} L2 regenerates the fleet through the surrogate ---
-nonlinear snapshots at linear-generator cost, retiring the project's oldest declared
-limitation (a takeoff-family surrogate is being trained with the same recipe). L6 then
-re-opens hypothesis H4 with the two mechanisms stacking never tested: twin-residual
-features (measured minus surrogate-predicted at the estimated health --- an information
-channel the raw deviations genuinely lack once generation is nonlinear) and
+\section{L2: the nonlinear fleet (SynCFM56 v2)}
+\label{sec:f8-l2}
+
+With both family surrogates gated (\cref{sec:f8-l1}), the fleet generator's physics
+emitter becomes swappable: setting \code{fleet.emitter = surrogate} replaces the
+linearization of \cref{eq:generator} with the neural twin, at the same
+40-second-per-fleet cost (CPU inference inside the existing per-engine workers). Everything
+else --- trajectories, sensor model, seeds, splits --- is byte-identical, so v2 differs
+from v1.1 in exactly one controlled variable: the fidelity of the true channels.
+\textbf{v1.1 is left frozen} (its hashes anchor the F5/F7 pre-registrations); v2 lives
+alongside it as \code{data/processed/fleet\_v2/}.
+
+Two re-audits confirm v2. First, fidelity: re-solving full pyCycle at 60 states sampled from
+the v2 fleet and comparing both generators against it (\cref{tab:v2-fidelity}), the
+surrogate is 3--7$\times$ closer to true physics than the linearization on every cockpit
+channel --- EGT median error $0.04\,\%$ versus $0.31\,\%$. Second, the difficulty gate:
+the trivial classifier scores $58.0\,\%$ on v2's acute-isolation task (versus $58.1\,\%$
+on v1.1), safely below the $60\,\%$ ceiling --- the nonlinear physics did not accidentally
+make the benchmark easier, the one risk that mattered. Realism is intact (wash sawtooth
+\SI{+2.9}{\degreeCelsius} recovery, end-of-life EGT and fuel-flow signs correct in $100\,\%$ of
+engines, measured noise matching the catalog).
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{L2 fidelity: v1 linear vs v2 surrogate generator error against full pyCycle at
+  60 v2-fleet-sampled states ($|$error$|$ as percent of channel value). Auto-generated.}
+  \label{tab:v2-fidelity}
+  \input{tables/table_v2_fidelity}
+\end{table}
+
+\paragraph{What v2 unlocks.} L6 re-opens hypothesis H4 with the two mechanisms stacking
+never tested: twin-residual features (measured minus surrogate-predicted at the estimated
+health --- an information channel the raw deviations genuinely lack now that generation is
+nonlinear and the surrogate is \emph{not} the generator's own inverse) and
 physics-constrained losses using the surrogate's exact gradients. H4 was refuted for the
-concatenation shortcut; whether \emph{any} physics injection helps is still an open,
+concatenation shortcut; whether \emph{any} physics injection helps is an open,
 now-testable question.

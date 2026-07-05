@@ -100,12 +100,28 @@ def engine_snapshots(engine, contributions, catalog, rng):
     for k, v in cond.items():
         df[k] = v.astype(np.float32)
 
-    for prefix, interp, coord in (('to', to_interp, cond['to_dTs_C']),
-                                  ('cr', cr_interp, cond['cr_N1_cmd'])):
+    # Physics emitter: 'linear' (v1.x, the F1 linearization) or 'surrogate'
+    # (v2, the differentiable neural twin — nonlinear at linear-generator cost).
+    emitter = catalog.get('fleet', {}).get('emitter', 'linear')
+    surr = None
+    if emitter == 'surrogate':
+        from ehmbrain.perf.surrogate import SurrogateEmitter, SURR_CHANNELS
+        surr = SurrogateEmitter.cached()
+
+    for prefix, interp, coord, family in (
+            ('to', to_interp, cond['to_dTs_C'], 'takeoff'),
+            ('cr', cr_interp, cond['cr_N1_cmd'], 'cruise')):
         w = interp.at(coord)
         base = interp.baseline_matrix(w)
         dev = interp.deviations(w, x)
         true_z = base * (1.0 + dev / 100.0)
+        if surr is not None:
+            # Surrogate supplies the 7 non-N1 channels; N1 stays the held
+            # power-setting input (zero health deviation, from the baseline).
+            pred = surr.predict(x, coord, family)     # (n, 8) SURR_CHANNELS
+            for j, ch in enumerate(CHANNELS):
+                if ch in SURR_CHANNELS:
+                    true_z[:, j] = pred[:, SURR_CHANNELS.index(ch)]
         for j, ch in enumerate(CHANNELS):
             bias = drift_bias(life, cfg.drifts, ch)
             spec = catalog['sensors'][ch]

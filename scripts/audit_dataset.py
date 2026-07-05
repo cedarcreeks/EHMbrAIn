@@ -125,14 +125,18 @@ def realism_audit(df, index, events, catalog):
 
 
 def main():
+    import sys
+    fleet_dir = FLEET
+    if len(sys.argv) > 1:                # e.g. 'fleet_v2'
+        fleet_dir = REPO_ROOT / 'data' / 'processed' / sys.argv[1]
     catalog = yaml.safe_load((REPO_ROOT / 'conf' / 'fault_catalog.yaml').read_text())
-    df = pd.read_parquet(FLEET / 'snapshots.parquet')
-    events = pd.read_parquet(FLEET / 'events.parquet')
-    index = json.loads((FLEET / 'fleet_index.json').read_text())
+    df = pd.read_parquet(fleet_dir / 'snapshots.parquet')
+    events = pd.read_parquet(fleet_dir / 'events.parquet')
+    index = json.loads((fleet_dir / 'fleet_index.json').read_text())
 
     report = {'difficulty': difficulty_audit(df),
               'realism': realism_audit(df, index, events, catalog)}
-    (FLEET / 'audit_dataset.json').write_text(json.dumps(report, indent=2))
+    (fleet_dir / 'audit_dataset.json').write_text(json.dumps(report, indent=2))
     print(json.dumps(report, indent=2))
 
 
