@@ -117,6 +117,15 @@ is legitimate; changing a threshold after seeing the answer is what the tag forb
 \section{Contributions}
 \label{sec:contributions}
 
+In plain terms first, before the technical names: the project builds a realistic test dataset
+with hidden answers no real fleet can provide (C1), runs a scrupulously fair contest between
+the two method families (C2), and from it delivers a physics-informed hybrid (C3), calibrated
+uncertainty (C4), a physics-anchored explainability score (C5), a sensor-and-data trade map
+(C6), an external reality check (C7), and --- the furthest reach --- a per-engine certificate
+of what a diagnosis can honestly know, proven against the truth (C8). Each item below names
+the technique; every term is defined where it is first used, so this list is a preview, not a
+prerequisite.
+
 \begin{enumerate}
   \item[\textbf{C1.}] \textbf{SynCFM56}: the first public synthetic GPA dataset for a specific
     commercial engine (CFM56-7B26), with per-flight health-parameter ground truth and an
@@ -148,9 +157,22 @@ is legitimate; changing a threshold after seeing the answer is what the tag forb
 
 \section{Document structure}
 
-\Cref{ch:background} builds the technical foundations assuming no prior knowledge of jet
-engines or GPA: how a turbofan works, what is measured on the wing, and the mathematics of gas
-path diagnosis. \Cref{ch:methodology} describes the testbed architecture and the methodological
-safeguards. \Cref{ch:model} documents the thermodynamic twin of the CFM56-7B26 and its
-calibration against certified data ---the work completed to date--- with quantitative evidence
-of every step. \Cref{ch:milestones} carries the dated gate-by-gate record.
+The document follows the work in order, and a reader can stop wherever their interest ends.
+\Cref{ch:background} builds the foundations from zero: how a turbofan works, what is measured
+on the wing, and the mathematics of gas-path diagnosis --- no prior knowledge assumed.
+\Cref{ch:methodology} lays out the testbed and the fairness safeguards that make the
+comparison trustworthy. The next three chapters build the ingredients: the thermodynamic twin
+of the engine (\cref{ch:model}), what the data \emph{is} and where it comes from
+(\cref{ch:data}), and the synthetic fleet generated from it (\cref{ch:fleet}). The two EHM
+families are then implemented and measured --- traditional (\cref{ch:trad}) and AI
+(\cref{ch:ai}) --- and adjudicated head to head under the pre-registered protocol
+(\cref{ch:results}), with five real engines telling the story in operations language
+(\cref{ch:cases}).
+
+The remaining chapters push past the main study. \Cref{ch:tomography} asks whether more
+observability can be bought without new hardware; \cref{ch:overcoming} turns each declared
+limitation into its own experiment; \cref{ch:breakthrough} is the project's furthest reach,
+the ground-truth-validated certificate; and \cref{ch:economics} asks, cautiously, what any of
+it is worth. \Cref{ch:conclusions} closes. The appendices hold the decision register (every
+choice and its justification), the dated milestone log, and a plain-language deep dive on how
+each machine-learning method works (\cref{ch:ml-appendix}).
