@@ -381,6 +381,13 @@ it. It is updated whenever code lands.
     \code{svd_report()} returns rank, singular values and condition number;
     \code{signature_angles()} the pairwise angles between fault signatures; and
     \code{confusable_pairs()} the sub-$15^{\circ}$ subset that instantiates hypothesis H2.
+  \item[\code{perf/surrogate.py} --- differentiable neural twin (F8/L1).] The residual-learning
+    surrogate architecture and the \code{SurrogateEmitter} that runs it CPU-only inside the
+    fleet workers, so the nonlinear v2 fleet (\cref{sec:f8-l2}) generates at linear-generator
+    cost.
+  \item[\code{trad/identifiability.py} --- the certificate (F10).] Accumulated Fisher
+    information over an operating-condition history $\to$ Cram\'er--Rao posterior, per-direction
+    identifiability tags and the coverage ellipsoid (\cref{ch:breakthrough}).
   \item[\code{common/corrections.py} --- corrected parameters.] ISA atmosphere
     (\code{isa_static}), ram-corrected $\theta/\delta$ at the fan face
     (\code{theta_delta}), the exponent regression \code{fit_correction_exponents()}
@@ -504,6 +511,32 @@ document (gate H6); the stage-by-stage mapping to report evidence is:
   \code{scripts/benchmark_pipeline.py} & compute times (norm N5) & \cref{tab:compute} \\
   \code{scripts/make_case_studies.py} & five case-study figures + facts & \cref{ch:cases} \\
   \code{scripts/make_report_assets.py} & \emph{every} figure and table above & this document \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+The extension phases (\cref{ch:tomography,ch:overcoming,ch:breakthrough,ch:economics}) add
+their own drivers, each writing a verdict artifact its figure or table reads:
+
+\begin{center}\footnotesize
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}}
+  \toprule
+  Command (\code{uv run python \ldots}) & Produces & Feeds \\
+  \midrule
+  \code{scripts/f7_observability.py} & realistic-scatter observability & \cref{fig:f7-obs} \\
+  \code{scripts/f7_learner.py} & learned-MOPA verdicts (F7) & \cref{tab:f7-verdicts} \\
+  \code{scripts/f8_surrogate_data.py} + \code{scripts/f8_surrogate.py} & neural twin + gate (L1) & \cref{fig:surrogate} \\
+  \code{scripts/make_fleet.py surrogate} + \code{scripts/audit_v2_fidelity.py} & fleet v2 + fidelity (L2) & \cref{fig:v2-fidelity} \\
+  \code{scripts/f8_l6_hybrid.py} & twin-residual H4 (L6) & \cref{fig:h4v2} \\
+  \code{scripts/f8_l5_arch.py} & architecture breadth (L5) & \cref{fig:arch} \\
+  \code{scripts/f8_l4_recoverable.py} & recoverable fraction (L4) & \cref{fig:recoverable} \\
+  \code{scripts/f8_l9_pcs.py} & PCS validation (L9) & \cref{tab:pcs} \\
+  \code{scripts/f8_l7_drift.py} & augmented-Kalman drift (L7) & \cref{sec:f8-l7} \\
+  \code{scripts/f8_lh2_wall.py} & real-vs-virtual sensors (L-H2) & \cref{fig:wall} \\
+  \code{scripts/f8_lrul_advanced.py} & advanced prognostic (L-RUL) & \cref{fig:lrul} \\
+  \code{scripts/f10_certificate.py} & identifiability certificate & \cref{tab:f10,fig:f10} \\
+  \code{scripts/econ_impact.py} & economic Monte Carlo & \cref{tab:econ,fig:econ} \\
+  \code{scripts/fig_rul_distribution.py}, \code{fig_isolation.py}, \code{dump_optuna_history.py} & result-distribution data & \cref{fig:rul-dist,fig:iso-confusion,fig:optuna} \\
   \bottomrule
 \end{tabular}
 \end{center}
