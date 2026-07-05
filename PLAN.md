@@ -1021,6 +1021,18 @@ acumula deuda de legibilidad.
 
 ## F-VIZ — Máxima evidencia en forma gráfica (directriz usuario 2026-07-05)
 
+**F-VIZ EN CURSO (2026-07-05)**: 7 figuras nuevas de resultados CONCLUYENTES (todas
+autogeneradas de sus JSON, gráfico EN VEZ de tabla donde el visual aporta):
+- fig:confusable-angles (ch2) — ángulos pares confusables cabina vs extendido + umbral 15°
+- fig:rul-dist (ch8) — box per-motor error RUL trad vs IA (dispersión+sesgo, no solo media)
+- fig:surrogate/fig:v2-fidelity/fig:arch/fig:h4v2/fig:recoverable (ch11) — L1/L2/L5/L6/L4
+Tablas tab:surrogate/v2-fidelity/arch/h4v2/recoverable → figuras.
+PENDIENTE F-VIZ (necesitan guardar datos por-episodio o menor valor): lead-time detección
+(dist), matriz confusión aislamiento, convergencia Optuna, tamaños conjunto conformal F7.
+Los parciales (L7/L9) se quedan en tabla (no concluyentes → no sobrevender).
+
+### Inventario original:
+
 **Requisito**: con la cantidad de experimentos hechos, mostrar TANTOS resultados/evidencias
 como sea posible en forma de gráficos. Hoy: 22 artefactos JSON de resultados vs solo 18
 figuras — muchos resultados viven solo en tablas. Convertir en figura todo lo que gane con
