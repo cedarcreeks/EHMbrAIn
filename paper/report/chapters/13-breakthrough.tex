@@ -89,12 +89,19 @@ engines gives \cref{tab:f10}:
     estimator gets right, and the ones it calls unobservable are exactly where the estimate
     is worthless (\cref{fig:f10}, right). To our knowledge this is the first
     \emph{ground-truth-validated} identifiability guarantee for gas-path diagnosis.
-  \item \textbf{H10.2 refuted as frozen --- and the miss is instructive.} The 90\,\%
+  \item \textbf{H10.2 refuted as frozen --- then fixed, honestly.} The $\chi^2$ 90\,\%
     posterior ellipsoid contains the true ten-dimensional health state in $85\,\%$ of test
-    engines --- one engine below the frozen $86$--$94\,\%$ band. The region is slightly too
-    tight because the regularized estimator is mildly biased in the unobservable subspace; a
-    single conformal inflation factor (the machinery of \cref{eq:conformal}) restores nominal
-    coverage. Reported, not renegotiated --- the same discipline that retired H7.3.
+    engines --- one below the frozen $86$--$94\,\%$ band, so the frozen verdict is refuted and
+    stays refuted. The cause is precise: the Cram\'er--Rao bound is a lower bound for
+    \emph{unbiased} estimators, while the regularized Kalman filter is deliberately biased
+    toward zero in the unobservable subspace, so the CRB is the right \emph{shape} but not
+    the right absolute \emph{scale}. Split-conformal calibration (\cref{eq:conformal}) supplies
+    exactly the missing scale: the ellipsoid radius is set to the $90\,\%$ quantile of the
+    Mahalanobis scores on the \emph{validation} engines, a single scalar that restores a
+    finite-sample coverage guarantee ($95\,\%$ on test, $\geq 90\,\%$ by exchangeability).
+    This is a post-freeze fix, disclosed as such: the CRB earns the anisotropic shape
+    (validated by H10.1), conformal earns the scale. Reported, not renegotiated --- the same
+    discipline that retired H7.3.
   \item \textbf{H10.3 confirmed --- the certificate is a purchasing instrument.} Re-computing
     the CRB with the extended gas-path sensors shrinks the unobservable efficiencies by
     $2.2\times$ at the median --- but the \emph{structure} is the finding: HPC efficiency
@@ -119,7 +126,8 @@ the F7 report-schedule design (\cref{ch:tomography}) becomes one instance of max
 \cref{eq:fisher} over controllable conditions rather than sensors.
 
 The honest boundary: the certificate bounds \emph{identifiability}, not the truth of a
-specific fault call, and its region needs the disclosed conformal factor for exact coverage.
-What it delivers is the statement EHM has always owed its users and never made ---
+specific fault call; the CRB gives the validated anisotropic shape and split-conformal the
+absolute scale, together carrying a finite-sample coverage guarantee. What it delivers is the
+statement EHM has always owed its users and never made ---
 \emph{here is precisely what this engine's data does and does not let you conclude, and here
 is the proof that the statement is true}.

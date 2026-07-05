@@ -770,9 +770,12 @@ def f10_assets():
         f"  H10.1 certificate honesty & {'CONFIRMED' if h1['confirmed'] else 'refuted'} & "
         f"Spearman $\\rho={h1['spearman_rho']:.2f}$ ($p={h1['p_value']:.3f}$) between certified "
         f"precision and actual per-direction error \\\\",
-        f"  H10.2 region coverage & {'confirmed' if h2['confirmed'] else 'REFUTED (frozen)'} & "
-        f"true 10-dim health in the 90\\,\\% ellipsoid at {h2['empirical_coverage']*100:.0f}\\,\\% "
-        f"(band 86--94\\,\\%; needs a conformal factor) \\\\",
+        f"  H10.2 region coverage (frozen) & {'confirmed' if h2['confirmed'] else 'REFUTED'} & "
+        f"true 10-dim health in the $\\chi^2$ 90\\,\\% ellipsoid at {h2['empirical_coverage']*100:.0f}\\,\\% "
+        f"(band 86--94\\,\\%) \\\\",
+        f"  \\quad + conformal scale (post-freeze) & restored & val-calibrated radius $\\to$ "
+        f"{v['H10.2_conformal_fix']['coverage_conformal']*100:.0f}\\,\\% coverage "
+        f"($\\geq$90\\,\\% guaranteed; CRB shape, conformal scale) \\\\",
         f"  H10.3 acquisition value & {'CONFIRMED' if h3['confirmed'] else 'refuted'} & "
         f"extended sensors shrink the unobservable efficiencies {h3['median_shrink']:.1f}$\\times$ "
         f"(hpc.eta {h3['cockpit_vs_extended_crb_shrink_efficiencies']['hpc.eta']:.0f}$\\times$) \\\\"]

@@ -65,3 +65,13 @@ If H10.1 confirmatory rho < 0.6: report as a weaker-but-real relationship (the e
 0.70 may shrink under the frozen estimator). If coverage is off: the region needs a
 calibration factor (conformal-style), reported. Either way the certificate's VALUE (honest
 per-direction ranking) is already measured; the phase cannot produce a dishonest positive.
+
+## H10.2 conformal fix (post-freeze, 2026-07-05)
+
+The frozen chi-square 90% ellipsoid under-covered (0.85 on test). Disclosed post-freeze fix:
+split-conformal calibration of the ellipsoid RADIUS on the validation engines (quantile of
+the Mahalanobis scores). Result: test coverage 0.95 (>=90% guaranteed by exchangeability).
+Interpretation: the CRB provides the validated anisotropic SHAPE (H10.1), split-conformal the
+absolute SCALE the CRB — a lower bound for unbiased estimators — cannot give for the biased
+regularized Kalman. The frozen H10.2 verdict stays refuted; the conformal version is the
+method to use.

@@ -37,14 +37,42 @@ def main():
             + [f'cr_{c}' for c in COCKPIT] + Xc)
     snap = pd.read_parquet(FLEET / 'snapshots.parquet', columns=cols)
 
+    val_ids = [r['engine_id'] for r in index if r['split'] == 'val']
     bm = BaselineModel()
     cert = Certificate(COCKPIT)
     cert_ext = Certificate(EXTENDED)
+
+    def maha_score(eid):
+        """(x_true - x_est)^T Sigma^-1 (x_true - x_est) at late life, and cov."""
+        e = snap[snap.engine_id == eid].sort_values('cycle').reset_index(drop=True)
+        n = len(e)
+        n1 = e.cr_N1_cmd.to_numpy()
+        meas = e[[f'cr_{c}' for c in COCKPIT]].to_numpy(float)
+        dz = bm.deviations(meas, n1)
+        Ha, Hb, w = bm.cruise(n1)[1]
+        xs = kalman_gpa(dz, lambda i: Ha * (1 - w[i]) + Hb * w[i], R_DIAG, q=2e-4)
+        c = cert.certify(n1[int(0.7 * n):])
+        xt = e[[f'x_{p.replace(".", "_")}' for p in HEALTH_PARAMS]].to_numpy()
+        x_est = xs[int(0.9 * n):].mean(axis=0)
+        x_true = xt[int(0.9 * n):].mean(axis=0)
+        d = x_true - x_est
+        return float(d @ np.linalg.solve(c['cov'], d))
+
+    # split-conformal: calibrate the ellipsoid radius on VALIDATION engines so
+    # coverage hits nominal (the frozen chi-square radius under-covers). This is
+    # a POST-FREEZE fix, disclosed; the frozen H10.2 stays refuted.
+    from scipy.stats import chi2
+    val_scores = np.array([maha_score(eid) for eid in val_ids])
+    alpha = 0.10
+    k = int(np.ceil((len(val_scores) + 1) * (1 - alpha)))
+    qhat_conformal = float(np.sort(val_scores)[min(k, len(val_scores)) - 1])
+    qhat_frozen = float(chi2.ppf(0.90, len(HEALTH_PARAMS)))
 
     crb_pred = {p: [] for p in HEALTH_PARAMS}
     kf_err = {p: [] for p in HEALTH_PARAMS}
     crb_ext = {p: [] for p in HEALTH_PARAMS}
     covered = []
+    covered_conformal = []
     for eid in test_ids:
         e = snap[snap.engine_id == eid].sort_values('cycle').reset_index(drop=True)
         n = len(e)
@@ -66,8 +94,10 @@ def main():
         # H10.2: true late-life x in the 90% ellipsoid around the KF estimate
         x_est = xs[int(0.9 * n):].mean(axis=0)
         x_true = xt[int(0.9 * n):].mean(axis=0)
-        ok, _ = cert.in_region(x_true, x_est, c['cov'], level=0.90)
-        covered.append(ok)
+        d = x_true - x_est
+        maha2 = float(d @ np.linalg.solve(c['cov'], d))
+        covered.append(maha2 <= qhat_frozen)             # frozen chi-square radius
+        covered_conformal.append(maha2 <= qhat_conformal)  # val-calibrated radius
 
     cp = [np.median(crb_pred[p]) for p in HEALTH_PARAMS]
     ke = [np.median(kf_err[p]) for p in HEALTH_PARAMS]
@@ -93,6 +123,14 @@ def main():
         'H10.2_coverage': {
             'empirical_coverage': coverage, 'nominal': 0.90,
             'confirmed': bool(0.86 <= coverage <= 0.94)},
+        'H10.2_conformal_fix': {
+            'note': 'POST-FREEZE: ellipsoid radius calibrated on VALIDATION '
+                    'engines (split-conformal on the Mahalanobis score); the '
+                    'frozen chi-square verdict above stays refuted',
+            'qhat_frozen_chi2': round(qhat_frozen, 2),
+            'qhat_conformal_val': round(qhat_conformal, 2),
+            'coverage_conformal': float(np.mean(covered_conformal)),
+            'nominal': 0.90},
         'H10.3_acquisition': {
             'cockpit_vs_extended_crb_shrink_efficiencies': shrink,
             'median_shrink': med_shrink,
@@ -101,7 +139,9 @@ def main():
     }
     (OUT / 'verdicts_f10.json').write_text(json.dumps(verdict, indent=2))
     print(f"H10.1 honesty:   rho={rho:.3f} p={pv:.4f}  -> {verdict['H10.1_honesty']['confirmed']}")
-    print(f"H10.2 coverage:  {coverage:.2f} (nominal 0.90)  -> {verdict['H10.2_coverage']['confirmed']}")
+    print(f"H10.2 coverage:  {coverage:.2f} frozen-chi2 (nominal 0.90)  -> {verdict['H10.2_coverage']['confirmed']}")
+    print(f"H10.2 conformal: {np.mean(covered_conformal):.2f} val-calibrated radius "
+          f"(qhat {qhat_conformal:.1f} vs chi2 {qhat_frozen:.1f})")
     print(f"H10.3 acquisition: efficiencies shrink {med_shrink:.1f}x  -> {verdict['H10.3_acquisition']['confirmed']}")
     print('  per-efficiency shrink:', {k: round(v, 1) for k, v in shrink.items()})
 
