@@ -57,16 +57,16 @@ linearization is an order of magnitude worse (N2 nonlinear residual: 0.42\,\% th
 0.035\,\% in the audit). The final gate evaluates both models \emph{on the same held-out
 test set} and demands strict like-for-like improvement.
 
-\begin{table}[htbp]
-  \centering\small
-  \caption{L1 gate: surrogate versus linearization on the same 400 held-out full-physics
-  solves (median and P95 of $|$error$|$, percent of channel value). Auto-generated from
-  the surrogate report.}
-  \label{tab:surrogate}
-  \input{tables/table_surrogate}
-\end{table}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{l1_surrogate}
+  \caption{L1 gate: median error against full pyCycle per cockpit channel, on the same
+  held-out solves --- the surrogate (blue) is an order of magnitude closer than the
+  linearization (gray). Auto-generated.}
+  \label{fig:surrogate}
+\end{figure}
 
-\paragraph{Result.} \Cref{tab:surrogate}: the surrogate beats the linearization by
+\paragraph{Result.} \Cref{fig:surrogate}: the surrogate beats the linearization by
 13--19$\times$ on every cockpit channel --- N2 at 0.008\,\% median where the linear model
 sits at 0.12\,\%, EGT at 0.03\,\% versus 0.54\,\%. In exchange for 14 minutes of solve
 generation, the project now owns a twin that evaluates in microseconds, differentiates
@@ -86,7 +86,7 @@ from v1.1 in exactly one controlled variable: the fidelity of the true channels.
 alongside it as \code{data/processed/fleet\_v2/}.
 
 Two re-audits confirm v2. First, fidelity: re-solving full pyCycle at 60 states sampled from
-the v2 fleet and comparing both generators against it (\cref{tab:v2-fidelity}), the
+the v2 fleet and comparing both generators against it (\cref{fig:v2-fidelity}), the
 surrogate is 3--7$\times$ closer to true physics than the linearization on every cockpit
 channel --- EGT median error $0.04\,\%$ versus $0.31\,\%$. Second, the difficulty gate:
 the trivial classifier scores $58.0\,\%$ on v2's acute-isolation task (versus $58.1\,\%$
@@ -95,13 +95,14 @@ make the benchmark easier, the one risk that mattered. Realism is intact (wash s
 \SI{+2.9}{\degreeCelsius} recovery, end-of-life EGT and fuel-flow signs correct in $100\,\%$ of
 engines, measured noise matching the catalog).
 
-\begin{table}[htbp]
-  \centering\small
-  \caption{L2 fidelity: v1 linear vs v2 surrogate generator error against full pyCycle at
-  60 v2-fleet-sampled states ($|$error$|$ as percent of channel value). Auto-generated.}
-  \label{tab:v2-fidelity}
-  \input{tables/table_v2_fidelity}
-\end{table}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{l2_fidelity}
+  \caption{L2 fidelity: median generator error against full pyCycle, per cockpit channel ---
+  the v2 surrogate (blue) is several times closer than the v1 linearization (gray).
+  Auto-generated.}
+  \label{fig:v2-fidelity}
+\end{figure}
 
 \section{L6: H4 re-opened --- and refuted a second way}
 \label{sec:f8-l6}
@@ -119,15 +120,15 @@ H4 was (\code{docs/prereg-v3.md}, tag \code{prereg-v3}): pure vs hybrid at 10/25
 of training engines, three seeds, single confirmatory pass, thresholds fixed \emph{before}
 running.
 
-\begin{table}[htbp]
-  \centering\small
-  \caption{H4 on v2 (RUL RMSE, cycles, mean of three seeds). The physics feature does not
-  help --- it hurts under scarcity. Auto-generated from the frozen verdict.}
-  \label{tab:h4v2}
-  \input{tables/table_h4v2}
-\end{table}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{l6_hybrid}
+  \caption{H4 on v2: the twin-residual hybrid (red) is worse than the pure GRU (blue) exactly
+  where it should help most --- scarce data --- and no better at full data. Auto-generated.}
+  \label{fig:h4v2}
+\end{figure}
 
-\Cref{tab:h4v2}: the hybrid is \emph{worse} where it was supposed to help most (2\,099 vs
+\Cref{fig:h4v2}: the hybrid is \emph{worse} where it was supposed to help most (2\,099 vs
 1\,944 cycles at 10\,\% data, 1\,268 vs 1\,233 at 25\,\%) and statistically
 indistinguishable at full data; the Wilcoxon test runs the wrong way ($p = 0.99$ against the
 hybrid). \textbf{H4 is now refuted a second, independent way.} Two different physics-injection
@@ -158,20 +159,21 @@ per-architecture tuning campaign, which would reintroduce the effort asymmetry t
 exists to avoid.
 
 \textbf{H5L.1 confirmed}: all three architectures beat the tuned traditional baseline at
-$90\,\%$ life (\cref{tab:arch}), and by nearly the same margin --- RMSE $827$--$888$ cycles
+$90\,\%$ life (\cref{fig:arch}), and by nearly the same margin --- RMSE $827$--$888$ cycles
 against the traditional $1\,981$, a $\sim$2.3$\times$ improvement whichever network is used.
 The convolutional and attention models land within a few percent of the recurrent one; the
 best (TCN) beats it slightly, but the finding is precisely that architecture choice barely
 matters. The RUL advantage is a property of learning from the deviation sequence, not of the
 GRU --- which hardens H3 rather than qualifying it.
 
-\begin{table}[htbp]
-  \centering\small
-  \caption{L5: RUL RMSE (cycles, mean of three seeds) for three AI architectures under equal
-  effort, versus the tuned traditional baseline. Auto-generated.}
-  \label{tab:arch}
-  \input{tables/table_arch}
-\end{table}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{l5_architectures}
+  \caption{L5: RUL RMSE (mean of three seeds) for three AI architectures under equal effort;
+  all sit far below the tuned traditional baseline at 90\,\% life (dashed). The advantage is
+  the learning, not the architecture. Auto-generated.}
+  \label{fig:arch}
+\end{figure}
 
 \section{L4: how much will a wash recover?}
 \label{sec:f8-l4}

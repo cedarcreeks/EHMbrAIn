@@ -168,7 +168,7 @@ the GRU.
     Split conformal (\cref{eq:conformal}) & uncertainty & any predictor's residuals & validation split (calibration) & guarantee is marginal, not per-engine \\
     APS sets (\cref{eq:conformal}) & isolation ambiguity (F7) & classifier softmax & validation episodes & set size inflates under distribution shift \\
     SHAP + PCS (\cref{eq:shapley}) & explanation consistency & trained classifier + background data & --- (post hoc) & meaningless on a weak classifier (v0 null, by design of the metric) \\
-    Neural surrogate (\cref{tab:surrogate}) & differentiable twin (F8) & health vector + condition & 2\,400 pyCycle solves/family; seed selection on holdout & extrapolation beyond $\pm3.5\,\%$ design range untested \\
+    Neural surrogate (\cref{fig:surrogate}) & differentiable twin (F8) & health vector + condition & 2\,400 pyCycle solves/family; seed selection on holdout & extrapolation beyond $\pm3.5\,\%$ design range untested \\
     \bottomrule
   \end{tabular}
 \end{table}

@@ -1047,8 +1047,9 @@ accesible, legible en claro/oscuro no aplica—es PDF—, ejes/leyendas claras, 
 - decks/deck_report → colas LOO por condición (F1).
 - econ/impact → ya hay; posible curva de sensibilidad tipo tornado ampliada.
 
-**Regla**: figura solo si aporta sobre la tabla (distribución, tendencia, comparación
-visual, estructura) — no duplicar por duplicar; donde la tabla es más clara (una cifra),
-dejar tabla. Cada figura con caption autoexplicativo + atribución de generador (N4). Priorizar
+**Regla (afinada por usuario 2026-07-05)**: gráfico O tabla, lo que encaje — presentar
+evidencia de un experimento SOLO cuando es CONCLUYENTE; figura solo si aporta sobre la tabla
+(distribución, tendencia, comparación visual, estructura); no duplicar por duplicar; donde
+la tabla es más clara (una cifra), dejar tabla. Cada figura con caption autoexplicativo + atribución de generador (N4). Priorizar
 las que muestran DISTRIBUCIONES e INCERTIDUMBRE (no solo medias) — refuerza la honestidad.
 Coordinar con F-FLOW (las figuras rompen el choppy y ayudan al lector novato).

@@ -811,6 +811,76 @@ def f10_assets():
     print('  f10 assets done')
 
 
+def f8_result_figures():
+    """Conclusive F8 results as figures (from existing verdict artifacts)."""
+    import matplotlib.pyplot as plt
+    INK, BLUE, RED, GRAY = '#212529', '#4263EB', '#A61E4D', '#868E96'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y', 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    F8 = REPO_ROOT / 'data' / 'processed' / 'f8'
+
+    # L5: architectures vs traditional (bar per life fraction)
+    ap = F8 / 'arch_verdict.json'
+    if ap.exists():
+        v = json.loads(ap.read_text()); A = v['architectures']
+        fracs = ['0.5', '0.7', '0.9']; xs = np.arange(len(fracs))
+        fig, ax = plt.subplots(figsize=(5.6, 2.7))
+        names = list(A); w = 0.2
+        cols = [BLUE, '#1098AD', '#7048E8']
+        for k, n in enumerate(names):
+            ax.bar(xs + (k - 1) * w, [A[n]['rmse_by_frac'][f] for f in fracs], w,
+                   label=n, color=cols[k])
+        ax.axhline(v['traditional_90_rmse'], color=RED, ls='--', lw=1,
+                   label='traditional @90\\%')
+        ax.set_xticks(xs); ax.set_xticklabels(['50\\%', '70\\%', '90\\%'])
+        ax.set_xlabel('life fraction'); ax.set_ylabel('RUL RMSE [cycles]')
+        ax.legend(frameon=False, fontsize=7, ncol=2)
+        fig.tight_layout(); fig.savefig(FIG_DIR / 'l5_architectures.pdf'); plt.close(fig)
+
+    # L6: pure vs hybrid RUL by data fraction (the negative)
+    hp = F8 / 'h4_v2_verdict.json'
+    if hp.exists():
+        r = json.loads(hp.read_text())['results']
+        fr = ['0.10', '0.25', '1.00']; xs = np.arange(len(fr))
+        fig, ax = plt.subplots(figsize=(5.0, 2.7))
+        ax.bar(xs - 0.2, [r['pure'][f]['rmse_cycles'] for f in fr], 0.4, label='pure GRU', color=BLUE)
+        ax.bar(xs + 0.2, [r['hybrid'][f]['rmse_cycles'] for f in fr], 0.4, label='+ twin-residual', color=RED)
+        ax.set_xticks(xs); ax.set_xticklabels(['10\\%', '25\\%', '100\\%'])
+        ax.set_xlabel('training data'); ax.set_ylabel('RUL RMSE [cycles]')
+        ax.legend(frameon=False, fontsize=7)
+        fig.tight_layout(); fig.savefig(FIG_DIR / 'l6_hybrid.pdf'); plt.close(fig)
+
+    # L2: v1 linear vs v2 surrogate fidelity vs pyCycle (bar per channel)
+    fp = REPO_ROOT / 'data' / 'processed' / 'fleet_v2' / 'audit_v2_fidelity.json'
+    if fp.exists():
+        pc = json.loads(fp.read_text())['per_channel']
+        chans = list(pc); xs = np.arange(len(chans))
+        fig, ax = plt.subplots(figsize=(5.0, 2.7))
+        ax.bar(xs - 0.2, [pc[c]['v1_linear']['median'] for c in chans], 0.4, label='v1 linear', color=GRAY)
+        ax.bar(xs + 0.2, [pc[c]['v2_surrogate']['median'] for c in chans], 0.4, label='v2 surrogate', color=BLUE)
+        ax.set_xticks(xs); ax.set_xticklabels([c.replace('_', ' ') for c in chans], fontsize=7)
+        ax.set_ylabel('median error vs pyCycle [\\%]')
+        ax.legend(frameon=False, fontsize=7)
+        fig.tight_layout(); fig.savefig(FIG_DIR / 'l2_fidelity.pdf'); plt.close(fig)
+    # L1: surrogate vs linearization error per cockpit channel (same-population gate)
+    sp = F8 / 'surrogate_report.json'
+    if sp.exists():
+        g = json.loads(sp.read_text())['gate']
+        chans = list(g); xs = np.arange(len(chans))
+        fig, ax = plt.subplots(figsize=(5.0, 2.7))
+        ax.bar(xs - 0.2, [g[c]['linearization_same_testset']['median'] for c in chans], 0.4,
+               label='linearization', color=GRAY)
+        ax.bar(xs + 0.2, [g[c]['surrogate']['median'] for c in chans], 0.4,
+               label='surrogate', color=BLUE)
+        ax.set_xticks(xs); ax.set_xticklabels([c.replace('_', ' ') for c in chans], fontsize=8)
+        ax.set_ylabel('median error vs pyCycle [\\%]')
+        ax.legend(frameon=False, fontsize=7)
+        fig.tight_layout(); fig.savefig(FIG_DIR / 'l1_surrogate.pdf'); plt.close(fig)
+    print('  f8 result figures done')
+
+
 def f8_l5_assets():
     path = REPO_ROOT / 'data' / 'processed' / 'f8' / 'arch_verdict.json'
     if not path.exists():
@@ -989,6 +1059,7 @@ def artifact_assets():
     f8_assets()
     f8_l2_assets()
     f8_l6_assets()
+    f8_result_figures()
     f8_l5_assets()
     f8_l4_assets()
     f8_l9_assets()
