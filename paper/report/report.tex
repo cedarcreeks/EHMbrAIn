@@ -31,6 +31,15 @@
 \DeclareUrlCommand\code{\urlstyle{tt}\def\UrlBreaks{\do\/\do\_\do\.\do\-\do\:\do\(\do\)}}
 \emergencystretch=2em
 
+% Key-idea callout: the one load-bearing idea of each chapter (norm N7 handbook).
+\newcommand{\keyidea}[1]{%
+  \par\smallskip\noindent
+  \begin{tikzpicture}
+    \node[draw=black!35, rounded corners=3pt, fill=black!4, inner sep=7pt,
+          text width=\dimexpr\linewidth-16pt\relax, font=\small]
+      {\textbf{Key idea.}~#1};
+  \end{tikzpicture}\par\smallskip}
+
 \title{\textbf{EHMbrAIn}\\[2mm]
   \large AI-based versus traditional Engine Health Monitoring:\\
   a gas path analysis testbed on the CFM56-7B with synthetic ground truth}
