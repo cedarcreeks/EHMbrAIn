@@ -68,6 +68,9 @@ measurable acceptance criterion:
 \section{Machine learning without prior background}
 \label{sec:ml-primer}
 
+(Readers who want the full mechanics --- how a network is trained, how each method works ---
+will find them in \cref{ch:ml-appendix}; this section gives only the minimum to read on.)
+
 Nothing in this document assumes machine-learning training. Six ideas carry everything:
 
 \begin{description}
@@ -198,7 +201,7 @@ equal skill each discordant pair is a fair coin, so
   \label{eq:mcnemar}
 \end{equation}
 one-sided when the hypothesis is directional. The concordant cases cancel --- episodes both
-get right (or both miss) say nothing about the \emph{difference}. This is why chapter 10
+get right (or both miss) say nothing about the \emph{difference}. This is why \cref{ch:tomography}
 could bound its verdict without replaying the test pass: with 15/23 vs 4/23 correct, the
 accuracy gap forces $b - c = 11$, and $p$ is maximized at $b=15, c=4$, still $0.0096$.
 
@@ -251,7 +254,7 @@ residuals $r_i = |y_i - \hat{y}_i|$ and take
 Exchangeability alone guarantees $\Pr[y \in C(x)] \ge 1 - \alpha$ --- no distributional
 assumption, any model, finite samples. The $(n_c + 1)$ (not $n_c$) accounts for the new
 point joining the ranking: the guarantee is exact, not asymptotic. The classification
-variant used in chapter 10 (adaptive prediction sets) sorts the predicted class
+variant used in \cref{ch:tomography} (adaptive prediction sets) sorts the predicted class
 probabilities, accumulates until the calibration quantile of ``mass needed to reach the
 true class'' is covered, and returns that \emph{set} of classes --- ambiguity becomes set
 size instead of silent error.
@@ -434,7 +437,7 @@ stage.
 
 \subsection{Test suite (\texttt{tests/})}
 
-Thirty-six tests, all run in CI on every change: environment smoke (the vendored pyCycle
+Thirty-seven tests, all run in CI on every change: environment smoke (the vendored pyCycle
 example end-to-end); design-point convergence and acceptance windows; anchor convergence,
 fuel-flow and OPR tolerances, and N1/N2 redlines; the Study self-consistency property; ICM
 physical signs and rank-3 cockpit underdetermination; the corrections module (ISA,
@@ -463,7 +466,7 @@ end to end (\cref{tab:compute}; per-stage breakdown measured by
     \code{uv} (the Python package manager).
   \item \code{uv sync} --- reproduces the exact pinned environment (Python 3.11,
     pyCycle 4.4, torch with MPS).
-  \item \code{uv run pytest} --- 36 tests must pass before anything else; they gate every
+  \item \code{uv run pytest} --- 37 tests must pass before anything else; they gate every
     claim in this document.
 \end{enumerate}
 

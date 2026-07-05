@@ -50,12 +50,13 @@ made concrete.
 Engine 0 carries a drifting EGT sensor that accumulates a $+9$\,K bias by end of life
 (\cref{fig:case-c}). Every deviation-based consumer downstream --- trending, GPA, margin
 estimation --- ingests that bias as if the gas path were 9\,K hotter than it is: a
-phantom deterioration of roughly a third of a typical year's real margin loss. Neither
-family in this study estimates sensor bias explicitly (the augmented-state Kalman of
-\cref{sec:gpa} is the classical remedy; a queued extension). The operational lesson
-survives any modeling choice: \textbf{cross-channel consistency checks and periodic probe
-calibration are monitoring infrastructure, not optional hygiene} --- the smartest algorithm
-inherits its sensors' honesty.
+phantom deterioration of roughly a third of a typical year's real margin loss. The classical
+remedy --- an augmented-state Kalman that estimates the bias (\cref{sec:gpa}) --- is built
+and tested in \cref{sec:f8-l7}: it \emph{tracks} the drift well but, on the cockpit rank-3
+set, barely un-corrupts the diagnosis, so the operational lesson survives any modeling
+choice: \textbf{cross-channel consistency checks and periodic probe calibration are
+monitoring infrastructure, not optional hygiene} --- the smartest algorithm inherits its
+sensors' honesty.
 
 \begin{figure}[htbp]
   \centering

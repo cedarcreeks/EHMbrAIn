@@ -1,0 +1,202 @@
+\chapter{Machine-learning methods in depth}
+\label{ch:ml-appendix}
+
+\begin{quote}\itshape
+This appendix explains \emph{how} each learning method in the document actually works, one
+level below the equations of \cref{sec:ai-math,sec:stats-math}. It assumes only the
+six-idea primer of \cref{sec:ml-primer}; a reader who wants the mechanics --- what a network
+computes, how it is trained, why each choice was made and where it breaks --- will find them
+here. Nothing new is claimed; this is the reference layer the main text points to.
+\end{quote}
+
+\section{How a neural network is trained}
+\label{sec:ml-nn}
+
+Every neural model here (the GRU, the autoencoder, the surrogate) is trained by the same
+loop, worth stating once in full.
+
+\paragraph{The forward pass.} A network is a function $f_\theta(\mathbf{x})$ built by
+alternating linear maps and simple nonlinearities. A single layer computes
+$\mathbf{a} = \sigma(\mathbf{W}\mathbf{x} + \mathbf{b})$: multiply the input by a weight
+matrix $\mathbf{W}$, add a bias $\mathbf{b}$, and apply an element-wise nonlinearity
+$\sigma$ (here GELU, a smooth relative of the rectifier). Stacking $L$ such layers lets the
+network represent very general input--output relationships; the adjustable numbers
+$\theta = \{\mathbf{W}^{(1)}, \mathbf{b}^{(1)}, \ldots\}$ are the parameters.
+
+\paragraph{The loss.} Training needs a scalar measure of wrongness. For regression (RUL,
+the surrogate) it is the mean squared error $\mathcal{L} = \frac1N\sum_i \|f_\theta(\mathbf{x}_i)
+- y_i\|^2$; for classification (diagnosis) it is the cross-entropy
+$\mathcal{L} = -\frac1N\sum_i \log f_\theta(\mathbf{x}_i)_{y_i}$, which rewards putting
+probability mass on the true class. Class weighting multiplies each term by the inverse
+class frequency so rare fault classes are not ignored.
+
+\paragraph{Backpropagation.} To reduce $\mathcal{L}$ we need its gradient with respect to
+every parameter, $\partial\mathcal{L}/\partial\theta$. Backpropagation is the chain rule
+applied layer by layer from the output backwards: the error at the output is propagated
+back through each layer's local derivative, accumulating the contribution of every weight.
+It costs one backward pass per forward pass --- linear, not exponential, in the number of
+parameters, which is what makes deep networks trainable at all.
+
+\paragraph{Gradient descent and Adam.} Each step nudges the parameters against the gradient,
+$\theta \leftarrow \theta - \eta\, \partial\mathcal{L}/\partial\theta$, with learning rate
+$\eta$. Plain descent is slow and sensitive to $\eta$; the \emph{Adam} optimizer used here
+keeps running averages of the gradient (momentum) and of its square (per-parameter scaling),
+so each weight gets an adaptive step size. The gradient is computed not on the whole dataset
+but on random \emph{mini-batches}, which is faster and adds a helpful noise; one sweep
+through the data is an \emph{epoch}, and training runs for tens of them.
+
+\paragraph{Why it does not simply memorize.} A network with enough parameters can fit its
+training set exactly and generalize terribly (\cref{sec:ml-primer}). The defenses used here
+are the honest split (all reported numbers come from engines never trained on), early-ish
+stopping (a bounded epoch budget), and keeping the models small --- the RUL GRU has on the
+order of $10^4$ parameters, not $10^7$. On this dataset bigger networks did not help, which
+is itself informative: the signal, not model capacity, is the ceiling.
+
+\section{The GRU, mechanism and motivation}
+\label{sec:ml-gru}
+
+The prognosis and F7 isolation models are gated recurrent units
+(\cref{eq:gru}). A recurrent network reads a sequence one step at a time, carrying a hidden
+state $\mathbf{h}_n$ that summarizes everything seen so far --- the natural fit for an
+engine's deviation history.
+
+\paragraph{The problem it solves.} A plain recurrent network multiplies the hidden state by
+the same matrix at every step; over hundreds of steps that repeated multiplication makes
+gradients either vanish or explode, so the network cannot learn long-range dependence (the
+early-life trend that matters for late-life RUL). The GRU fixes this with \emph{gates}:
+learned, data-dependent valves that decide how much of the state to keep versus rewrite.
+
+\paragraph{The gates, in words.} At each step (\cref{eq:gru}): the \emph{update gate}
+$\mathbf{z}_n$ interpolates between keeping the old state and adopting a freshly computed
+candidate --- near zero it preserves memory across a quiet stretch, near one it rewrites on
+new evidence. The \emph{reset gate} $\mathbf{r}_n$ decides how much of the past to consult
+when forming that candidate. Because the update gate can hold the state unchanged, the
+gradient can flow across many steps without vanishing --- the network can ``remember'' the
+early trend. The whole advantage over the classical Holt smoother
+(\cref{eq:holt}) is that the GRU's forgetting rate is \emph{learned, vector-valued and
+context-dependent} rather than a single fixed constant.
+
+\paragraph{Training a recurrent network.} Backpropagation through a sequence is
+``backpropagation through time'': the network is unrolled over the window (here 32--96
+steps), and the chain rule runs back through every step. Sequences are cut into fixed-length
+windows and down-sampled (every 10th--30th cycle) both to bound the unroll length and because
+adjacent flights are near-duplicates.
+
+\section{The autoencoder and why it failed}
+\label{sec:ml-ae}
+
+The v0 detector was an autoencoder (\cref{eq:autoencoder}): an encoder compresses a window to
+a low-dimensional code, a decoder reconstructs it, and training minimizes reconstruction
+error on \emph{healthy} data only. The premise is that a model fluent only in healthy
+patterns will reconstruct a faulty window poorly, so the reconstruction error is an anomaly
+score. It failed for a reason visible in its own objective: with a code wide enough to be
+expressive, the cheapest way to minimize reconstruction error is to learn an approximate
+\emph{identity map} --- copy the input through --- which reconstructs faulty and healthy
+windows equally well and flattens the score. The lesson generalizes: reconstruction-based
+anomaly detection needs an information bottleneck tight enough to forbid the identity
+shortcut, and the winning Mahalanobis detector avoids the trap entirely by scoring against
+the healthy distribution directly rather than learning to reconstruct.
+
+\section{Mahalanobis detection with covariance shrinkage}
+\label{sec:ml-maha}
+
+The detector that works (\cref{eq:mahalanobis}) asks how atypical a feature vector is
+relative to healthy behaviour, measured in ``whitened'' units that undo the channels'
+different scales and correlations. The one subtlety is the covariance estimate. With more
+features than comfortable relative to the sample size, the empirical covariance
+$\mathbf{S}$ is nearly singular: its smallest eigenvalues are underestimated, and inverting
+it magnifies noise along those directions, manufacturing false alarms. Ledoit--Wolf
+shrinkage (\cref{eq:ledoitwolf}) blends $\mathbf{S}$ toward a scaled identity by an amount
+$\rho$ computed in closed form to minimize expected error --- no tuning knob. The result is a
+well-conditioned covariance and a stable distance. Detection then requires several consecutive
+exceedances of a healthy-data percentile, turning a per-snapshot score into an alarm with a
+controlled false-positive rate.
+
+\section{Gradient-boosted trees for diagnosis}
+\label{sec:ml-gbdt}
+
+The isolation classifier is a histogram gradient-boosting machine (\cref{eq:gbdt}): an
+ensemble of shallow decision trees built one at a time, each new tree fitted to the gradient
+of the loss left by the ensemble so far --- so each tree corrects the current mistakes.
+``Histogram'' means continuous features are bucketed into a few dozen bins before split
+search, which makes training fast. Boosted trees remain the strongest off-the-shelf learner
+on small \emph{tabular} problems (hundreds of engineered step features, not raw sequences),
+which is why diagnosis got trees while the sequence tasks got the GRU. Their limit here is
+not the model but the data: on the confusable subset the information is simply absent
+(\cref{sec:res-h2}), and no tree depth recovers it.
+
+\section{Conformal prediction, in detail}
+\label{sec:ml-conformal}
+
+Split conformal (\cref{eq:conformal}) turns any point predictor into an interval with a
+finite-sample coverage guarantee, assuming only that calibration and test points are
+\emph{exchangeable} (their joint distribution is order-independent --- weaker than
+independence, and satisfied by an engine-level split). The recipe: on a held-out calibration
+set collect the absolute residuals, take their $\lceil(1-\alpha)(n_c+1)\rceil$-th smallest
+value $\hat{q}$, and predict $\hat{y}(x) \pm \hat{q}$. The guarantee
+$\Pr[y \in \hat{y}\pm\hat{q}] \ge 1-\alpha$ follows because the new point's residual is
+equally likely to fall in any rank among the calibration residuals; the $(n_c+1)$ counts the
+new point joining the ranking, which is what makes the bound exact rather than asymptotic.
+
+\paragraph{Prediction sets for classification.} The isolation variant (adaptive prediction
+sets, \cref{ch:tomography}) applies the same logic to a classifier: sort the predicted class
+probabilities, accumulate them until the true class is included, and calibrate the
+accumulation threshold on validation data. The output is a \emph{set} of classes whose size
+grows when the model is unsure --- ambiguity becomes an explicit, guaranteed-coverage object
+rather than a silent error, which is exactly what the F7 isolation sets and the F10
+certificate (\cref{ch:breakthrough}) exploit.
+
+\section{SHAP attributions}
+\label{sec:ml-shap}
+
+To ask \emph{why} a classifier made a call, SHAP assigns each input feature a Shapley value
+(\cref{eq:shapley}): its average contribution to the prediction over all orders in which
+features could be revealed, with the rest marginalized over background data. Shapley values
+are the unique attribution satisfying three fairness axioms from cooperative game theory
+(the contributions sum to the prediction minus a baseline; identical features get equal
+credit; a feature that never changes the output gets zero). The exact computation is
+exponential in the number of features, so a permutation sampler estimates it. In this
+project the attribution vector is not the end product but the input to the
+Physics-Consistency Score (\cref{sec:pcs}), which projects it through the influence matrix
+and checks whether the model's stated reasoning points at the physically correct component.
+
+\section{Tuning: the tree-structured Parzen estimator}
+\label{sec:ml-tpe}
+
+Both EHM families were tuned by Optuna's tree-structured Parzen estimator (TPE,
+\cref{sec:stats-math}). After a few random trials it splits the tried configurations into a
+good group and the rest, fits a probability density over each, and proposes the next
+configuration where the ratio (good density)/(rest density) is largest --- concentrating
+trials where good settings cluster while still exploring. On a 14--16-dimensional mixed
+search space this finds strong configurations in $\sim$50 trials, far fewer than grid search
+would need, and --- critically for fairness --- both families receive the same budget.
+
+\section{The neural surrogate: residual learning}
+\label{sec:ml-surrogate}
+
+The differentiable twin (\cref{sec:f8-l1}) is a neural network that predicts the engine's
+channel values from its health state and operating condition. The architectural choice that
+made it pass was to predict not the value but the \emph{residual} above the F1 linearization:
+$\text{surrogate} = \text{linear model} + \text{MLP correction}$. This inherits the linear
+model's near-perfect accuracy where physics is nearly linear (so the network need not
+re-learn it) and spends the network's capacity only on the curvature the linear model
+misses. A pure network, asked to learn the whole map, could not match the linearization's
+precision on the smoothest channel (N2); the residual form fixed it at once --- the same
+``keep the physics, learn the correction'' pattern that, applied to features rather than
+outputs, \emph{failed} for the RUL hybrid (H4). The difference is instructive: residual
+learning helps when the physics is a good first approximation of the target (channel values),
+and hurts when the physics-derived quantity is a noisy, redundant feature of an already-solved
+problem (RUL).
+
+\section{Learned MOPA: physics inversion, then learned fusion}
+\label{sec:ml-mopa}
+
+The F7 isolation model (\cref{sec:tomo-learner}) is the clearest illustration of where
+learning belongs relative to physics. A GRU fed raw deviation sequences failed (12\,\%
+isolation): asked to learn the entire inverse physics from a few hundred windows, it had too
+little data. A GRU fed the \emph{per-flight regularized WLS projections} --- the physics
+inversion done first, analytically, at each flight's condition --- then learned only to
+\emph{fuse} that sequence of noisy estimates over time, and tripled classical stacking.
+The division of labour is the lesson: let the known physics do the inversion it does well,
+and let the network do the temporal fusion it does well; neither the pure-classical nor the
+pure-neural extreme wins.
