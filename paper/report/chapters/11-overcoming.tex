@@ -170,3 +170,26 @@ again. Without a genuinely physical reasoner to validate against, PCS cannot be 
 more than weakly informative here. C5 is therefore only partially validated; a clean test
 would need a positive control (e.g.\ the extended-sensor WLS estimate, physical by
 construction), which is left as pre-registrable future work rather than claimed post hoc.
+
+\section{L7: the lying thermocouple, and the limit of a smarter filter}
+\label{sec:f8-l7}
+
+Case C (\cref{ch:cases}) showed a drifting EGT sensor corrupting every downstream method. The
+classical remedy is an \emph{augmented-state} Kalman that estimates the sensor bias $b$
+alongside the health vector --- the $\mathbf{S}\mathbf{b}$ term of \cref{eq:gpa-linear} made
+into a tracked state (\code{docs/prereg-v6.md}, tag \code{prereg-v6}). Two questions: does it
+recover the drift, and does it stop the drift from poisoning the diagnosis?
+
+\textbf{It recovers the drift.} The augmented estimate of $b$ tracks the true bias with a
+median Spearman $\rho = 0.83$ ($p = 0.004$) across the thirteen drifting-EGT engines. (The
+\emph{frozen} confirmatory was restricted to the test split, which contained only two such
+engines --- a pre-registration design limitation, disclosed --- so the significant number is
+the disclosed exploratory one over all splits; the per-engine recovery is strong either way.)
+
+\textbf{But it barely cleans the diagnosis.} The spurious health error the drift induces on
+the hot-section parameters falls only marginally, from $1.69\,\%$ to $1.64\,\%$ ($\sim3\,\%$).
+On the cockpit rank-3 measurement set the bias stays confounded with the health directions it
+mimics, so the filter can \emph{track} the drift but cannot \emph{un-corrupt} the estimate.
+The lesson is the one Case C already implied and the certificate (\cref{ch:breakthrough})
+formalizes: against a lying sensor, a smarter algorithm buys awareness, not accuracy ---
+the fix is instrumentation (cross-channel redundancy or the extended set), not filtering.
