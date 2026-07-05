@@ -1030,8 +1030,8 @@ Tablas tab:surrogate/v2-fidelity/arch/h4v2/recoverable → figuras.
 AMPLIADO (2ª tanda): fig:iso-confusion (ch8, matriz confusión H2), fig:det-delays (ch8,
 strip lead-time H1), fig:rul-dist (ch8, box RUL H3) → **ch8 resultados TOTALMENTE visualizado
 (los 3 veredictos titulares)**. Total 9 figuras concluyentes nuevas. Scripts fig_isolation.py,
-fig_rul_distribution.py + volcados en f5_confirm/f8_l4. PENDIENTE menor: convergencia Optuna,
-tamaños conjunto conformal F7 (menor valor). Los parciales (L7/L9) se quedan en tabla.
+fig_rul_distribution.py + volcados en f5_confirm/f8_l4. Convergencia Optuna HECHA (fig:optuna, ch8). F-VIZ COMPLETO: 28 figuras (de 18). Único
+restante trivial: tamaños conjunto conformal F7 (muy menor). Parciales L7/L9 en tabla.
 
 ### Inventario original:
 
