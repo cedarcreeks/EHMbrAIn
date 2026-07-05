@@ -47,6 +47,7 @@ STAGES = {
         ('fleet_v2', 'make_fleet.py', ['surrogate'], False),
         ('h4_v2_hybrid', 'f8_l6_hybrid.py', [], True),
     ],
+    'f10': [('identifiability_certificate', 'f10_certificate.py', [], False)],
 }
 
 
