@@ -782,3 +782,55 @@ matemático ni explicación guía — hasta el estándar del resto del documento
    con el índice de notación (ch. 0) actualizado.
 4. Norma nueva N6: todo concepto nuevo que entre al report a partir de ahora entra CON su
    modelo matemático y explicación guía (no se acumula deuda conceptual).
+
+---
+
+## F11 — Siguiente breakthrough (tras concluir F10, directriz usuario 2026-07-05)
+
+**Regla dura aprendida en F10**: MEDIR la factibilidad ANTES de proponer. En F10 maté la
+idea de "romper el muro con curvatura" con un test barato antes de invertir; la que sobrevivió
+(certificado validado) se construyó. Repetir esa disciplina: cada candidato pasa un test
+decisivo de señal contra verdad-terreno; solo si pasa, se pre-registra y construye.
+
+Candidatos a explorar (orden = por potencial × factibilidad con nuestros activos únicos:
+gemelo diferenciable + verdad-terreno + geometría ICM + certificado F10):
+1. **Diagnóstico activo de lazo cerrado**: el gemelo diferenciable calcula la condición de
+   vuelo que MÁS desambigua las hipótesis de fallo vivas (maximizar ganancia de información
+   de Fisher del certificado F10 sobre u controlable) → la aerolínea vuela un reporte dirigido
+   y resuelve la ambigüedad. Extensión dinámica de F7. Test previo: ¿existe u que suba el par
+   confusable u-rompible por encima del ruido en 1 reporte?
+2. **RUL con descomposición epistémica/aleatoria honesta**: separar incertidumbre reducible
+   (más datos/sensores) de irreducible (ruido), vía el certificado + conformal. Nadie lo hace
+   bien en prognosis de motor. Test: ¿la parte epistémica encoge con horizonte de datos?
+3. **Transferencia entre flotas sin reentrenar** (el santo grial del EHM): usar el gemelo como
+   puente físico entre dominios. Requiere ≥2 gemelos (otro motor) — coste alto.
+4. **Certificado sobre fallos agudos + v2 no lineal**: extender F10 a episodios y física no
+   lineal; ¿sigue honesto el certificado bajo transitorios?
+Gate F11: mismo protocolo H0-style (test factibilidad → prereg-vN → confirmatorio → capítulo).
+
+## F-ECON — Capítulo de implicaciones económicas (directriz usuario 2026-07-05)
+
+**Requisito**: capítulo entero cuantificando impacto económico en los TRES estratos —
+mantenimiento (talleres/MRO), aerolíneas (operadores), OEMs — para un **caso concreto de
+compañía**, con **impacto E incertidumbre cuantificados**. HONESTIDAD ESTRICTA, rigor, SIN
+pecar de optimista. Reglas de construcción (no violar):
+- **Ningún beneficio sin mecanismo trazado a un resultado MEDIDO** (p.ej. RUL 3-6× → ventana
+  de taller más estrecha → menos retiradas no programadas; detección 12× antes → borescopio
+  a tiempo). Prohibido inventar ROI.
+- **Toda cifra de coste = pública y citada** (coste shop visit CFM56, economía del margen EGT,
+  coste combustible de degradación, coste de retirada no programada) O marcada explícitamente
+  como SUPUESTO con su rango.
+- **Propagar incertidumbre, no puntos**: llevar las distribuciones de nuestros resultados
+  (RMSE RUL, lead time, falsas alarmas) a distribuciones de coste (Monte Carlo); reportar
+  intervalos/percentiles, no medias. Análisis de sensibilidad sobre los supuestos dominantes.
+- **Caso concreto**: perfil de operador 737NG realista (N aviones → 2N motores CFM56-7B,
+  utilización pública), solo datos públicos. Separar "lo que nuestros resultados soportan" de
+  "lo que exigiría despliegue real para confirmar".
+- **Subsección "por qué esto podría no valer nada"**: costes de integración, falsas alarmas
+  que erosionan confianza, el muro H2 (la IA no arregla el aislamiento), riesgo de sobreajuste
+  a un sim. La honestidad del capítulo es su valor.
+- Por estrato: MRO (planificación de capacidad, mix de trabajo), aerolínea (AOG evitados,
+  slotting, planificación de leasing, combustible), OEM (diseño de sensores — enlazar F10/F7
+  como guía de instrumentación con valor cuantificado).
+- Autogenerar cifras desde un script (norma N4) con las distribuciones de resultados +
+  supuestos de coste versionados en un YAML citado.
