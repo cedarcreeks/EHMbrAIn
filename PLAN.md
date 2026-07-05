@@ -845,3 +845,28 @@ pecar de optimista. Reglas de construcción (no violar):
   como guía de instrumentación con valor cuantificado).
 - Autogenerar cifras desde un script (norma N4) con las distribuciones de resultados +
   supuestos de coste versionados en un YAML citado.
+
+---
+
+## F8/L-H2 — Romper el muro H2 con sensores extendidos (propuesta 2026-07-05)
+
+**Pregunta del usuario**: ¿H2 sigue sin romperse, hay plan? SÍ hay plan, y la factibilidad
+está MEDIDA: en el set extendido (N2,WF,EGT + P25,T25,PS3,T3) el par que definía el muro
+η_HPC~η_HPT pasa de 1.32° (cabina) a **19.61°** — por encima del umbral confusable de 15°;
+rango 3→7. La información existe; falta demostrar que la PRECISIÓN de aislamiento sube.
+
+**Diseño (prereg-v9)**: re-correr la tarea de aislamiento H2 (oracle-timed, subconjunto
+confusable) con AMBAS familias sobre el set EXTENDIDO vs cabina:
+- WLS-GPA con filas ICM extendidas (rango 7) vs cabina (rango 3).
+- Clasificador IA sobre features extendidas.
+- Métrica: precisión en el subconjunto confusable, extendido vs cabina.
+- Baseline: los 31%=31% de F5 (cabina).
+**Hipótesis H-H2.1 (CONFIRMADA sii)**: la precisión de aislamiento confusable con sensores
+extendidos supera la de cabina en ≥25 pp (McNemar p<0.05), en al menos una familia →
+demostración directa de que "compra sensores" rompe el muro. Honesto en ambos sentidos: si
+NO sube pese a los 19.6°, el cuello de botella es el estimador/muestras, no la geometría —
+hallazgo igual de valioso.
+**Coste operativo**: el par que se rescata es el diagnóstico HPC-vs-HPT — decidir si abrir el
+compresor o la turbina en el taller. Enlaza con la economía OEM (F10/F-ECON).
+Cabo que resuelve: la afirmación "buy sensors" del proyecto pasa de geométrica (ángulos, CRB)
+a demostrada (precisión de aislamiento medida).
