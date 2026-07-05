@@ -140,8 +140,37 @@ be pre-registered against this record.
 
 \paragraph{The differentiable twin's real payoff.} L6's negative does not diminish L1: the
 surrogate's value is as a fast, exact-gradient \emph{generator} and analysis-by-synthesis
-tool (L2; the sensor-drift line is closed in \cref{sec:f8-l7}, mechanism-level labelling still queued), not as a feature
+tool (L2; the sensor-drift line is closed in \cref{sec:f8-l7}), not as a feature
 factory for a learner that already had the signal.
+
+\section{L4: how much will a wash recover?}
+\label{sec:f8-l4}
+
+A fleet manager washing a compressor wants to know the payoff \emph{before} washing: what
+share of an engine's lost EGT margin is fouling (which a wash restores) versus permanent wear
+(which it does not). The composable ground truth (\cref{sec:degradation-models}) makes this a
+supervised target: replaying each engine's per-mechanism contributions and projecting them
+through the takeoff EGT row gives the true recoverable fraction at every cycle. The question
+(\code{docs/prereg-v7.md}, tag \code{prereg-v7}): can it be read off the measured deviation
+trajectory alone?
+
+\textbf{H4L.1 confirmed, decisively.} A histogram gradient-boosting regressor on
+trailing-window shape features (level, slope, curvature and sawtooth roughness of the cockpit
+deviations) predicts the recoverable fraction with test $R^2 = 0.86$ and Spearman
+$\rho = 0.86$ ($p < 10^{-4}$), against a mean-predictor baseline of zero (\cref{tab:recoverable}).
+The mechanism is honest and physical: fouling betrays itself through the wash sawtooth its
+recoveries leave in the deviation history, so an engine's own past wash responses reveal how
+much the next wash will buy. This is the batch's first clean positive limitation-overcoming
+result --- and an actionable one, converting the composability of the synthetic ground truth
+into a wash-planning tool an operator could use.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{L4: estimating the recoverable (washable) fraction of lost EGT margin from
+  deviation-trajectory shape, test split. Auto-generated.}
+  \label{tab:recoverable}
+  \input{tables/table_recoverable}
+\end{table}
 
 \section{L9: can the Physics-Consistency Score be validated?}
 \label{sec:f8-l9}
