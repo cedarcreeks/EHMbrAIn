@@ -111,6 +111,11 @@ consistency check.
 \section{Calibration against measured data (WP1.2)}
 \label{sec:calibration}
 
+A model that converges is not yet a model that is \emph{right}. Calibration is the step that
+ties the twin to reality: adjusting its few free scalars until it reproduces measured
+certification data it was not built to match. The philosophy first, then the two iterations
+it took.
+
 \subsection{Data sources and philosophy}
 
 Off-design calibration uses exclusively \textbf{measured, certified data} (\cref{tab:tcds}).
@@ -281,6 +286,11 @@ pipelines consume the same baseline, so it does not bias the comparison.
 
 \section{Influence coefficient matrix and observability (WP1.4)}
 \label{sec:icm}
+
+With a calibrated healthy engine in hand, the last F1 artifact is the map from
+\emph{faults} to \emph{symptoms} --- the influence coefficient matrix that every diagnosis
+in this document inverts. Building it means deliberately injecting each fault and recording
+the response.
 
 \subsection{Health-parameter injection}
 
