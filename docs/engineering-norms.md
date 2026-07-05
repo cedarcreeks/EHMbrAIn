@@ -80,3 +80,12 @@ beside it, every term is defined before use, and sections are joined by
 connective transitions (where we came from, where we go, why). New prose
 enters fluid and self-explaining; readability debt is not accumulated.
 The F-FLOW sweep (PLAN §F-FLOW) retrofits this document-wide.
+
+## N9 — Every appendix is a handbook
+
+Appendices are held to the same self-contained, accessible standard as the
+body (N6/N7/N8): not a bare table or list, but a handbook a newcomer can
+read on its own --- each with a plain 'what it is', an analogy or worked
+example where it helps, and enough context to be understood without the
+rest of the document. Correction passes bring every appendix up to this
+standard; no appendix enters as a naked table.

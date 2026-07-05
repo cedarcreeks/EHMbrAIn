@@ -1097,3 +1097,26 @@ mejor prognóstico clásico avanzado" (hallazgo importante); si no, H3 se refuer
 **Valor**: cierra el único punto donde el baseline era de-práctica no de-frontera; convierte
 H3 de "IA vs práctica" a "IA vs lo mejor clásico". Nota: la IA captura la curvatura tardía
 que el lineal no, así que se espera estrechamiento pero no cierre.
+
+---
+
+## F-APPX — Todos los anexos deben ser handbooks (directriz usuario 2026-07-06)
+
+**Requisito para las pasadas de corrección**: cada anexo (A1 registro de decisiones, A2 log
+de hitos, A3 métodos IA, y cualquier futuro) debe ser un HANDBOOK autocontenido y accesible
+—entendible por cualquiera sin dar por sabido—, no una tabla o lista escueta. Mismo estándar
+que el cuerpo (normas N6/N7/N8): cada ingrediente con su qué-es en llano, analogía/ejemplo
+cuando ayude, y suficiente contexto para seguirlo sin el resto del documento.
+
+Estado por anexo:
+- A3 (métodos IA): ✅ HECHO handbook (analogías + ejemplos numéricos por método, 2026-07-06).
+- A1 (registro de decisiones): 🔶 pasar a handbook — hoy es tabla [M/L/D/C/T/A]; en corrección,
+  añadir una intro que explique PARA QUÉ sirve el registro, qué significa cada clase con un
+  ejemplo, y cómo leerlo/usarlo para replicar; que un lector externo entienda por qué cada
+  decisión es defendible sin buscar en el cuerpo.
+- A2 (log de hitos): 🔶 pasar a handbook — hoy es cronología densa; en corrección, intro que
+  explique qué es un gate y por qué el registro fechado importa (credibilidad, no adorno), y
+  que cada entrada sea legible sola.
+
+Aplicar en toda pasada de corrección futura; norma N9. Ningún anexo nuevo entra como tabla
+pelada.
