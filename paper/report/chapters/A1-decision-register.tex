@@ -100,6 +100,47 @@ both already resolved (noted below).
 \end{tabular}
 \end{center}
 
+\section*{Later phases (F5--F10) and economics}
+
+\begin{center}\footnotesize\setlength{\tabcolsep}{4pt}
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.26\textwidth}>{\raggedright\arraybackslash}p{0.17\textwidth}c>{\raggedright\arraybackslash}p{0.40\textwidth}}
+  \toprule
+  Decision & Value & Class & Basis \\
+  \midrule
+Tuning budget & 50 Optuna (TPE) trials per family & [C] & symmetric by design; enough for a
+    14--16-dim space, disclosed in prereg-v1 \\
+  Detection selection rule & lexicographic min-FA, then max-recall & [D] & no trial met the
+    FA$\leq$1 val budget; infeasibility rule disclosed in prereg-v1 \\
+  H1 operating point & per-family, FA-budgeted & [D] & fixed-recall-0.9 unreachable at v1.1
+    magnitudes; amended \emph{at} freeze, on the record \\
+  Report-schedule design (F7) & greedy over the ICM grid & [M] & the schedule is an
+    observability design variable; measured, not assumed \\
+  Learned-MOPA architecture & GRU over WLS projections & [D] & raw-sequence GRU
+    failed; physics-inversion-first is the working split \\
+  H7.3 drift thresholds & $\geq$20 / $\leq$10 pp & [T] & calibrated on a 16-episode dev sample;
+    refuted as frozen --- discipline over narrative \\
+  Surrogate architecture (L1) & linearization $+$ MLP residual & [D] & pure MLP could not match
+    N2 precision; residual form did \\
+  Surrogate gate & like-for-like on the same test set & [D] & two earlier drafts (statistic
+    mismatch, wrong population) disclosed in code \\
+  Fleet-v2 emitter & surrogate (flag) & [D] & v1.1 left byte-identical and frozen;
+    v2 in a separate directory \\
+  Twin-residual feature (L6) & $(\mathbf{I}-\mathbf{H}_{\text{ref}}\mathbf{M})\Delta\mathbf{z}$
+    & [M] & the residual the linear GPA cannot explain; H4 refuted a 2nd way \\
+  M3 (physics loss) & deferred & [D] & two H4 negatives shift the burden; needs its own
+    pre-registration \\
+  Certificate instrument (F10) & first-order Fisher (linear $\mathbf{H}$) & [D] & curvature
+    below the noise floor (measured), so first-order governs identifiability \\
+  Certificate region scale & CRB shape $+$ split-conformal scale & [D] & CRB is a lower bound
+    for unbiased estimators; conformal supplies the absolute scale \\
+  Economics: single mechanism & unsched.\ $\to$ sched.\ & [D] & the only
+    mechanism the results directly support; all else discussed, not monetized \\
+  Economics: absolute anchor & industry unscheduled band, not the raw model & [A] & the raw
+    synthetic-fleet rate overstates practice; disclosed \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \paragraph{Audit outcome.} Sweeping the study for unjustified choices found two genuinely
 arbitrary decisions, both caught and resolved before this appendix was written: the
 \emph{chronic-mechanism labeling} of the diagnosis task (resolved by the acute-episode
@@ -108,4 +149,9 @@ horizon} rather than engine life (resolved by two-pass generation). Remaining cl
 assumptions are declared at their point of use and shared by both EHM families, so they affect
 the realism of the world, not the fairness of the comparison. Class-[T] defaults are the
 traditional pipeline's tuning surface --- left untouched by design until F5 spends the same
-optimization budget on both families.
+optimization budget on both families. The later-phase rows (F5--F10 and economics) were added
+as those phases ran; each material choice there is either measured [M], a disclosed
+convention [C], a reasoned design decision [D] traceable to a result, or a flagged assumption
+[A] shared by both families or confined to the economic model. Two [T] thresholds were
+themselves refuted as frozen (H7.3, and H10.2's $\chi^2$ radius), which the register treats
+as evidence the gates bite rather than as choices to relitigate.
