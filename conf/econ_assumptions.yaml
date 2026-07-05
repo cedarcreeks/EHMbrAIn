@@ -1,0 +1,41 @@
+# Economic-impact assumptions (F-ECON). EVERY value is a public order-of-magnitude
+# estimate with a RANGE, or an explicitly-flagged ASSUMPTION. Nothing here is a
+# precise figure; the Monte Carlo propagates all ranges into the output intervals.
+# Sources are indicative (public MRO commentary, OEM/lessor disclosures, ICAO/787
+# operator economics). Treat every number as uncertain.
+
+concrete_case:
+  operator: "mid-size 737NG operator (illustrative, public parameters only)"
+  n_aircraft: 50
+  engines_per_aircraft: 2            # CFM56-7B26
+  annual_cycles_per_engine: [2000, 3000]   # public 737NG utilization range
+
+costs_usd:
+  # Mature CFM56-7B shop visit (performance restoration). Public MRO estimates
+  # vary widely with workscope; wide range on purpose.
+  shop_visit: [3000000, 5000000]        # SOURCE: public MRO commentary; ASSUMPTION on workscope
+  # An UNSCHEDULED removal costs more than a planned one: AOG, spare-engine lease,
+  # expedited logistics, and a higher chance of secondary (collateral) damage.
+  unscheduled_premium_mult: [1.3, 2.5]   # multiplier on shop_visit; ASSUMPTION (ranged)
+  # Recurring cost of running the monitoring program: software, integration,
+  # analyst time, and handling false alarms. Charged against any savings.
+  integration_annual: [100000, 1000000]     # ASSUMPTION (ranged)
+
+policy:
+  # Planned-removal lead time: how many cycles of true remaining life you aim to
+  # keep when you slot the shop visit. Shorter = cheaper but riskier.
+  lead_time_cycles: [1000, 2500]         # ASSUMPTION (ranged)
+  # Base rate of engine removals that are unscheduled under CURRENT practice
+  # (conservative trend monitoring). This ANCHORS the absolute scale — the raw
+  # removal model on our synthetic fleet overstates it, so we do NOT use the raw
+  # rate for the headline; we anchor here to the industry-cited band.
+  current_unscheduled_fraction: [0.10, 0.30]   # ASSUMPTION (ranged); industry band
+  # Fraction of those unscheduled removals that better prognosis converts to
+  # scheduled. Its DIRECTION and rough size come from the measured RUL-error
+  # reduction (~2.3x tighter at 90% life), but the real-world magnitude is
+  # genuinely uncertain, so the range is wide and deliberately conservative.
+  conversion_fraction: [0.15, 0.60]      # ASSUMPTION (ranged), grounded-but-conservative
+
+monte_carlo:
+  n_trials: 20000
+  seed: 20260705

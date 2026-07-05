@@ -1,0 +1,145 @@
+\chapter{Economic implications: a deliberately cautious estimate}
+\label{ch:economics}
+
+\begin{quote}\itshape
+This chapter in brief: what the measured results could be worth to the three parties who pay
+for engine health monitoring --- maintenance shops, airlines and OEMs --- for one concrete
+operator, with every cost input ranged and cited, every dollar traced to a measured
+mechanism, the uncertainty propagated rather than hidden, and an explicit section on why the
+number might be zero. It leads with the caveats on purpose.
+\end{quote}
+
+\keyidea{Only one mechanism is monetized --- less-biased prognosis converting unscheduled
+engine removals into scheduled ones --- because it is the only one the results directly
+support; the estimate is anchored to industry rates (not the synthetic fleet's optimistic
+raw numbers), propagated through Monte Carlo, and reported as a wide interval with its
+downside.}
+
+\section{The rule: no dollar without a measured mechanism}
+\label{sec:econ-rule}
+
+It is easy to manufacture a large ROI for any monitoring technology; it is honest to
+manufacture none. This chapter monetizes exactly one mechanism, the one \cref{ch:results}
+measured: the tuned AI prognosis is markedly less biased and tighter than the tuned
+traditional extrapolation at end of life (RUL RMSE $858$ vs $1\,981$ cycles at $90\,\%$
+life). A less-optimistic remaining-life estimate lets an operator \emph{slot} a shop visit
+before the engine fails on the wing --- converting a fraction of expensive
+\emph{unscheduled} removals (AOG, spare-engine lease, expedited logistics, higher risk of
+secondary damage) into cheaper \emph{scheduled} ones. Everything else an enthusiast might
+count --- fuel saved by earlier fault clearing, smoother shop capacity, the OEM value of
+better sensors --- is discussed but \emph{not} put in the total, because our benchmark does
+not measure it directly. All inputs live in \code{conf/econ\_assumptions.yaml} as ranges
+with sources or explicit \textsc{assumption} flags; the arithmetic is
+\code{scripts/econ\_impact.py} (norm N4).
+
+\section{The concrete case}
+\label{sec:econ-case}
+
+A mid-size 737NG operator: 50 aircraft, hence 100 CFM56-7B engines, at a public utilization
+of 2\,000--3\,000 cycles per engine per year. A mature CFM56-7B shop visit is taken as
+\$3--5\,M (public MRO commentary, wide because workscope varies); an unscheduled removal
+costs $1.3$--$2.5\times$ that; the monitoring programme itself costs \$0.1--1\,M per year to
+run (software, integration, analyst time, false-alarm handling), charged against any saving.
+Every one of these is an uncertain range, and the Monte Carlo (20\,000 trials) draws all of
+them jointly.
+
+\paragraph{Honesty about the grounding.} On the synthetic fleet, a naive rule that removes
+purely when the point RUL crosses the lead time would make the traditional method
+$40\,\%$ unscheduled and the AI $0\,\%$ --- figures that \emph{overstate} reality, because
+real trend monitoring uses conservative margins and more signals than our benchmark's
+cockpit RUL. So those numbers are used only to establish the \emph{direction and rough size}
+of the improvement; the headline \textbf{anchors the absolute unscheduled rate to the
+industry band ($10$--$30\,\%$)} and lets better prognosis convert a deliberately
+conservative, wide $15$--$60\,\%$ of those removals. This anchoring is the single most
+important honesty decision in the chapter.
+
+\section{The estimate, with its uncertainty}
+\label{sec:econ-result}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Annual economic impact for the 100-engine operator, from the mechanism our
+  results support. Monte-Carlo percentiles over all ranged inputs. Auto-generated.}
+  \label{tab:econ}
+  \input{tables/table_econ}
+\end{table}
+
+\Cref{tab:econ,fig:econ}: the median annual saving is about \textbf{\$3\,M for the
+100-engine fleet --- roughly \$30\,k per engine per year} --- but the honest content is the
+spread, not the median. The conservative decile (p10) is still positive at \$0.9\,M, the
+optimistic decile (p90) reaches \$8\,M, and the estimate is net-negative in about $1\,\%$ of
+parameter draws. That $1\,\%$ understates the true risk, because it counts only
+\emph{parametric} uncertainty; the structural risks of \cref{sec:econ-worthless} are not in
+it. The sensitivity panel shows the outcome is driven most by the unscheduled-cost premium
+and the conversion fraction --- precisely the two softest assumptions --- so a reader who
+distrusts those should read toward p10, not p50.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{econ_impact}
+  \caption{Left: Monte-Carlo distribution of annual fleet savings (red line at zero, dashed
+  at the median). Right: sensitivity of the outcome to each input --- the two softest
+  assumptions dominate. Auto-generated.}
+  \label{fig:econ}
+\end{figure}
+
+\section{The three parties}
+\label{sec:econ-strata}
+
+\begin{description}
+  \item[Airlines (operators).] The mechanism above is theirs: fewer AOG events and plannable
+    shop slots. The quantified \$0.9--8\,M/year is an operator number. A second, unmonetized
+    operator benefit is fuel: clearing a fault (or scheduling a wash) earlier trims the
+    fuel-flow penalty of degradation, but our benchmark does not measure fleet fuel, so it is
+    left out of the total rather than guessed.
+  \item[Maintenance shops (MRO).] The value is capacity smoothing: unscheduled removals
+    arrive at random and force expensive expediting, while scheduled ones fill planned slots.
+    Part of this is already inside the unscheduled-cost premium; the residual --- better
+    workforce and slot utilization --- is real but operator-specific and left qualitative.
+    The determinability certificate (\cref{ch:breakthrough}) additionally enables
+    \emph{condition-based workscoping}: knowing which module is genuinely degraded (when it
+    is identifiable) avoids opening what does not need opening.
+  \item[OEMs and sensor suppliers.] Here the project's diagnostic results become a design
+    input rather than a saving. The certificate quantifies exactly which added sensor rescues
+    which fault --- station probes make HPC-efficiency faults $45\times$ more identifiable
+    (\cref{sec:bt-honesty}), fan efficiency almost not at all --- turning ``instrument the
+    engine better'' into a ranked, physics-justified specification. We deliberately attach no
+    dollar figure to this: its value depends on an OEM's product strategy, which our data
+    cannot see.
+\end{description}
+
+\section{Why this could be worth nothing}
+\label{sec:econ-worthless}
+
+The estimate rests on the mechanism actually materializing in service, and several structural
+risks --- none in the Monte Carlo --- could drive it to zero or below:
+\begin{itemize}
+  \item \textbf{The isolation wall (H2) is unbroken.} The AI does \emph{not} improve fault
+    isolation (\cref{sec:res-h2}); its value here is purely prognostic. An operator hoping
+    for better \emph{diagnosis} from the same investment would be disappointed.
+  \item \textbf{False alarms erode trust and money.} A prognosis that cries wolf triggers
+    premature removals --- the opposite of the saving --- and maintenance controllers stop
+    believing it. The integration cost line captures some of this, but a badly-tuned
+    deployment could be net-negative well beyond the modelled $1\,\%$.
+  \item \textbf{Sim-to-real gap.} Our RUL advantage is measured on a synthetic fleet; the
+    C-MAPSS check (\cref{sec:sim-to-real}) preserved the \emph{ranking} but not necessarily
+    the magnitude. Real degradation is messier, and the conversion fraction could sit at the
+    bottom of its range or below.
+  \item \textbf{Incumbent practice is already good.} Mature operators catch most failures
+    today with conservative margins; the marginal removals an AI actually converts may be
+    fewer than even our anchored band assumes.
+\end{itemize}
+
+\section{What the results support, and what they do not}
+\label{sec:econ-support}
+
+Supported by measurement: a less-biased end-of-life RUL exists (H3, confirmed and externally
+ranked), and its \emph{direction} of economic effect --- fewer unscheduled removals --- is
+sound. \emph{Not} established by this work: the absolute magnitude in a real fleet, which
+depends on deployment quality, incumbent practice and real degradation, none observable here.
+The honest summary is therefore a conditional one: \textbf{if} the prognosis advantage
+transfers even partially to service and \textbf{if} the programme is competently integrated,
+a 100-engine 737NG operator can plausibly save low single-digit millions per year, with a
+real chance of less and a structural chance of nothing --- and the same analysis says the
+larger, unquantified prize is not prognosis at all but the diagnostic instrumentation the
+certificate would justify buying.

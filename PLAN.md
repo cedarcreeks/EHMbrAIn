@@ -808,7 +808,18 @@ gemelo diferenciable + verdad-terreno + geometría ICM + certificado F10):
    lineal; ¿sigue honesto el certificado bajo transitorios?
 Gate F11: mismo protocolo H0-style (test factibilidad → prereg-vN → confirmatorio → capítulo).
 
-## F-ECON — Capítulo de implicaciones económicas (directriz usuario 2026-07-05)
+## F-ECON — Capítulo de implicaciones económicas ✅ HECHO (2026-07-05)
+
+**ESTADO: HECHO.** ch14 "Economic implications: a deliberately cautious estimate";
+conf/econ_assumptions.yaml (rangos citados/flagged); scripts/econ_impact.py (Monte Carlo
+20k anclado en errores RUL medidos, mecanismo único: menos sesgo prognosis → retiradas
+no-programadas→programadas); resultado 100 motores: p50 $3.2M/año, p10 $0.9M, p90 $8M,
+P(neto<0)≈1%, ~$32k/motor/año; techo crudo 40%vs0% marcado como sobreestimación; 3 estratos
+(aerolínea cuantificado, MRO capacidad cualitativa, OEM valor sensor F10 sin $ inventado);
+sección "por qué podría no valer nada" (muro H2, falsas alarmas, gap sim-real, práctica
+incumbente); tabla+figura autogeneradas. Spec original abajo cumplida.
+
+### Spec original (cumplida):
 
 **Requisito**: capítulo entero cuantificando impacto económico en los TRES estratos —
 mantenimiento (talleres/MRO), aerolíneas (operadores), OEMs — para un **caso concreto de
