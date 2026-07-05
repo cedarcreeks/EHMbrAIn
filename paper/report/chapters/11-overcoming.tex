@@ -20,11 +20,12 @@ Ten declared limitations, ten research lines. The ordering is by synergy, not se
 the two physics-injection mechanisms H4 left untested --- exact-gradient physics losses and
 twin-residual features --- (L6), and fast analysis-by-synthesis diagnosis. Mission-mix
 generation (L2) then feeds the report-schedule findings of \cref{ch:tomography} with data
-rather than geometry alone. This chapter reports the lines executed to date: L1 (the twin),
-L2 (the nonlinear fleet), L6 (H4 re-opened), L9 (validating the PCS metric,
-\cref{sec:f8-l9}) and L7 (sensor-drift estimation, \cref{sec:f8-l7}). The heavier remaining
-lines --- real-station EGT, mechanism-level labels, an architecture sweep, N-CMAPSS DS02 and
-map-shape calibration --- queue behind those, each a pre-registrable study in its own right.
+rather than geometry alone. This chapter reports the six lines executed to date: L1 (the twin), L2 (the nonlinear
+fleet), L6 (H4 re-opened), L5 (architecture breadth, \cref{sec:f8-l5}), L4 (the recoverable
+fraction, \cref{sec:f8-l4}), L9 (validating the PCS metric, \cref{sec:f8-l9}) and L7
+(sensor-drift estimation, \cref{sec:f8-l7}). The heavier remaining lines --- real-station
+EGT, N-CMAPSS DS02 and map-shape calibration --- queue behind those, each a pre-registrable
+study in its own right.
 Every line inherits the house discipline: a hypothesis frozen before the run, and a gate that
 is allowed to fail.
 
@@ -142,6 +143,35 @@ be pre-registered against this record.
 surrogate's value is as a fast, exact-gradient \emph{generator} and analysis-by-synthesis
 tool (L2; the sensor-drift line is closed in \cref{sec:f8-l7}), not as a feature
 factory for a learner that already had the signal.
+
+\section{L5: is the RUL advantage architecture-robust?}
+\label{sec:f8-l5}
+
+The headline prognosis result (H3) used a GRU. Is the advantage a property of \emph{learning
+from sequences}, or an accident of that one architecture? L5 answers it under the fairness
+rule that governs the whole project: three sequence architectures --- the GRU, a temporal
+convolutional network (dilated causal convolutions) and a Transformer (self-attention) ---
+get \emph{identical} treatment (same inputs, data, RUL cap, epoch budget, three seeds, and
+fixed sensible hyperparameters). This is an equal-modest-effort comparison, disclosed as
+such (\code{docs/prereg-v8.md}, tag \code{prereg-v8}); it is deliberately \emph{not} a
+per-architecture tuning campaign, which would reintroduce the effort asymmetry the project
+exists to avoid.
+
+\textbf{H5L.1 confirmed}: all three architectures beat the tuned traditional baseline at
+$90\,\%$ life (\cref{tab:arch}), and by nearly the same margin --- RMSE $827$--$888$ cycles
+against the traditional $1\,981$, a $\sim$2.3$\times$ improvement whichever network is used.
+The convolutional and attention models land within a few percent of the recurrent one; the
+best (TCN) beats it slightly, but the finding is precisely that architecture choice barely
+matters. The RUL advantage is a property of learning from the deviation sequence, not of the
+GRU --- which hardens H3 rather than qualifying it.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{L5: RUL RMSE (cycles, mean of three seeds) for three AI architectures under equal
+  effort, versus the tuned traditional baseline. Auto-generated.}
+  \label{tab:arch}
+  \input{tables/table_arch}
+\end{table}
 
 \section{L4: how much will a wash recover?}
 \label{sec:f8-l4}
