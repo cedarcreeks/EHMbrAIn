@@ -849,6 +849,30 @@ pecar de optimista. Reglas de construcción (no violar):
 ---
 
 
+
+## ⟪ACTUALIZACIÓN VERIFICADA FADEC (2026-07-05)⟫
+
+**HECHO VERIFICADO en fuentes públicas** (docs de familiarización/sistemas CFM56-7B, foro
+técnico PPRuNe): el FADEC del CFM56-7B **mide físicamente PS3 (CDP, presión descarga
+compresor), T25 (entrada HPC, sonda PT25) y T3 (descarga compresor, termopares)** — el grueso
+del set extendido — para CONTROL. → Cambia el veredicto de L-H2:
+- Las sondas extendidas YA existen e instaladas → la barrera para EHM NO es hardware sino
+  GRABAR/TRANSMITIR ese dato del FADEC para monitoreo (fontanería de datos, config barata).
+- **L-H2 RE-ELEVADO**: de "retrofit inviable" a "aprovechar datos ya existentes". Marco
+  práctico: cuantificar el valor diagnóstico de piping los parámetros de estación del FADEC al
+  EHM (rescatar el par η_HPC~η_HPT, 1.3°→19.6°). Recomendación de config, no de compra de
+  avión.
+CAVEATS (mantener, no sobrevender):
+- Disponibilidad del dato FADEC para monitoreo VARÍA por operador/config (DAR/QAR vs downlink);
+  no universal.
+- Tasa/resolución: dato de control vs snapshot estabilizado — puede requerir agregación.
+- P25 (total salida booster) NO verificado como sonda dedicada; usar solo PS3/T25/T3 como
+  "confirmados FADEC", P25 como opcional/derivado.
+- El certificado F10 sigue siendo el entregable para quien NO tiene el dato disponible.
+FUENTES: pprune.org/tech-log/578767, slideshare CFM56-7B familiarization, pdfcoffee CTC-224.
+DECISIÓN: L-H2 + L-H2b ahora MERECEN la pena juntos como par (real=práctico rescata el muro;
+virtual=protección de compra). Ejecutar cuando el usuario lo apruebe; prereg-v9 los cubre.
+
 ## ⟪REVALUACIÓN L-H2 / L-H2b (2026-07-05, tras crítica del usuario)⟫
 
 **Crítica del usuario (válida en parte)**: demostrar "más sensores = mejor" tiene poco valor
