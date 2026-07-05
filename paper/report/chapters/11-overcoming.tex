@@ -260,6 +260,44 @@ The lesson is the one Case C already implied and the certificate (\cref{ch:break
 formalizes: against a lying sensor, a smarter algorithm buys awareness, not accuracy ---
 the fix is instrumentation (cross-channel redundancy or the extended set), not filtering.
 
+\section{Breaking the wall --- and why only a real sensor can}
+\label{sec:f8-lh2}
+
+The H2 refutation (\cref{sec:res-h2}) left an actionable question the certificate answered
+geometrically (\cref{sec:bt-honesty}): the confusable wall is informational, so real
+gas-path sensors should break it. This line tests that directly, and pairs it with a sharper
+question --- can a \emph{virtual} sensor, one the twin predicts from the cockpit data an
+operator already has, do the same for free? Under pre-registration (\code{docs/prereg-v9.md},
+tag \code{prereg-v9}) the traditional nearest-signature isolator runs on the confusable test
+episodes under three sensor conditions: cockpit only; cockpit plus \emph{model-predicted}
+station channels; and cockpit plus the \emph{real} station channels (\cref{fig:wall}).
+
+The result is as clean as the theory (\cref{eq:gpa-linear}) demands. Real station sensors take
+confusable isolation from $0.15$ to $0.92$ --- $+77$ percentage points, McNemar $p = 0.001$:
+\textbf{H-H2.1 confirmed}, the wall breaks the moment the missing information is physically
+measured. The virtual sensors leave it at exactly $0.15$ ($p = 1.000$): \textbf{H-H2.2
+confirmed}, they add nothing. This is the data-processing inequality made concrete --- a
+quantity computed from the cockpit data cannot carry information the cockpit data did not
+already hold, so it cannot separate faults the cockpit cannot. Only a probe placed where the
+two faults differ --- the HPC exit --- supplies the missing dimension.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\textwidth]{wall_break}
+  \caption{Confusable-fault isolation accuracy under three sensor conditions. A virtual
+  (twin-predicted) station sensor matches the cockpit exactly; only a real station sensor
+  breaks the wall. Auto-generated.}
+  \label{fig:wall}
+\end{figure}
+
+The industrial reading is precise and, in this case, unusually cheap: the station parameters
+that break the wall (PS3, T25, T3) are already measured by the CFM56-7B FADEC for engine
+control, so the barrier to using them for diagnosis is recording and downlinking that data,
+not installing new hardware. And the negative half is a purchasing safeguard: no software vendor,
+however sophisticated, can substitute a virtual sensor for the missing measurement --- the
+certificate of \cref{ch:breakthrough} says exactly what the current sensors can and cannot
+know, and this line shows that boundary is real.
+
 \section{The F8 program so far}
 \label{sec:f8-summary}
 
@@ -284,6 +322,7 @@ program looks like when its gates are allowed to fail.
     L6 & Does a twin-residual feature help RUL (H4)? & \textbf{No} --- refuted a second, independent way (\cref{sec:f8-l6}) \\
     L7 & Can an augmented Kalman fix a drifting sensor? & \textbf{Partly} --- tracks the drift, cannot un-corrupt the cockpit diagnosis (\cref{sec:f8-l7}) \\
     L9 & Can the PCS metric be validated? & \textbf{Partly} --- tracks correctness weakly; no strongly-physical classifier to test against (\cref{sec:f8-l9}) \\
+    L-H2 & Does breaking the wall need a \emph{real} sensor? & \textbf{Yes} --- real station sensors lift confusable isolation 0.15$\to$0.92; a virtual one adds nothing (\cref{sec:f8-lh2}) \\
     \bottomrule
   \end{tabular}
 \end{table}

@@ -905,6 +905,32 @@ def fig_isolation_confusion():
     print('  isolation confusion figure done')
 
 
+def fig_wall():
+    """L-H2/L-H2b: confusable isolation accuracy, cockpit/virtual/real."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f8' / 'wall_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text()); a = v['accuracy']
+    INK, BLUE, RED, GRAY = '#212529', '#4263EB', '#A61E4D', '#868E96'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y', 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(4.6, 2.9))
+    names = ['cockpit', 'cockpit\\n+ virtual', 'cockpit\\n+ real']
+    vals = [a['cockpit'], a['virtual'], a['real']]
+    cols = [GRAY, RED, BLUE]
+    ax.bar(range(3), vals, color=cols)
+    for i, val in enumerate(vals):
+        ax.annotate(f'{val:.2f}', (i, val), ha='center', va='bottom', fontsize=8)
+    ax.set_xticks(range(3)); ax.set_xticklabels(names, fontsize=8)
+    ax.set_ylabel('confusable isolation accuracy'); ax.set_ylim(0, 1)
+    ax.set_title('a virtual sensor adds nothing; a real one breaks the wall', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'wall_break.pdf'); plt.close(fig)
+    print('  wall figure done')
+
+
 def fig_confusable_angles():
     """Confusable-pair signature angles at cruise: cockpit vs extended sensors,
     with the 15-degree confusable threshold. The H2 wall and its sensor cure."""
@@ -1242,6 +1268,7 @@ def artifact_assets():
     f8_assets()
     f8_l2_assets()
     f8_l6_assets()
+    fig_wall()
     fig_confusable_angles()
     fig_isolation_confusion()
     fig_detection_delays()
