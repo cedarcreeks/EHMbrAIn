@@ -168,6 +168,12 @@ This is why every deviation in this project is computed in corrected space.
 \section{Gas Path Analysis}
 \label{sec:gpa}
 
+We now have the pieces --- an engine, a handful of corrected measurements --- and can state the
+central problem: recovering the engine's hidden internal condition from those few numbers.
+\emph{Gas Path Analysis} (GPA) is the classical way to do it, and the rest of this section
+builds it up: what ``condition'' means as a vector, how it maps to the measurements, why
+inverting that map is hard, and the failure mode (smearing) that the whole project circles.
+
 \subsection{Health parameters}
 
 GPA describes the internal state of the engine with two numbers per turbomachine: the deviation
@@ -312,6 +318,11 @@ analysis of \cref{ch:breakthrough} returns to.
 
 \section{The physics of degradation}
 \label{sec:degradation}
+
+The health vector says \emph{how much} each component has drifted; this section says
+\emph{why} --- the physical mechanisms that move those numbers, and the characteristic shape
+each leaves over an engine's life. These are what the synthetic fleet of \cref{ch:fleet} must
+reproduce, so they are worth meeting first. \Cref{tab:degradation} summarizes them.
 
 \begin{table}[htbp]
   \centering\footnotesize

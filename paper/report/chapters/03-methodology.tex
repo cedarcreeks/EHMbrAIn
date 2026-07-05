@@ -13,6 +13,12 @@ inventory maps each program to its role. Read \cref{sec:ai-toolbox} even if you 
 
 \section{Overall architecture}
 
+Before the details, the shape of the whole project. It is a chain of phases, each producing a
+versioned artifact the next consumes and each guarded by a gate it must pass before the next
+begins (\cref{fig:pipeline}); the rest of this chapter, and the rest of the document, walk that
+chain. The gates are the spine: they are what turn a sequence of scripts into an argument that
+can be checked.
+
 \begin{figure}[htbp]
   \centering
   \begin{tikzpicture}[font=\footnotesize, node distance=3.5mm,
@@ -331,8 +337,10 @@ Three concrete decisions illustrate the intended standard of rigor:
 \section{Software architecture and computational pipeline}
 \label{sec:software}
 
-This section is the complete inventory of the project's code: what each program does, how it
-does it, and what flows between them. It is updated whenever code lands.
+A reproducible study owes the reader not just its results but its machinery. This section is
+the complete inventory of the project's code --- what each program does, how it does it, and
+what flows between them --- so that any claim can be traced to the exact lines that produced
+it. It is updated whenever code lands.
 
 \subsection{Library modules (\texttt{src/ehmbrain/})}
 
