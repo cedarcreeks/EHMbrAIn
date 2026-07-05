@@ -250,7 +250,25 @@ measurements (EGT and $W_f$ deviations, in \%), with influence matrix
 \begin{equation*}
   \mathbf{H} = \begin{pmatrix} 1.0 & 0.9 \\ 0.5 & 0.5 \end{pmatrix},
 \end{equation*}
-whose columns ---the two fault signatures--- point in nearly the same direction. Let the truth
+whose columns ---the two fault signatures--- point in nearly the same direction.
+
+\paragraph{What ``the same direction'' means (and why we measure it in degrees).} Each fault
+produces its own \emph{pattern} of meter movements: an HPC fault might push EGT up a lot and
+fuel flow up a little, an HPT fault might push both up in slightly different proportions.
+Collect those movements into a list and you can picture each fault as an \emph{arrow} in the
+space of measurements --- the arrow's direction is the fault's fingerprint, the proportion in
+which it moves the meters. Diagnosis is then just asking: which fault's arrow does the
+observed reading point along? The catch is the \emph{angle between two faults' arrows}. If
+two faults push the meters in almost the same proportions, their arrows are almost parallel
+--- a small angle --- and their readings look nearly identical, so noise easily makes one
+masquerade as the other. If the arrows are far apart --- a large angle --- the two faults look
+different and are easy to tell apart. The angle is the single number that says how separable
+two faults are: $90^{\circ}$ means completely independent fingerprints (trivial to
+distinguish), $0^{\circ}$ means literally identical (impossible), and somewhere below about
+$15^{\circ}$ ordinary sensor noise blurs them into one. In the matrix above the two columns
+sit only a couple of degrees apart --- which is exactly why the next lines go wrong.
+
+Let the truth
 be an HPC fault only: $\mathbf{x} = (-1, 0)^{\mathsf T}$, giving exact measurements
 $\Delta\mathbf{z} = (-1.0, -0.5)^{\mathsf T}$, and indeed
 $\mathbf{H}^{-1}\Delta\mathbf{z} = (-1, 0)^{\mathsf T}$ recovers it. Now perturb the first
@@ -272,12 +290,14 @@ parallel--- noise makes the estimator distribute a fault that is physically conc
 component across several, or attribute it to the wrong one; it is the classical weakness of
 linear GPA~\cite{Li2002}.
 A singular-value decomposition (SVD) of the ICM quantifies this weakness (rank, condition
-number, angles between fault signatures) and defines the ``confusable'' subset used by
-hypothesis H2: fault pairs whose signatures are less than $15^{\circ}$ apart.
+number, and the signature angles introduced above) and defines the ``confusable'' subset used
+by hypothesis H2: fault pairs whose signature arrows are less than $15^{\circ}$ apart --- the
+threshold below which, on our sensor noise, two faults are no longer reliably separable.
 \Cref{fig:confusable-angles} shows this for the real engine at cruise: with the cockpit set
 several pairs fall below the $15^{\circ}$ line --- the HPC-versus-HPT efficiency pair sits at
-barely $1.3^{\circ}$, all but indistinguishable --- while the extended gas-path sensors lift
-every pair well clear of it. The angle is geometry, not yet a result; whether it translates
+barely $1.3^{\circ}$ (near-identical fingerprints, all but indistinguishable) --- while the
+extended gas-path sensors, by adding meters that the two faults move differently, swing the
+arrows apart and lift every pair well clear of the line. The angle is geometry, not yet a result; whether it translates
 into isolation accuracy is what hypothesis H2 tests (\cref{sec:res-h2}) and what the sensor
 analysis of \cref{ch:breakthrough} returns to.
 
