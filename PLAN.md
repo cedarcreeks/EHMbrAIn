@@ -949,3 +949,39 @@ ni un sensor sintético sustituyen a la información física ausente.
 (H4/L6 — mismo motivo), (b) el certificado F10 (la info de Fisher la fija el set de sensores),
 (c) el uso LEGÍTIMO de virtuales = validación de sensores / detección de deriva (Caso C, L7:
 EGT virtual que discrepa del medido delata el termopar), a documentar como matiz honesto.
+
+---
+
+## F-QA — Sección final "Qué preguntas responde este estudio y cómo" (directriz usuario 2026-07-05)
+
+**Requisito**: el report debe cerrar con una sección que mapee, explícitamente, cada pregunta
+que el estudio responde → la respuesta → CÓMO se responde (experimento, evidencia, capítulo).
+Que un lector vea de un vistazo qué se preguntó y con qué rigor se contestó.
+
+**Forma**: sección al final (en ch12 conclusiones o sección propia antes de ella), tabla
+autogenerable o estructurada. Cada fila = Pregunta · Respuesta (con veredicto/número) · Cómo
+(mecanismo + capítulo/tag prereg). Cubrir, sin sobrevender, las preguntas reales:
+
+Preguntas científicas (hipótesis pre-registradas):
+- ¿Detecta antes la IA que el trending? → SÍ tras tuning (12× antes, recall 0.48 vs 0.13) →
+  H1, prereg-v1, ch8.
+- ¿Aísla mejor la IA fallos confusables? → NO (31%=31%, muro informacional) → H2, ch8.
+- ¿Predice mejor la RUL la IA? → SÍ (3-6×, robusto a arquitectura) → H3+L5, ch8/ch11.
+- ¿Ayuda inyectar física a un aprendiz? → NO (2 mecanismos, 2 refutaciones) → H4+L6, ch8/ch11.
+- ¿Está mejor calibrada la incertidumbre conformal? → SÍ (6× más estrecha, honesta) → H5, ch8.
+Preguntas operativas (transferencia industria):
+- ¿Dónde NO hace falta IA? → eventos/escalones (el tradicional gana a coste casi nulo) → ch6/ch9.
+- ¿Qué tarea justifica la inversión IA? → prognosis → ch8.
+- ¿Qué se puede saber con los sensores actuales? → certificado F10 (validado ρ=0.70) → ch13.
+- ¿Qué sensor rescata qué fallo? → PS3/T3 rescatan η_HPC 45× → F10/L-H2, ch13.
+- ¿Puede un sensor virtual/algoritmo sustituir un sensor físico ausente? → NO (rango 3 vs 4,
+  desigualdad de procesamiento) → L-H2b.
+- ¿Cuánto recupera un lavado? → estimable R²=0.86 → L4, ch11.
+- ¿Cuánto vale económicamente? → ~$3M/año mediana, intervalo ancho, downside honesto → ch14.
+Preguntas de método (cómo se hace ciencia creíble aquí):
+- ¿Cómo comparar IA vs tradicional sin trampa? → datos/métricas/tuning idénticos + prereg → ch3.
+- ¿Cómo auditar un dataset sintético? → 3 auditorías + gate de dificultad → ch5.
+- ¿Cómo construir un benchmark solo con datos públicos? → TCDS/EEDB → gemelo → ch4/ch datos.
+
+Regla: cada respuesta remite a su evidencia (tag prereg / capítulo); los NO y los parciales
+se listan con el mismo peso que los SÍ (norma de honestidad). Nada sin trazar a un resultado.
