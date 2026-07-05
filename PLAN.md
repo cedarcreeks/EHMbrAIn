@@ -985,3 +985,34 @@ Preguntas de método (cómo se hace ciencia creíble aquí):
 
 Regla: cada respuesta remite a su evidencia (tag prereg / capítulo); los NO y los parciales
 se listan con el mismo peso que los SÍ (norma de honestidad). Nada sin trazar a un resultado.
+
+---
+
+## F-FLOW — Pasada de fluidez y tono técnico-didáctico combinado (directriz usuario 2026-07-05)
+
+**Problema observado por el usuario**: el report se lee "choppy" (entrecortado) y da por
+sabidas muchas cosas. La norma N7 cubrió COMPLETITUD de ingredientes; esto cubre LEGIBILIDAD
+y FLUJO — combinar rigor técnico con tono didáctico, de forma continua, no a saltos.
+
+**Requisito (todo el documento, pasada retroactiva + toda prosa futura)**:
+1. **Combinar, no alternar**: cada pasaje técnico lleva su intuición al lado (no un capítulo
+   técnico y otro divulgativo — ambos tonos en el mismo párrafo cuando hace falta).
+2. **Definir antes de usar, siempre**: ningún término/símbolo/acrónimo aparece sin haberse
+   introducido; si es inevitable (tabla de hipótesis en ch1), decirlo explícito y remitir.
+3. **Tejido conectivo**: transiciones entre secciones y capítulos — frase puente que diga de
+   dónde venimos y a dónde vamos ("Habiendo establecido X, ahora Y porque Z"). Eliminar
+   secciones que empiezan en frío.
+4. **Contra el choppy**: párrafos que fluyen (no listas de hechos inconexos); un hilo
+   argumental por sección; cerrar cada sección con qué se llevó el lector.
+5. **"No des nada por sabido"** reforzado: al introducir cada concepto físico/matemático/IA,
+   una frase de intuición para el novato ANTES del formalismo; ejemplo numérico cuando quepa.
+6. **Nivel calibrado**: no condescendiente con el experto ni opaco para el novato — el
+   "Audience and register" de ch1 (doble lector) aplicado en cada página.
+
+**Procedimiento**: pasada capítulo a capítulo leyendo en voz de lector novato; marcar (a)
+saltos abruptos, (b) términos sin definir, (c) párrafos-lista sin hilo, (d) secciones que
+arrancan sin puente. Reescribir. Verificar que sigue compilando 0/0/0. NO alterar números ni
+resultados (solo prosa). Gate F-FLOW: relectura donde un lector técnico-pero-no-experto pueda
+seguir el hilo sin atascarse.
+Norma nueva **N8**: toda prosa nueva entra ya fluida y con intuición junto al rigor; no se
+acumula deuda de legibilidad.

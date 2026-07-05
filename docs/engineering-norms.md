@@ -71,3 +71,12 @@ guided explanation a novice can follow, and its role in the argument.
 Data gets provenance; techniques get mechanics; decisions get reasons;
 numbers get generation scripts. The F9 program executes the retroactive
 sweep chapter by chapter; new text enters at standard from day one.
+
+## N8 — Technical and didactic tone, combined and flowing
+
+The report blends rigor with accessibility in the same passages, not in
+alternating chapters: every technical statement carries its intuition
+beside it, every term is defined before use, and sections are joined by
+connective transitions (where we came from, where we go, why). New prose
+enters fluid and self-explaining; readability debt is not accumulated.
+The F-FLOW sweep (PLAN §F-FLOW) retrofits this document-wide.
