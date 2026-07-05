@@ -16,9 +16,9 @@ for decision-making purposes.
 Per \code{docs/prereg-v1.md}: 50 Optuna trials per family
 (\code{scripts/tune_f5.py}, TPE seed 0, objectives on validation only, per-task winners from
 the frozen pool), then one --- and only one --- evaluation of the tuned configurations on the
-20 test engines (\code{scripts/f5\_confirm.py}), then the verdict machinery (one-sided exact
+20 test engines (\code{scripts/f5\_confirm.py}), then the verdict machinery of \cref{sec:stats-math} (one-sided exact
 McNemar for paired binary outcomes, Wilcoxon signed-rank paired by engine, Holm correction
-across the tested hypotheses, BCa-grade effect sizes). Two execution notes, both disclosed in
+across the tested hypotheses, BCa intervals and Cliff's-delta effect sizes). Two execution notes, both disclosed in
 the scripts and the decision register: no traditional trial met the FA\,$\leq$\,1 validation
 budget, so its detection winner was selected by the lexicographic infeasibility rule (fewest
 false alarms, then highest recall); and AI models fit on training engines only, which keeps
