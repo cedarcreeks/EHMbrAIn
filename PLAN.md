@@ -990,6 +990,14 @@ se listan con el mismo peso que los SÍ (norma de honestidad). Nada sin trazar a
 
 ## F-FLOW — Pasada de fluidez y tono técnico-didáctico combinado (directriz usuario 2026-07-05)
 
+**F-FLOW EN CURSO (2026-07-05)**: 3 batches hechas — TEJIDO CONECTIVO en todas las costuras
+frías (secciones que arrancaban con figura/tabla/subsección/lista sin puente): ch2 (GPA,
+degradación), ch3 (arquitectura, inventario software), ch4 (calibración, ICM), ch5 (auditorías),
+ch8 (takeaways), ch14 (estimación, tres partes). Concepto de ángulos-en-grados explicado
+accesible (ch2, analogía flechas). PENDIENTE F-FLOW: suavizado fino intra-párrafo, auditoría
+completa término-antes-de-usar (define-before-use) en todo el doc, revisión appendices. Es
+iterativo; el gran lever (anti-choppy estructural) ya aplicado.
+
 **Problema observado por el usuario**: el report se lee "choppy" (entrecortado) y da por
 sabidas muchas cosas. La norma N7 cubrió COMPLETITUD de ingredientes; esto cubre LEGIBILIDAD
 y FLUJO — combinar rigor técnico con tono didáctico, de forma continua, no a saltos.
