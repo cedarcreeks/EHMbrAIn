@@ -55,6 +55,8 @@ visible as wins.
     intervals) & \cref{ch:results} \\
   What can today's sensors know? & Exactly the identifiable subspace the certificate maps &
     \cref{ch:breakthrough} \\
+  Is a large RUL error the method's fault or the future's? & Both, by life stage: $87\,\%$
+    irreducible early; a $4\times$ reducible gap late & \cref{sec:bt-prognostic-floor} \\
   Which sensor rescues which fault? & Station probes: HPC efficiency $45\times$; isolation
     0.15$\to$0.92 & \cref{sec:bt-honesty}, \cref{sec:f8-lh2} \\
   Can a virtual sensor or clever algorithm substitute a physical one? & \textbf{No} --- it
@@ -157,6 +159,14 @@ instrument. The honest boundary is stated too: the CRB earns the region's valida
 and a disclosed split-conformal factor earns its absolute scale (restoring a 90\,\% coverage
 guarantee). This is the contribution most likely to matter outside
 this document, because it is the one no real-data study can validate.
+
+A second certificate (\cref{sec:bt-prognostic-floor}) does the analogous job for prognosis.
+Conditioning on each engine's \emph{true} current health state removes all epistemic
+ignorance, exposing an aleatoric floor on remaining-life error that no method can beat: at
+mid-life $87\,\%$ of the RUL spread is irreducible, yet a $4\times$ reducible gap opens late
+in life. It answers the question every operator should ask before funding a better prognostic
+--- is the error the method's or the future's --- with a ground-truth-validated number and the
+life stage at which investment actually pays.
 
 \section{The F7 extension}
 

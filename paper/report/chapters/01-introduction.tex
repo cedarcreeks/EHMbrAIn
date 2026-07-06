@@ -121,8 +121,9 @@ In plain terms first, before the technical names: the project builds a realistic
 with hidden answers no real fleet can provide (C1), runs a scrupulously fair contest between
 the two method families (C2), and from it delivers a physics-informed hybrid (C3), calibrated
 uncertainty (C4), a physics-anchored explainability score (C5), a sensor-and-data trade map
-(C6), an external reality check (C7), and --- the furthest reach --- a per-engine certificate
-of what a diagnosis can honestly know, proven against the truth (C8). Each item below names
+(C6), an external reality check (C7), and --- the furthest reach --- two per-engine
+certificates, proven against the truth, of what a diagnosis can honestly know (C8) and how
+much of an engine's future its present can reveal (C9). Each item below names
 the technique; every term is defined where it is first used, so this list is a preview, not a
 prerequisite.
 
@@ -153,6 +154,12 @@ prerequisite.
     engine's data lets one conclude, and doubles as a sensor-acquisition instrument
     (predicting that station probes rescue HPC efficiency $45\times$). The validation is one
     only a synthetic-truth benchmark can perform.
+  \item[\textbf{C9.}] \textbf{The prognostic floor} (\cref{sec:bt-prognostic-floor}): the
+    predictive counterpart of C8. By conditioning on each engine's \emph{true} current health
+    state it measures, against ground truth, the aleatoric floor on remaining-life error --- the
+    RMSE no method can beat. It shows $87\,\%$ of mid-life RUL uncertainty is irreducible, yet a
+    $4\times$ reducible gap opens late in life, telling an operator \emph{where} a better
+    prognostic is worth building and where the future is simply unknowable.
 \end{enumerate}
 
 \section{Document structure}

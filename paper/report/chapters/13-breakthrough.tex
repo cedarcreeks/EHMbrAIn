@@ -1,4 +1,4 @@
-\chapter{Earned-confidence diagnosis: a validated identifiability certificate}
+\chapter{Earned-confidence health monitoring: two validated certificates}
 \label{ch:breakthrough}
 
 \begin{quote}\itshape
@@ -6,7 +6,10 @@ This chapter in brief: every gas-path diagnosis in industry is a point estimate 
 what it cannot know. This chapter builds the opposite --- a per-engine certificate stating
 exactly which health directions are recoverable and to what precision --- and then does the
 thing no fielded system can: \emph{proves the certificate honest against ground truth}. The
-same certificate turns sensor purchasing into a Fisher-information calculation.
+same certificate turns sensor purchasing into a Fisher-information calculation. A second
+certificate does the analogous job for prognosis: it measures, against ground truth, how much
+of an engine's remaining life is genuinely unknowable from its present state --- and thus
+where a better prognostic can help and where it cannot.
 \end{quote}
 
 \keyidea{Accumulated Fisher information over an engine's real flight history yields a per-direction identifiability certificate --- and, uniquely, one \emph{proven honest against ground truth} ($\rho=0.70$): the CRB earns the anisotropic shape, split-conformal the scale, and the same object says which sensor rescues which fault.}
@@ -134,3 +137,76 @@ absolute scale, together carrying a finite-sample coverage guarantee. What it de
 statement EHM has always owed its users and never made ---
 \emph{here is precisely what this engine's data does and does not let you conclude, and here
 is the proof that the statement is true}.
+
+\section{A second certificate: the prognostic floor}
+\label{sec:bt-prognostic-floor}
+
+The identifiability certificate answers a \emph{diagnosis} question --- what can this
+engine's data let us conclude about its \emph{present} state. Prognosis asks the harder
+\emph{future} question: how many cycles remain. Every RUL number in
+\cref{ch:results} carried an error bar, but none of them answered the question an operator
+actually needs before spending money on a better prognostic: \emph{is this error large
+because our method is weak, or because the future is genuinely unknowable from what we can
+see today?} Those are different problems with opposite remedies. A weak method is fixed by a
+better model or more sensors; an unknowable future is fixed by nothing. Confusing the two
+either wastes budget chasing an irreducible wall or abandons a target that was within reach.
+
+We separate them the same way the field separates \emph{aleatoric} from \emph{epistemic}
+uncertainty. Epistemic uncertainty is ignorance --- it shrinks as data and models improve.
+Aleatoric uncertainty is intrinsic randomness --- the future of a specific engine is not a
+deterministic function of its present, because loading, ambient severity and the
+stochastic physics of crack growth have not happened yet. The remaining-life spread that
+survives \emph{even after we know the engine's exact current state} is that irreducible floor.
+
+\keyidea{Conditioning on the engine's \emph{true} current health state removes all epistemic
+ignorance; the remaining-life spread that survives is a ground-truth aleatoric floor ---
+the RMSE no method, however good, can beat. Measured against it, early-life RUL sits near
+the floor ($1.6\times$, little to gain) while late-life leaves a $4\times$ epistemic gap
+(real headroom for better methods).}
+
+We measure the floor by an oracle only a synthetic-truth fleet affords. At a chosen life
+fraction we take each engine's \emph{true} $10$-dimensional health vector $\mathbf{x}$
+(\cref{ch:trad}), find its $k=10$ nearest neighbours in standardized health space --- engines
+in a near-identical present condition --- and record the standard deviation of their
+\emph{true} remaining lives. Two engines in the same health state that nonetheless fail
+hundreds of cycles apart differ for reasons no present measurement contains; that spread is
+aleatoric by construction. The floor is the fleet-median of this local spread. Because it
+conditions on \emph{true} health, not an estimate, no better sensor or model can lower it ---
+it is a property of the degradation process, not of any method.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{prognostic_floor}
+  \caption{The prognostic floor (tag \texttt{prereg-v11}). Red: the ground-truth aleatoric
+  floor --- the RUL spread that survives conditioning on the engine's exact current health.
+  Blue: the epistemic gap between the best achieved method (label) and that floor. Early in
+  life the floor dominates; late in life a $4\times$ reducible gap opens.}
+  \label{fig:prognostic-floor}
+\end{figure}
+
+The result (\cref{fig:prognostic-floor}) is a two-part verdict, frozen as
+hypotheses \textbf{H11.1} and \textbf{H11.2} before measurement:
+
+\begin{itemize}
+  \item \textbf{H11.1 confirmed --- the floor is real and dominant.} At mid-life the
+    aleatoric floor is $1053$ cycles against a marginal true-RUL spread of $1205$: fully
+    $87\,\%$ of the raw uncertainty is irreducible even with perfect knowledge of the current
+    state. Remaining life is, to first order, \emph{not} written in the present --- a sober
+    correction to the implicit promise of much prognostics work.
+  \item \textbf{H11.2 confirmed --- the reducible headroom concentrates late.} The best
+    method's RMSE sits at $1.6\times$ the floor early ($1694$ vs $1053$) but $4.0\times$ late
+    ($858$ vs $212$). Early, the method is already near the physical wall and further effort
+    buys little; late, most of the error is epistemic and a better prognostic can still cut it
+    substantially. The certificate says \emph{where} prognostic investment pays off.
+\end{itemize}
+
+Together the two certificates bound both halves of health monitoring against ground truth:
+the identifiability certificate says what the present data lets you \emph{diagnose}, and the
+prognostic floor says what the present state lets you \emph{predict}. Each replaces a vague
+``it's hard'' with a measured, validated number and --- crucially --- with the direction that
+number points: which sensor to buy for diagnosis, and at which life stage to invest for
+prognosis. The honest boundary applies here too: the floor is estimated by a
+finite-neighbourhood oracle, so it is itself an estimate with sampling noise, and it bounds
+the \emph{achievable} RMSE, not the error of any one prediction. What it delivers is the
+prognostic counterpart of the first certificate's promise --- \emph{here is precisely how much
+of this engine's future its present can and cannot reveal}.

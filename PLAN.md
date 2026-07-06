@@ -785,7 +785,27 @@ matemático ni explicación guía — hasta el estándar del resto del documento
 
 ---
 
-## F11 — Siguiente breakthrough (tras concluir F10, directriz usuario 2026-07-05)
+## F11 — Segundo breakthrough: el piso prognóstico ✅ HECHO (2026-07-06, prereg-v11)
+
+Elegido el candidato 2 (descomposición epistémica/aleatoria). El candidato 1 (diagnóstico
+activo de lazo cerrado) se mató en el test de factibilidad: las condiciones controlables no
+suben el par confusable fundamental por encima del ruido en 1 reporte (solapa con F7).
+
+**Resultado**: piso aleatorio validado contra verdad-terreno vía oráculo (kNN k=10 sobre el
+estado de salud VERDADERO de 10-dim; la dispersión de RUL verdadero entre vecinos de salud
+casi idéntica = irreducible por construcción). Piso 1053/615/212 cy a 50/70/90 % de vida.
+- **H11.1 CONFIRMADA**: el piso domina temprano — a media vida el 87 % de la dispersión de
+  RUL es irreducible (1053 de 1205). El futuro NO está escrito en el presente.
+- **H11.2 CONFIRMADA**: el margen reducible se concentra tarde — método/piso pasa de 1.6×
+  (50 %) a 4.0× (90 %). El certificado dice DÓNDE invertir en mejor prognosis.
+- Segundo certificado (compañero del F10 de diagnóstico): ambos acotan contra verdad-terreno
+  qué puede saberse del presente (diagnóstico) y del futuro (prognosis) de un motor.
+- Artefactos: `scripts/f11_prognostic_floor.py` → `data/processed/f11/prognostic_floor.json`;
+  figura `prognostic_floor` (regen desde JSON en make_report_assets, N4); §sec:bt-prognostic-floor
+  en ch13; contribución C9 (ch01); fila F-QA (ch12); log de hito F11 (A2). 104 pp, 37 tests, 0/0/0/0.
+
+---
+Notas históricas del plan F11 (pre-ejecución):
 
 **Regla dura aprendida en F10**: MEDIR la factibilidad ANTES de proponer. En F10 maté la
 idea de "romper el muro con curvatura" con un test barato antes de invertir; la que sobrevivió

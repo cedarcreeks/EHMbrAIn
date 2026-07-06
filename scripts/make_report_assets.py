@@ -930,6 +930,35 @@ def fig_lrul():
     print('  lrul figure done')
 
 
+def fig_prognostic_floor():
+    """F11: aleatoric floor + epistemic gap per life fraction."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f11' / 'prognostic_floor.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())['per_fraction']
+    fr = ['0.5', '0.7', '0.9']
+    RED, BLUE = '#A61E4D', '#4263EB'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y', 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.2, 3.0))
+    xs = np.arange(3)
+    floors = [v[f]['aleatoric_floor'] for f in fr]
+    gaps = [v[f]['best_rmse'] - v[f]['aleatoric_floor'] for f in fr]
+    ax.bar(xs, floors, color=RED, label='aleatoric floor (irreducible)')
+    ax.bar(xs, gaps, bottom=floors, color=BLUE, alpha=0.55, label='epistemic gap (reducible)')
+    for i, f in enumerate(fr):
+        ax.annotate(f"{v[f]['best_rmse']:.0f}", (i, v[f]['best_rmse']), ha='center', va='bottom', fontsize=8)
+    ax.set_xticks(xs); ax.set_xticklabels(['50\\%', '70\\%', '90\\%'])
+    ax.set_xlabel('life fraction at prediction'); ax.set_ylabel('RUL error [cycles]')
+    ax.legend(frameon=False, fontsize=7.5)
+    ax.set_title('early: mostly irreducible; late: headroom to improve', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'prognostic_floor.pdf'); plt.close(fig)
+    print('  prognostic floor figure done')
+
+
 def fig_wall():
     """L-H2/L-H2b: confusable isolation accuracy, cockpit/virtual/real."""
     import matplotlib.pyplot as plt
@@ -1293,6 +1322,7 @@ def artifact_assets():
     f8_assets()
     f8_l2_assets()
     f8_l6_assets()
+    fig_prognostic_floor()
     fig_wall()
     fig_lrul()
     fig_confusable_angles()
