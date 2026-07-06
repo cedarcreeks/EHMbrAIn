@@ -1095,8 +1095,17 @@ definido antes; enlazado en ch10 + celda ch3 neutralizada), CUSUM/EWMA (glosados
 EGTM (ch5), MLP (ch11), CRB (Cramér–Rao enlazado en ch13 body + keyidea), MRO/OEM/ROI (ch14),
 ML (ch1), SAGE/ADEM (ch6), EASA (ch2). Los 29 restantes son nombres propios contextualizados
 (CFM56, GE, C-MAPSS/FD001/DS02, ACARS, PHM08…) o auto-glosados en prosa (WF, LW, GELU, DVC, TPE,
-GRU/TCN inline) que el regex de paréntesis no detecta. PENDIENTE F-FLOW: suavizado fino
-intra-párrafo (subjetivo, iterativo). El gran lever (anti-choppy estructural) ya aplicado.
+GRU/TCN inline) que el regex de paréntesis no detecta.
+
+**Suavizado intra-párrafo HECHO (2026-07-06)**: scorer de choppiness `scratchpad/chop.py`
+(frases cortas × baja densidad de conectores) sobre toda la prosa narrativa. Hallazgo honesto:
+tras las pasadas estructurales (tejido conectivo + define-before-use) la prosa está sana; los
+flags altos del scorer son casi todos falsos positivos — headers `\paragraph{}`/`\item[]`
+(signposts terse intencionales), intros de ecuación (terminan en ":"), y artefactos de `\cref`
+stripeados (el sujeto existe en el PDF compilado). Un único fix genuino aplicado: ch7, prescripción
+suelta "Anomaly detection... needs..." fundida con conector ("The lesson is that... so the detector
+built in response..."). El gran lever (anti-choppy estructural) ya estaba aplicado; F-FLOW se
+considera completo salvo pasadas de corrección futuras sobre prosa nueva (norma N8).
 
 **Problema observado por el usuario**: el report se lee "choppy" (entrecortado) y da por
 sabidas muchas cosas. La norma N7 cubrió COMPLETITUD de ingredientes; esto cubre LEGIBILIDAD

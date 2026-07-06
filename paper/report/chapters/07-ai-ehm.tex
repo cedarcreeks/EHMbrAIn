@@ -217,10 +217,11 @@ v1.1) against the margin-extrapolation prognosis of \cref{ch:trad}:
 reconstructs \emph{everything} well --- including post-fault windows. Root cause: a dense
 autoencoder over raw deviation windows learns a near-identity map, and a sustained level
 shift is statistically indistinguishable from the chronic drift it was trained to compress.
-Anomaly detection by reconstruction needs either residual whitening or change-relative
-features. The whitened-residual detector built in response (Mahalanobis distance of step
-features under a Ledoit--Wolf covariance) improves on the AE but still reaches only 0.06
-recall at its conservative validation threshold on the subtler v1.1 faults. Detection
+The lesson is that reconstruction-based anomaly detection needs either residual whitening or
+change-relative features, so the detector built in response works on whitened step features
+(their Mahalanobis distance under a Ledoit--Wolf covariance). It improves on the autoencoder
+yet still reaches only 0.06 recall at its conservative validation threshold on the subtler
+v1.1 faults. Detection
 remains the traditional pipeline's win (0.44 vs.\ 0.06) --- an honest scoreboard entry with
 a clear engineering path for the F5 tuning round.
 
