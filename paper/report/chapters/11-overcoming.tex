@@ -44,7 +44,8 @@ microseconds per evaluation, differentiable end to end.
 health parameters in $\pm3.5\,\%$, commanded N1 across the cruise band; 8 parallel
 workers, zero failed solves, $\sim$14 minutes on the M5). The architecture that passed is
 the house pattern at model scale: \textbf{the linearization plus a learned residual} --- a
-three-layer MLP corrects what the linear model misses, inheriting its smoothness where
+three-layer multilayer perceptron (MLP)---a plain feed-forward neural network---corrects
+what the linear model misses, inheriting its smoothness where
 physics is nearly linear. A pure MLP was tried first and could not match the
 linearization's precision on N2; the residual form fixed that immediately.
 

@@ -12,7 +12,7 @@ of an engine's remaining life is genuinely unknowable from its present state ---
 where a better prognostic can help and where it cannot.
 \end{quote}
 
-\keyidea{Accumulated Fisher information over an engine's real flight history yields a per-direction identifiability certificate --- and, uniquely, one \emph{proven honest against ground truth} ($\rho=0.70$): the CRB earns the anisotropic shape, split-conformal the scale, and the same object says which sensor rescues which fault.}
+\keyidea{Accumulated Fisher information over an engine's real flight history yields a per-direction identifiability certificate --- and, uniquely, one \emph{proven honest against ground truth} ($\rho=0.70$): the Cram\'er--Rao bound earns the anisotropic shape, split-conformal the scale, and the same object says which sensor rescues which fault.}
 
 
 \section{The gap nobody has closed}
@@ -42,8 +42,9 @@ calibrated twin:
 \end{equation}
 where $\mathbf{H}(u_t)$ is the influence matrix at the actual condition of flight $t$
 (supplied exactly by the twin, \cref{sec:icm}), $\mathbf{R}$ the measurement-noise
-covariance, and $\mathbf{P}_0$ a diffuse prior. The Cram\'er--Rao bound $\boldsymbol{\Sigma}$
-is the best per-direction precision \emph{any} unbiased estimator can achieve from this
+covariance, and $\mathbf{P}_0$ a diffuse prior. The Cram\'er--Rao bound (CRB) $\boldsymbol{\Sigma}$ ---
+a classical lower bound on estimator variance --- is the best per-direction precision
+\emph{any} unbiased estimator can achieve from this
 engine's data. Its diagonal $\sqrt{\operatorname{diag}(\boldsymbol{\Sigma})}$ is the
 certificate --- a per-parameter identifiability std --- and its off-diagonals expose which
 parameters are jointly confounded (the smearing structure, now explicit). The linear

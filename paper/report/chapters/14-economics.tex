@@ -3,7 +3,8 @@
 
 \begin{quote}\itshape
 This chapter in brief: what the measured results could be worth to the three parties who pay
-for engine health monitoring --- maintenance shops, airlines and OEMs --- for one concrete
+for engine health monitoring --- maintenance shops, airlines and original-equipment
+manufacturers (OEMs) --- for one concrete
 operator, with every cost input ranged and cited, every dollar traced to a measured
 mechanism, the uncertainty propagated rather than hidden, and an explicit section on why the
 number might be zero. It leads with the caveats on purpose.
@@ -18,7 +19,7 @@ downside.}
 \section{The rule: no dollar without a measured mechanism}
 \label{sec:econ-rule}
 
-It is easy to manufacture a large ROI for any monitoring technology; it is honest to
+It is easy to manufacture a large return on investment (ROI) for any monitoring technology; it is honest to
 manufacture none. This chapter monetizes exactly one mechanism, the one \cref{ch:results}
 measured: the tuned AI prognosis is markedly less biased and tighter than the tuned
 traditional extrapolation at end of life (RUL RMSE $858$ vs $1\,981$ cycles at $90\,\%$
@@ -37,7 +38,7 @@ with sources or explicit \textsc{assumption} flags; the arithmetic is
 
 A mid-size 737NG operator: 50 aircraft, hence 100 CFM56-7B engines, at a public utilization
 of 2\,000--3\,000 cycles per engine per year. A mature CFM56-7B shop visit is taken as
-\$3--5\,M (public MRO commentary, wide because workscope varies); an unscheduled removal
+\$3--5\,M (public maintenance-repair-overhaul (MRO) commentary, wide because workscope varies); an unscheduled removal
 costs $1.3$--$2.5\times$ that; the monitoring programme itself costs \$0.1--1\,M per year to
 run (software, integration, analyst time, false-alarm handling), charged against any saving.
 Every one of these is an uncertain range, and the Monte Carlo (20\,000 trials) draws all of
@@ -99,7 +100,7 @@ with different stakes, and the results speak to each differently.
     operator benefit is fuel: clearing a fault (or scheduling a wash) earlier trims the
     fuel-flow penalty of degradation, but our benchmark does not measure fleet fuel, so it is
     left out of the total rather than guessed.
-  \item[Maintenance shops (MRO).] The value is capacity smoothing: unscheduled removals
+  \item[Maintenance shops.] The value is capacity smoothing: unscheduled removals
     arrive at random and force expensive expediting, while scheduled ones fill planned slots.
     Part of this is already inside the unscheduled-cost premium; the residual --- better
     workforce and slot utilization --- is real but operator-specific and left qualitative.

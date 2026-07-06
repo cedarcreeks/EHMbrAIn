@@ -1014,9 +1014,15 @@ se listan con el mismo peso que los SÍ (norma de honestidad). Nada sin trazar a
 frías (secciones que arrancaban con figura/tabla/subsección/lista sin puente): ch2 (GPA,
 degradación), ch3 (arquitectura, inventario software), ch4 (calibración, ICM), ch5 (auditorías),
 ch8 (takeaways), ch14 (estimación, tres partes). Concepto de ángulos-en-grados explicado
-accesible (ch2, analogía flechas). PENDIENTE F-FLOW: suavizado fino intra-párrafo, auditoría
-completa término-antes-de-usar (define-before-use) en todo el doc, revisión appendices. Es
-iterativo; el gran lever (anti-choppy estructural) ya aplicado.
+accesible (ch2, analogía flechas). **Auditoría define-before-use HECHA (2026-07-06)**: script
+`scratchpad/audit2.py` escanea acrónimos en orden de lectura global; 39→29 flags tras corregir
+todos los bloqueadores reales de comprensión — MOPA (multi-operating-point analysis, nunca
+definido antes; enlazado en ch10 + celda ch3 neutralizada), CUSUM/EWMA (glosados ch3), AUC (ch3),
+EGTM (ch5), MLP (ch11), CRB (Cramér–Rao enlazado en ch13 body + keyidea), MRO/OEM/ROI (ch14),
+ML (ch1), SAGE/ADEM (ch6), EASA (ch2). Los 29 restantes son nombres propios contextualizados
+(CFM56, GE, C-MAPSS/FD001/DS02, ACARS, PHM08…) o auto-glosados en prosa (WF, LW, GELU, DVC, TPE,
+GRU/TCN inline) que el regex de paréntesis no detecta. PENDIENTE F-FLOW: suavizado fino
+intra-párrafo (subjetivo, iterativo). El gran lever (anti-choppy estructural) ya aplicado.
 
 **Problema observado por el usuario**: el report se lee "choppy" (entrecortado) y da por
 sabidas muchas cosas. La norma N7 cubrió COMPLETITUD de ingredientes; esto cubre LEGIBILIDAD

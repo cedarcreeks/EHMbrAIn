@@ -436,7 +436,8 @@ Later phases added, under the same contract-artifact-evidence pattern:
     Driver: \code{make_fleet.py}; audits: \code{audit_nonlinearity.py},
     \code{audit_dataset.py}.
   \item[\code{trad/}] \code{pipeline.py}: baseline deviations, Holt smoothing with
-    innovations, CUSUM and dual-EWMA gap detectors, WLS and wash-aware Kalman GPA,
+    innovations, cumulative-sum (CUSUM) and dual exponentially-weighted-moving-average (EWMA)
+    gap detectors, WLS and wash-aware Kalman GPA,
     nearest-signature isolation, Theil--Sen RUL. Driver: \code{run_trad.py}.
   \item[\code{ai/}] \code{data.py} (shared feature builder --- same deviations as
     \code{trad/}), \code{models.py} (autoencoder, GRU RUL net, MPS-aware training loops).
@@ -524,7 +525,7 @@ their own drivers, each writing a verdict artifact its figure or table reads:
   Command (\code{uv run python \ldots}) & Produces & Feeds \\
   \midrule
   \code{scripts/f7_observability.py} & realistic-scatter observability & \cref{fig:f7-obs} \\
-  \code{scripts/f7_learner.py} & learned-MOPA verdicts (F7) & \cref{tab:f7-verdicts} \\
+  \code{scripts/f7_learner.py} & learned multi-point fusion verdicts (F7) & \cref{tab:f7-verdicts} \\
   \code{scripts/f8_surrogate_data.py} + \code{scripts/f8_surrogate.py} & neural twin + gate (L1) & \cref{fig:surrogate} \\
   \code{scripts/make_fleet.py surrogate} + \code{scripts/audit_v2_fidelity.py} & fleet v2 + fidelity (L2) & \cref{fig:v2-fidelity} \\
   \code{scripts/f8_l6_hybrid.py} & twin-residual H4 (L6) & \cref{fig:h4v2} \\
@@ -565,7 +566,7 @@ form of transferability rule 4: if it only ran on a cluster, it would not be ado
 
 Both families are scored with identical metrics. For detection: lead time (how many flights
 before the ground-truth event the method raises a sustained alert), false alarms per thousand
-flights, F1 and precision-recall AUC. For isolation: top-1/top-2 accuracy, macro-F1, a
+flights, F1 and precision-recall area-under-the-curve (AUC). For isolation: top-1/top-2 accuracy, macro-F1, a
 \emph{smearing index} (the fraction of $\|\hat{\mathbf{x}}\|_1$ assigned to healthy components)
 and the PCS. For health estimation: RMSE of $\hat{\mathbf{x}}$ against ground truth. For RUL:
 RMSE, MAE, the NASA PHM08 score
