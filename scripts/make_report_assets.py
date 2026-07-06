@@ -930,6 +930,40 @@ def fig_lrul():
     print('  lrul figure done')
 
 
+def fig_ops_conversion():
+    """F-OPS: net unscheduled->scheduled conversion vs horizon, per method + floor ceiling."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f_ops' / 'conversion.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())['per_fraction']
+    LS = [200, 400, 800]
+    FR = ['0.5', '0.7', '0.9']
+    INK, BLUE, RED, GREY = '#212529', '#4263EB', '#A61E4D', '#ADB5BD'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, axes = plt.subplots(1, 3, figsize=(7.4, 2.7), sharey=True)
+    for ax, f in zip(axes, FR):
+        ai = [v[f]['by_L'][str(L)]['ai']['net'] * 100 for L in LS]
+        tr = [v[f]['by_L'][str(L)]['trad']['net'] * 100 for L in LS]
+        ceil = [v[f]['by_L'][str(L)]['ceiling'] * 100 for L in LS]
+        ax.fill_between(LS, ceil, 100, color=GREY, alpha=0.18, lw=0,
+                        label='above floor ceiling')
+        ax.plot(LS, ceil, color=GREY, ls=':', lw=1.2, label='floor ceiling')
+        ax.plot(LS, ai, 'o-', color=BLUE, lw=1.8, ms=4, label='AI (net)')
+        ax.plot(LS, tr, 's-', color=RED, lw=1.6, ms=4, label='traditional (net)')
+        ax.axhline(0, color=INK, lw=0.8)
+        ax.set_title(f'inspection at {int(float(f)*100)}\\% life', fontsize=8)
+        ax.set_xlabel('logistics horizon $L$ [cy]'); ax.set_xticks(LS)
+        ax.set_ylim(-3, 103)
+    axes[0].set_ylabel('unscheduled$\\to$scheduled [\\%]')
+    axes[-1].legend(frameon=False, fontsize=6.3, loc='center right')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'ops_conversion.pdf'); plt.close(fig)
+    print('  ops_conversion figure done')
+
+
 def fig_prognostic_floor():
     """F11: aleatoric floor + epistemic gap per life fraction."""
     import matplotlib.pyplot as plt
@@ -1323,6 +1357,7 @@ def artifact_assets():
     f8_l2_assets()
     f8_l6_assets()
     fig_prognostic_floor()
+    fig_ops_conversion()
     fig_wall()
     fig_lrul()
     fig_confusable_angles()

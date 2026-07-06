@@ -49,6 +49,7 @@ f8:
 	$(PY) scripts/f8_l9_pcs.py
 	$(PY) scripts/f10_certificate.py
 	$(PY) scripts/f11_prognostic_floor.py
+	$(PY) scripts/f_ops_conversion.py
 	$(PY) scripts/econ_impact.py
 
 evidence:

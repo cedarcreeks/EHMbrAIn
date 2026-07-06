@@ -54,6 +54,72 @@ industry band ($10$--$30\,\%$)} and lets better prognosis convert a deliberately
 conservative, wide $15$--$60\,\%$ of those removals. This anchoring is the single most
 important honesty decision in the chapter.
 
+\section{The mechanism, measured: unscheduled$\,\to\,$scheduled conversion}
+\label{sec:ops-conversion}
+
+The naive $40\,\%$-vs-$0\,\%$ figure above is too crude to build on. Before committing any
+dollar to the single monetized mechanism, we measure it properly (tag \texttt{prereg-v12}):
+\emph{what fraction of run-to-failure removals does each approach actually convert into planned
+ones}, as a function of how much warning the logistics chain needs. This turns the abstract RUL
+error of \cref{ch:results} into the operational number the estimate below consumes.
+
+\keyidea{An engine reaches its booked shop slot without failing first only if the method's RUL
+\emph{over-prediction} stays within the logistics horizon $L$; over-predict by more than $L$ and
+the removal is unscheduled. Netting out engines pulled wastefully early (the prognosis analog of
+a false alarm), the AI converts more at every life stage --- and, tellingly, sits near the
+irreducible F11 ceiling early in life but far below it late, exactly where a better prognostic
+still has room.}
+
+\paragraph{The operational rule.} At an inspection taken at life fraction $f$, an engine's true
+remaining life is $R$ and the method predicts $\hat R = R + e$, with $e$ the signed RUL error
+already recorded in \cref{ch:results} ($e>0$ is over-prediction). The operator books a removal a
+horizon $L$ cycles before the predicted end. The engine survives to that slot --- a
+\textbf{converted, scheduled} removal --- iff $e \le L$; if $e > L$ it fails first
+(\textbf{unscheduled}); if it grossly under-predicts ($e < -W$) the engine is pulled far too
+early (a \textbf{wasteful} removal, the false-alarm analog). The honest headline is the
+\textbf{net} rate, $-W \le e \le L$, which credits only removals that are both on time and not
+wasteful. Nominal $L=400$, $W=800$ cycles; the horizon is swept, not chosen.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{ops_conversion}
+  \caption{Net unscheduled$\to$scheduled conversion versus logistics horizon $L$, per method,
+  at three inspection points. Baseline (no monitoring) is $0\,\%$. The grey ceiling is what an
+  \emph{unbiased} predictor limited only by the F11 aleatoric floor
+  (\cref{sec:bt-prognostic-floor}) could achieve --- the shaded band above it is physically
+  unreachable. Early in life the AI already hugs that ceiling; late in life a wide reachable gap
+  remains.}
+  \label{fig:ops-conversion}
+\end{figure}
+
+\paragraph{What the measurement shows.} Three results, frozen as hypotheses before the pass:
+
+\begin{itemize}
+  \item \textbf{H-OPS.1 confirmed --- the AI converts more, net.} At the nominal horizon the AI
+    converts $35/50/45\,\%$ of removals at $50/70/90\,\%$ life, against the traditional
+    $15/0/25\,\%$ --- a strict win at every stage. The traditional stack's optimistic,
+    high-variance RUL (\cref{ch:trad}) over-predicts past the horizon too often to plan around.
+  \item \textbf{H-OPS.2 confirmed --- the ceiling binds early, headroom opens late.} The gap
+    between the physical ceiling and the AI's achieved conversion is essentially zero at
+    mid-life (the AI hugs the $\sim\!65\,\%$ floor-limited ceiling) but $52$ points at
+    $90\,\%$ life (ceiling $97\,\%$, AI $45\,\%$). This is the operational face of the
+    prognostic floor: early conversion is capped by irreducible randomness, so buying a better
+    prognostic pays off \emph{late}, not early --- the same verdict \cref{sec:bt-prognostic-floor}
+    reached in RMSE terms, now in removals.
+  \item \textbf{H-OPS.3 confirmed --- the honest accounting is sobering but survives.} Netting
+    out wasteful early removals nearly halves the AI's raw conversion at mid-life ($65\to35\,\%$):
+    part of the apparent gain is just aggressive early pulls. Even so, the net AI rate still
+    beats the net traditional rate. The advantage is real; it is smaller than the gross number
+    would suggest.
+\end{itemize}
+
+These synthetic net rates ($35$--$50\,\%$) sit \emph{inside} the deliberately conservative
+$15$--$60\,\%$ band the estimate anchors to, which is why the chapter uses the anchored band
+rather than these point values: with $n=20$ test engines the bootstrap intervals are wide, and
+the synthetic fleet cannot stand in for a real operator's margins and extra signals. The
+measurement earns the \emph{direction and rough size} of the mechanism; the estimate keeps the
+absolute rate anchored to industry.
+
 \section{The estimate, with its uncertainty}
 \label{sec:econ-result}
 

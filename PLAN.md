@@ -868,7 +868,29 @@ pecar de optimista. Reglas de construcción (no violar):
 
 ---
 
-## F-OPS — Conversión no-programado→programado: cuánto la reduce cada método (directriz usuario 2026-07-06)
+## F-OPS — Conversión no-programado→programado ✅ HECHO (2026-07-06, prereg-v12)
+
+**RESULTADO**: KPI operacional medido desde los errores RUL de F5 (sin re-entrenar).
+Conversión a horizonte L = P(sobre-predicción err ≤ L), neta de retiradas prematuras
+(err < −W), con techo del piso aleatorio F11. Nominal L=400/W=800, barrido L∈{200,400,800}.
+- **H-OPS.1 CONFIRMADA**: IA neto > tradicional en TODAS las fracciones — 35/50/45 % vs
+  15/0/25 % a 50/70/90 % vida. El RUL optimista y disperso del tradicional sobre-predice
+  demasiado para planificar.
+- **H-OPS.2 CONFIRMADA**: gap-al-techo crece con la vida — ≈0 pts a media vida (la IA pega
+  al techo físico ~65 %), 52 pts a 90 % (techo 97 %, IA 45 %). Cara operacional del piso
+  F11: mejorar prognosis paga TARDE, no temprano. Enlaza [[f11-prognostic-floor]].
+- **H-OPS.3 CONFIRMADA**: la contabilidad honesta (net) casi parte a la mitad el bruto de la
+  IA a media vida (65→35 %) — parte de la ganancia son retiradas agresivas tempranas — pero
+  la IA neta sigue ganando al tradicional.
+- Artefactos: `scripts/f_ops_conversion.py` → `data/processed/f_ops/conversion.json` (BCa CI
+  sobre motores); figura `ops_conversion` (regen JSON en make_report_assets, N4);
+  §sec:ops-conversion en ch14 (antes del Monte Carlo, la estimación la consume); fila F-QA
+  operativa (ch12); Makefile. 105 pp, 37 tests, 0/0/0/0. n=20 → CIs anchos, declarado.
+- Nota: los 35–50 % netos sintéticos caen DENTRO de la banda conservadora anclada 15–60 %
+  de F-ECON → el capítulo mantiene el ancla industrial, F-OPS gana dirección+tamaño.
+
+---
+Spec original (pre-ejecución):
 
 **Motivación del usuario**: el KPI operacional que importa no es el RMSE ni el recall abstractos,
 sino **qué fracción de retiradas NO PROGRAMADAS (caras, disruptivas, AOG) convierte cada enfoque
