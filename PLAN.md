@@ -868,6 +868,58 @@ pecar de optimista. Reglas de construcción (no violar):
 
 ---
 
+## F-OPS — Conversión no-programado→programado: cuánto la reduce cada método (directriz usuario 2026-07-06)
+
+**Motivación del usuario**: el KPI operacional que importa no es el RMSE ni el recall abstractos,
+sino **qué fracción de retiradas NO PROGRAMADAS (caras, disruptivas, AOG) convierte cada enfoque
+en retiradas PROGRAMADAS** (planificadas, baratas, con slot de taller). F-ECON usa esa conversión
+como SUPUESTO que alimenta el Monte Carlo; F-OPS la MIDE de verdad, per-método, desde nuestras
+distribuciones de lead time / RUL, antes de que ninguna cifra de coste entre en juego. Es el
+puente medido entre resultados (F5/F11) y economía (F-ECON).
+
+**PENDIENTE — no ejecutar hasta orden. Protocolo casa: test factibilidad → prereg-vN → confirmatorio único → sección + figura N4.**
+
+**Definición operacional (a congelar en prereg)**:
+- Un evento de fallo es **convertible** por un método sii ese método emite una alerta *fiable*
+  (detección sostenida O predicción RUL con banda) con lead time ≥ **L** ciclos antes del fallo
+  funcional, donde L = horizonte logístico para planificar un slot (barrer L ∈ {200, 400, 800}
+  ciclos; declarar el nominal y reportar sensibilidad — NO cherry-pick).
+- **Tasa de conversión** del método = fracción de eventos run-to-failure de la flota test
+  detectados/predichos ≥ L ciclos antes, **a presupuesto de falsas alarmas igualado** entre
+  tradicional e IA (cada falsa alarma = retirada programada innecesaria; la conversión sin
+  control de FA es tramposa — igualar FA/1000 vuelos antes de comparar).
+- **Línea base sin monitorización** = 0 % convertido (todo es no-programado / run-to-failure).
+- Comparar: baseline 0 % vs stack tradicional vs IA (suite F5), misma data, mismo L, misma FA.
+
+**Hipótesis candidatas (medir factibilidad ANTES de congelar — lección F10/F11)**:
+- **H-OPS.1**: la IA convierte una fracción estrictamente mayor que el tradicional al mismo
+  presupuesto de FA (esperado por lead time F5: IA 499 vs trad 6033 cy, pero hay que MEDIR la
+  conversión a L fijo, no asumirla del lead time medio).
+- **H-OPS.2**: la conversión es ACOTADA por el piso prognóstico F11 — a L grande (aviso muy
+  temprano) ni la IA convierte todo, porque el 87 % de la incertidumbre temprana es irreducible;
+  la ventaja IA se concentra a L moderado (vida tardía, donde F11 mostró 4× de margen reducible).
+  Enlaza F-OPS con [[f11-prognostic-floor]]: el piso pone el techo físico a la conversión.
+- **H-OPS.3 (honesta, downside)**: parte de la "conversión" de la IA se paga en falsas alarmas
+  → retiradas programadas innecesarias; reportar la conversión NETA (convertidos reales − FA
+  inducidas) y no solo la bruta. Si la neta no supera al tradicional a algún L, decirlo.
+
+**Construcción**:
+- `scripts/f_ops_conversion.py` → `data/processed/f_ops/conversion.json`: por método y por L,
+  {conversión bruta, FA/1000 vuelos, conversión neta, IC BCa bootstrap sobre motores}. Reusar
+  las alertas ya generadas por F5 (detección) + bandas RUL (no re-entrenar; leer artefactos).
+- Figura N4: curva conversión-neta vs L para baseline/tradicional/IA, con banda de piso F11
+  superpuesta (el techo alcanzable). Muestra dónde la IA gana y dónde el muro físico manda.
+- Sección: nueva §sec:ops-conversion en ch14 (economics) ANTES del Monte Carlo, o al final de
+  ch08 results como KPI operacional; enlazar a que F-ECON consume esta tasa MEDIDA (ya no
+  supuesta) → cerrar el bucle resultados→KPI→coste. Fila nueva en tabla F-QA operativa (ch12).
+- Honestidad: FA igualadas, L barrido, conversión neta, techo F11 dibujado, sim-to-real caveat.
+
+**Gate F-OPS**: la conversión reportada sale de alertas MEDIDAS (no supuestas), a FA igualada,
+con el techo F11 explícito; si el tradicional iguala a la IA a algún L, se documenta con igual
+peso. Alimenta F-ECON sustituyendo el supuesto de conversión por el número medido.
+
+---
+
 
 
 ## ⟪ACTUALIZACIÓN VERIFICADA FADEC (2026-07-05)⟫
