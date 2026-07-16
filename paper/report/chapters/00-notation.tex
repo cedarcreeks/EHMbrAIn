@@ -7,23 +7,27 @@
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{@{}p{0.10\textwidth}p{0.36\textwidth}p{0.09\textwidth}p{0.36\textwidth}@{}}
   \toprule
-  BPR & bypass ratio & LOO & leave-one-out (cross-validation) \\
-  CEA & NASA Chemical Equilibrium with Applications & LPC & low-pressure compressor (booster) \\
-  CI & continuous integration & LPT & low-pressure turbine \\
-  C-MAPSS & NASA turbofan simulation benchmark & MAE & mean absolute error \\
+  ACARS & aircraft--ground datalink (snapshot reports) & LPC & low-pressure compressor (booster) \\
+  BPR & bypass ratio & LPT & low-pressure turbine \\
+  CEA & NASA Chemical Equilibrium with Applications & MAE & mean absolute error \\
+  CI & continuous integration & MOPA & multiple-operating-point analysis \\
+  C-MAPSS & NASA turbofan simulation benchmark & N1, N2 & low-/high-pressure spool speeds \\
+  CUSUM & cumulative-sum change detector & N-CMAPSS & successor benchmark to C-MAPSS \\
   EEDB & ICAO Engine Emissions Databank & OPR & overall pressure ratio \\
   EGT(M) & exhaust gas temperature (margin) & PC & power code: fraction of reference thrust \\
   EHM & engine health monitoring & PCS & Physics-Consistency Score (ours, C5) \\
-  FADEC & full-authority digital engine control & PHM & prognostics and health management \\
+  EWMA & exponentially weighted moving average & PHM & prognostics and health management \\
+  FADEC & full-authority digital engine control & QAR & quick-access recorder (full-flight data) \\
   FAR & fuel--air ratio & RMSE & root-mean-square error \\
   FOD & foreign-object damage & RUL & remaining useful life \\
   FPR & false-positive rate & SAC & single annular combustor \\
   GPA & gas path analysis & SHAP & Shapley additive explanations \\
-  HPC & high-pressure compressor & SLS & sea-level static \\
-  HPT & high-pressure turbine & SVD & singular value decomposition \\
-  ICM & influence coefficient matrix & TCDS & type-certificate data sheet \\
+  GRU & gated recurrent unit (neural network) & SLS & sea-level static \\
+  HPC & high-pressure compressor & SVD & singular value decomposition \\
+  HPT & high-pressure turbine & TCDS & type-certificate data sheet \\
+  ICM & influence coefficient matrix & TPE & tree-structured Parzen estimator \\
   ISA & international standard atmosphere & TSFC & thrust-specific fuel consumption \\
-  N1, N2 & low-/high-pressure spool speeds & WLS & weighted least squares \\
+  LOO & leave-one-out (cross-validation) & WLS & weighted least squares \\
   \bottomrule
 \end{tabular}
 \end{center}
@@ -46,6 +50,8 @@
     $T_{t4}$ & combustor-exit total temperature \\
   $W_f,\ F_n$ & fuel flow, net thrust &
     $\Delta T_{\mathrm{ISA}}$ (dTs) & ambient offset from the ISA day \\
+  $\mathbf{F}$ & accumulated Fisher information (\cref{ch:breakthrough}) &
+    $\rho$ & Spearman rank correlation \\
   \bottomrule
 \end{tabular}
 \end{center}

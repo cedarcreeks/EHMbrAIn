@@ -11,6 +11,46 @@ these classes would be arbitrary --- the audit that produced this table found tw
 both already resolved (noted below).
 \end{quote}
 
+\section*{What this register is, and how to use it}
+
+Every quantitative study rests on choices that the data did not make for it: which engine
+variant to model, how much noise to inject, where to place a detection threshold, how many
+tuning trials to allow each method. Most papers leave these choices implicit, scattered
+through the text, or simply unstated --- and that is precisely what makes replication hard.
+This appendix collects \emph{every material free choice} in the study in one place, states
+the value chosen, and --- most importantly --- classifies \emph{why} that value is defensible.
+
+The classification is the point. A value is not more or less true because it appears in a
+table; what matters is the \emph{kind} of evidence behind it, because the kind tells a reader
+what would need to change for the choice to change:
+
+\begin{description}
+  \item[{[M]} Measured or certified.] The value comes from an authoritative measurement ---
+    a type-certificate data sheet, the ICAO emissions databank. Example: the calibration
+    anchors of \cref{tab:anchors}. To challenge it, you would challenge the source document.
+  \item[{[L]} Literature range.] The value sits inside a range published by independent
+    studies. Example: fouling magnitudes from the gas-turbine degradation literature
+    (\cref{tab:degradation}). Challenging it means producing better field data.
+  \item[{[D]} Derived.] Computed from our own calibrated model, so it inherits the model's
+    validation. Example: the rating temperature $T_{4,\max}$, fixed by the takeoff anchor.
+  \item[{[C]} Convention.] A community default adopted for comparability, not because it is
+    uniquely correct. Example: the M0.78/FL350 design point. Deviating is legitimate but
+    costs comparability with other studies.
+  \item[{[T]} Tunable default.] An engineering guess that we ourselves did not trust ---
+    so it was explicitly exposed to the symmetric tuning budget of phase F5, where both
+    families could revise it. Example: detector window lengths. These are the choices the
+    study \emph{stress-tested} rather than defended.
+  \item[{[A]} Assumption.] A value we could not ground in any of the above; declared openly,
+    with its sensitivity noted. These are the study's honest soft spots.
+\end{description}
+
+To use the register for replication: reproduce the [M] and [L] values from their cited
+sources, accept the [D] values if you accept the model calibration of \cref{ch:model},
+adopt or revise the [C] conventions to taste, re-tune the [T] defaults under your own budget,
+and probe the [A] assumptions first if you suspect a result. A reader who disagrees with a
+conclusion should be able to find, in this table, the exact choice they would have made
+differently --- and the class tells them what evidence their alternative needs.
+
 \section*{Engine model (F1)}
 
 \begin{center}\footnotesize\setlength{\tabcolsep}{4pt}

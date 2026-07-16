@@ -114,11 +114,12 @@ verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en o
 
 ### Reglas operativas críticas (NO violar)
 
-- **Repo público sin rastro**: commits SIN Co-Authored-By Claude, SIN "Generated with";
-  identidad `cedarcreeks <cedarcreeks@users.noreply.github.com>`; antes de push, `git grep -il`
-  de los tokens personales (nombre real + handles de correo) y de `claude` debe salir vacío.
-  Los tokens EXACTOS viven solo en la memoria privada de Claude (fuera del repo), NUNCA se
-  escriben literalmente en ningún fichero versionado — ni siquiera como ejemplo de comando.
+- **Repo público sin rastro**: commits SIN líneas de coautoría de herramientas, SIN
+  "Generated with"; identidad `cedarcreeks <cedarcreeks@users.noreply.github.com>`; antes de
+  push, `git grep -il` de los tokens personales (nombre real + handles de correo) y de nombres
+  de herramientas de asistencia debe salir vacío. Los tokens EXACTOS viven solo en notas
+  privadas fuera del repo, NUNCA se escriben literalmente en ningún fichero versionado — ni
+  siquiera como ejemplo de comando.
 - **Normas N1-N7** en docs/engineering-norms.md (N4 evidencia generada; N5 tiempos M5;
   N6 concepto entra con matemática; N7 handbook/tesis §0-bis-A).
 - **torch-MPS SOLO foreground** (background segfault); pyCycle datagen sí puede background.
@@ -140,7 +141,7 @@ verificar `git log --oneline -5` y `ls data/processed/`, y ejecutar la cola en o
 - Flota congelada: data/processed/fleet/ (v1.1, hashes en prereg-v1).
 - Compute: data/processed/compute_times.json (benchmark_pipeline.py).
 - Report fuente: paper/report/ (12 capítulos + 04b + A1/A2); PDF versionado report.pdf.
-- Memoria de proyecto Claude: ~/.claude/.../memory/ehmai-project.md (complementa esto).
+- Notas privadas de proyecto: fuera del repo (complementan esto).
 
 ---
 
