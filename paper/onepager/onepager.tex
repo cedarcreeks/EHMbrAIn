@@ -1,0 +1,109 @@
+% One-page summary of the EHMbrAIn study. Build: latexmk -pdf -outdir=build onepager.tex
+% All numbers trace to versioned artifacts in data/processed/ (see footer).
+\documentclass[11pt,twocolumn]{article}
+\usepackage[a4paper,margin=1.5cm,columnsep=7mm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage[hidelinks]{hyperref}
+\usepackage{balance}
+\usepackage{titlesec}
+\titlespacing*{\section}{0pt}{5pt plus 1pt}{2pt}
+\titleformat{\section}{\normalsize\bfseries}{}{0pt}{}
+\setlength{\parskip}{2pt}
+\setlength{\parindent}{0.9em}
+\pagestyle{empty}
+
+\begin{document}
+
+\twocolumn[{%
+\centering
+{\LARGE\bfseries The split verdict\par}
+{\large What AI actually fixes in engine health monitoring --- and what only sensors can\par}
+\vspace{1.5mm}
+{\small\itshape One-page summary of \textbf{EHMbrAIn}: AI-based vs.\ traditional EHM,
+a pre-registered gas-path-analysis testbed on the CFM56-7B with synthetic ground truth\par}
+\vspace{3mm}
+}]
+
+\balance
+\section{The question, made falsifiable}
+Does AI beat the traditional engine-health-monitoring stack --- or is that marketing? We
+built the comparison no field study can run: a pyCycle thermodynamic twin of the CFM56-7B26
+calibrated to certificate data, a 100-engine synthetic fleet (SynCFM56) with known
+ground-truth health, and two \emph{tuned} practitioners --- the classical stack (Kalman GPA,
+CUSUM, trending) and an AI suite (Mahalanobis, GRU, conformal) --- given identical data,
+identical sensors, and a symmetric 50-trial tuning budget. Every hypothesis, threshold, and
+test was frozen in twelve tagged pre-registrations \emph{before} the test set was touched;
+failed gates were repaired physically, never by moving thresholds.
+
+\section{Verdicts (single confirmatory pass, Holm-corrected)}
+\begin{center}\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}lccl@{}}
+\toprule
+Task & Trad. & AI & Verdict \\
+\midrule
+Detection recall (FA $1{=}1$) & 0.13 & \textbf{0.48} & AI, $p{=}.008$ \\
+\quad median delay (cycles) & 6033 & \textbf{499} & 12$\times$ earlier \\
+Isolation, confusable faults & 31\,\% & 31\,\% & \emph{tie: wall} \\
+RUL RMSE @90\,\% life (cy) & 1981 & \textbf{858} & AI, $\delta{=}0.89$ \\
+\quad vs.\ advanced classical & 1118 & \textbf{858} & AI, $p{=}.002$ \\
+90\,\% interval half-width (cy) & 11509 & \textbf{1957} & 5.9$\times$ tighter \\
+Physics-informed hybrid & --- & --- & refuted 2$\times$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The pattern survives contact with reality: on NASA's C-MAPSS benchmark the same pipelines
+score 14.9 vs.\ 42.1 cycles RMSE, and the classical side was even upgraded mid-study to a
+similarity-based prognostic (1981${\to}$1118) --- AI still wins ($858$, $p{=}0.002$).
+
+\section{The split is physics, not fashion}
+AI wins exactly where the task is \emph{statistical aggregation over time}: pulling faint
+trends out of noise (detection), integrating a whole degradation history into a forecast
+(prognosis), and honestly sizing its own error (uncertainty). It ties exactly where the
+\emph{sensor set} cannot distinguish two faults: the cockpit suite's influence-matrix
+geometry leaves seven confusable fault pairs at ${\sim}1.3^{\circ}$ separation, and no model
+--- classical or learned --- can invert information that never reached the data. Proof:
+adding two real station sensors lifts confusable isolation from 0.15 to 0.92
+($p{=}0.001$); adding \emph{virtual} (model-derived) versions of the same sensors changes
+nothing ($p{=}1.0$). Where learning does add isolation power is fusion: a GRU fusing
+multi-flight physics projections more than triples classical multi-point analysis (0.65
+vs.\ 0.17) on identical windows, and the ACARS reporting \emph{schedule} itself becomes a
+design variable (+79\,\% separability from one extra stabilized-cruise report).
+
+\section{Certificates, not promises}
+Two by-products may outlast the scoreboard. An \emph{identifiability certificate} ---
+accumulated Fisher information over an engine's actual flight history --- predicts
+per-direction diagnosis error \emph{before} deployment, validated against ground truth
+(Spearman $\rho{=}0.70$): it tells an operator which faults their fleet can see and which
+sensor rescues which blind spot. A \emph{prognostic floor} --- the aleatoric RUL
+uncertainty that no model can remove --- shows 87\,\% of early-life error is irreducible,
+while at 90\,\% of life the best method still sits $4\times$ above the floor: buy
+algorithms for the endgame, calibration for the rest.
+
+\section{What it is worth}
+The operational currency is converting unscheduled removals into scheduled ones. Against
+the floor-derived ceiling, the AI stack converts a net 35--50\,\% of unscheduled events
+across realistic lead-time demands; the traditional stack manages 0--25\,\%. For a
+50-aircraft, 100-engine fleet, a Monte-Carlo cost model prices the difference at
+\$3.2M/yr median (\$0.9M--\$8.0M p10--p90, ${<}1\,\%$ probability of net loss).
+
+\vspace{1mm}
+\noindent\rule{\linewidth}{0.4pt}
+{\footnotesize \textbf{Takeaway}: ``AI vs.\ traditional'' is the wrong question. AI is a
+strictly better \emph{statistician} on the same data; it is not a new \emph{sensor}. Buy AI
+for detection, prognosis, and calibrated uncertainty; buy instrumentation for isolation;
+and demand certificates --- identifiability and floor --- that say, in advance, which
+regime you are in.\par
+\vspace{0.8mm}
+Full study: 106-page report, 12 pre-registration tags, every figure and number
+auto-generated from versioned artifacts, replicable end-to-end on a desktop
+(\texttt{make all}, ${\sim}11$ min). Repository:
+\href{https://github.com/cedarcreeks/EHMbrAIn}{github.com/cedarcreeks/EHMbrAIn}.\par}
+
+\end{document}

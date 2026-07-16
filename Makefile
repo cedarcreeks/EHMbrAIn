@@ -62,7 +62,10 @@ evidence:
 report:
 	cd paper/report && latexmk -pdf -outdir=build report.tex && cp build/report.pdf report.pdf
 
+onepager:
+	cd paper/onepager && latexmk -pdf -outdir=build onepager.tex && cp build/onepager.pdf onepager.pdf
+
 test:
 	uv run pytest -q
 
-.PHONY: all model fleet audits pipelines f5 f8 evidence report test
+.PHONY: all model fleet audits pipelines f5 f8 evidence report onepager test

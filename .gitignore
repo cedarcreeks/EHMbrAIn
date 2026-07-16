@@ -33,7 +33,7 @@ multirun/
 .ipynb_checkpoints/
 
 # LaTeX build
-paper/report/build/
+paper/*/build/
 
 # LaTeX aux (in-source builds from editors like TeXstudio)
 *.aux
@@ -46,7 +46,7 @@ paper/report/build/
 *.run.xml
 *.synctex.gz
 *.toc
-paper/report/build/
+paper/*/build/
 *-blx.bib
 paper/**/*.log
 
