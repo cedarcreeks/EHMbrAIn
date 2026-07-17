@@ -63,7 +63,7 @@ report:
 	cd paper/report && latexmk -pdf -outdir=build report.tex && cp build/report.pdf report.pdf
 
 onepager:
-	cd paper/onepager && latexmk -pdf -outdir=build onepager.tex && cp build/onepager.pdf onepager.pdf
+	cd paper/onepager && latexmk -pdf -outdir=build EHMbrAIn.tex && cp build/EHMbrAIn.pdf EHMbrAIn.pdf
 
 test:
 	uv run pytest -q
