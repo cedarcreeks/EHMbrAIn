@@ -61,6 +61,20 @@ degraders) and applied to the component's efficiency/flow entries of $\mathbf{x}
 Let $n$ index flight cycles and $m$ be the engine's severity multiplier for the mechanism.
 Each mechanism contributes to the health vector as follows (the exact forms in
 \code{trajectories.py}, so the report and the generator cannot diverge --- norm N4).
+\Cref{fig:deg-profiles} draws all six shapes before the equations state them: the reader
+who keeps those six silhouettes in mind needs nothing further from this section.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{degradation_profiles}
+  \caption{The six degradation time profiles at unit severity, drawn by evaluating the
+  generator's own trajectory code on the versioned fault catalog (norm N4): fouling with its
+  wash sawtooth (\cref{eq:fouling}), linear erosion (\cref{eq:erosion}), bilinear tip
+  clearance (\cref{eq:bilinear}), accelerating hot section --- efficiency down, flow capacity
+  up (\cref{eq:hotsection}) --- FOD steps, and an acute ramp--hold episode
+  (\cref{eq:acute}; zoomed, illustrative onset). Auto-generated.}
+  \label{fig:deg-profiles}
+\end{figure}
 
 \paragraph{Fouling --- saturating exponential with an exact wash sawtooth.} Dirt
 accumulates toward an asymptote with time constant $\tau$ (cycles), and each compressor
@@ -163,7 +177,7 @@ roughly 10\,000--20\,700 cycles (v1.1 exact figures in \cref{tab:fleet}).
 
 Each flight cycle emits two reports, mimicking airline ACARS practice: a takeoff snapshot (sea
 level, ambient offset drawn from a climate distribution) and a cruise snapshot
-(FL350/M0.78, commanded N1 drawn per flight). Truth channels pass through the sensor model of
+(flight level 350, i.e.\ \SI{35000}{ft}, at Mach 0.78; commanded N1 drawn per flight). Truth channels pass through the sensor model of
 the catalog: per-channel Gaussian noise (absolute or percentage $\sigma$), quantization to the
 recording resolution, additive drift ramps on the affected engines (37 of 100 --- matching the
 catalog's per-sensor probabilities summing to 0.36), and missing data as isolated losses plus
@@ -174,7 +188,8 @@ dataset.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{SynCFM56 v1.0 at a glance. Auto-generated from the fleet artifacts.}
+  \caption{SynCFM56 v1.1 --- the frozen evaluation dataset --- at a glance. Auto-generated
+  from the fleet artifacts.}
   \label{tab:fleet}
   \input{tables/table_fleet}
 \end{table}
@@ -212,7 +227,8 @@ irrelevant to truth-referenced scoring.
 \label{sec:audit-difficulty}
 
 The difficulty gate is designed to prevent a trivially easy dataset from flattering the AI: a
-deliberately weak classifier (multinomial logistic regression on the 16 raw measured channels)
+deliberately weak classifier (multinomial logistic regression on the 16 raw measured channels
+--- the eight channels of \cref{sec:channel-meaning} in each of the two per-flight reports)
 must \emph{not} solve the isolation task; the pre-set threshold is 60\,\% accuracy.
 
 \textbf{First pass: failed.} With the original labeling --- the dominant \emph{chronic}
@@ -262,12 +278,14 @@ argued away, and the fix strengthened the benchmark.
 \subsection{Realism}
 \label{sec:audit-realism}
 
-Quantitative checks of macroscopic behavior, all in \cref{tab:fleet}: the wash sawtooth is
-visible (mean exhaust-gas-temperature-margin (EGTM) recovery $+2.8$\,\si{\degreeCelsius}, positive at 99.75\,\% of the 400
-sampled wash events); end-of-life deviations carry the physical deterioration signature in
-100\,\% of engines ($\Delta$EGT $+68$\,K, $\Delta W_f$ $+5.7$\,\%); the measured-noise
-residual on drift-free engines reproduces the catalog $\sigma$ (2.51 vs.\ 2.50\,K); lives
-center on 15\,400 cycles with a realistic severe-degrader tail and no censored engines.
+Quantitative checks of macroscopic behavior, all in \cref{tab:fleet} (v1.1 figures; the
+v1.0 audit passed with near-identical values): the wash sawtooth is
+visible (mean exhaust-gas-temperature-margin (EGTM) recovery $+2.9$\,\si{\degreeCelsius},
+positive at 100\,\% of the sampled wash events); end-of-life deviations carry the physical
+deterioration signature in
+100\,\% of engines ($\Delta$EGT $+69$\,K, $\Delta W_f$ $+6.0$\,\%); the measured-noise
+residual on drift-free engines reproduces the catalog $\sigma$ (2.52 vs.\ 2.50\,K); lives
+center on $\sim$15\,100 cycles with a realistic severe-degrader tail and no censored engines.
 
 \subsection{Version 1.1: more episodes, and the gate bites again}
 \label{sec:fleet-v11}

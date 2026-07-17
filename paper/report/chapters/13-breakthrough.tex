@@ -97,7 +97,8 @@ engines gives \cref{tab:f10}:
     is worthless (\cref{fig:f10}, right). To our knowledge this is the first
     \emph{ground-truth-validated} identifiability guarantee for gas-path diagnosis.
   \item \textbf{H10.2 refuted as frozen --- then fixed, honestly.} The $\chi^2$ 90\,\%
-    posterior ellipsoid contains the true ten-dimensional health state in $85\,\%$ of test
+    posterior ellipsoid (the region that should contain the truth 90\,\% of the time if the
+    posterior covariance were exact) contains the true ten-dimensional health state in $85\,\%$ of test
     engines --- one below the frozen $86$--$94\,\%$ band, so the frozen verdict is refuted and
     stays refuted. The cause is precise: the Cram\'er--Rao bound is a lower bound for
     \emph{unbiased} estimators, while the regularized Kalman filter is deliberately biased
@@ -167,7 +168,7 @@ the floor ($1.6\times$, little to gain) while late-life leaves a $4\times$ epist
 
 We measure the floor by an oracle only a synthetic-truth fleet affords. At a chosen life
 fraction we take each engine's \emph{true} $10$-dimensional health vector $\mathbf{x}$
-(\cref{ch:trad}), find its $k=10$ nearest neighbours in standardized health space --- engines
+(\cref{sec:gpa}), find its $k=10$ nearest neighbours in standardized health space --- engines
 in a near-identical present condition --- and record the standard deviation of their
 \emph{true} remaining lives. Two engines in the same health state that nonetheless fail
 hundreds of cycles apart differ for reasons no present measurement contains; that spread is

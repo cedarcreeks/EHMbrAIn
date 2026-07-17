@@ -197,6 +197,22 @@ implementation fail --- and both are now embodied in tests:
     signal-to-noise an order of magnitude better than the trend estimate.
 \end{itemize}
 
+\Cref{fig:detector-anatomy} makes both lessons visible on one synthetic deviation series ---
+chronic aging plus an acute step and a slow ramp, run through the pipeline's own primitives.
+The innovations erase the chronic trend and shout at the step but never see the ramp; the
+CUSUM therefore fires on the step alone; only the dual-EWMA gap opens on both events.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.92\textwidth]{detector_anatomy}
+  \caption{Anatomy of the detection stack on a synthetic deviation series with a chronic
+  trend, an acute step (dashed) and a slow ramp (dotted), computed with the pipeline's own
+  Holt/CUSUM/EWMA primitives. The innovations (second panel) remove the chronic trend ---
+  lesson one; the CUSUM on them (third) catches the step but is blind to the ramp, which
+  only the dual-EWMA gap (fourth) captures --- lesson two. Auto-generated.}
+  \label{fig:detector-anatomy}
+\end{figure}
+
 \section{Results on the test fleet (v0 defaults)}
 \label{sec:trad-results}
 

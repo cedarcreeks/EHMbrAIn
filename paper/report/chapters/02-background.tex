@@ -163,7 +163,9 @@ of systematic baseline error.
 ($\theta = 1$). On an ISA$+30$ day the inlet runs at \SI{318}{\kelvin}, so
 $\theta = 318/288.15 = 1.104$, and the same healthy engine reads \SI{966}{\kelvin}. A naive
 comparison would report an ``$86$\,K deterioration'' where none exists. Corrected with the
-fitted exponent $a = 0.95$: $966 / 1.104^{0.95} = \SI{879}{\kelvin}$ --- the hot-day reading
+fitted exponent $a = 0.95$ (each channel gets its own regression-fitted exponent,
+\cref{sec:corrected-baseline}; the generic law above uses the textbook $\theta^{1}$, and the
+fit lands close to it): $966 / 1.104^{0.95} = \SI{879}{\kelvin}$ --- the hot-day reading
 collapses onto the standard-day one, and only \emph{genuine} health changes remain visible.
 This is why every deviation in this project is computed in corrected space.
 
@@ -274,7 +276,45 @@ different and are easy to tell apart. The angle is the single number that says h
 two faults are: $90^{\circ}$ means completely independent fingerprints (trivial to
 distinguish), $0^{\circ}$ means literally identical (impossible), and somewhere below about
 $15^{\circ}$ ordinary sensor noise blurs them into one. In the matrix above the two columns
-sit only a couple of degrees apart --- which is exactly why the next lines go wrong.
+sit only a couple of degrees apart --- \cref{fig:smearing-arrows} draws that geometry, and it
+is exactly why the next lines go wrong.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{tikzpicture}[scale=9.0, font=\footnotesize, >={Stealth}]
+    % axes
+    \draw[->, black!50] (-0.02,0) -- (1.32,0)
+      node[below left, font=\scriptsize] {$\Delta$EGT};
+    \draw[->, black!50] (0,-0.02) -- (0,0.76)
+      node[left, font=\scriptsize] {$\Delta W_f$};
+    % a well-separated signature, for contrast
+    \draw[->, black!35, dashed] (0,0) -- (0.28,0.62)
+      node[above, font=\scriptsize, align=center, text=black!55]
+      {a well-separated signature\\(noise cannot confuse it)};
+    % the two confusable signatures (columns of the toy H, 2.5 degrees apart)
+    \draw[->, thick, red!70!black] (0,0) -- (1.125,0.625)
+      node[pos=0.42, above=1pt, sloped, font=\scriptsize] {HPT signature};
+    \draw[->, thick, blue!70!black] (0,0) -- (1.0,0.5)
+      node[pos=0.6, below=1pt, sloped, font=\scriptsize] {HPC signature};
+    % readings
+    \fill[blue!70!black] (1.0,0.5) circle (0.006);
+    \node[anchor=west, font=\scriptsize, align=left] at (1.025,0.455)
+      {exact reading of\\a pure HPC fault};
+    \draw[black!60, very thin] (1.0,0.494) -- (1.03,0.465);
+    \draw[->, black, thick] (0.985,0.5) -- (0.915,0.5)
+      node[midway, below=1.5pt, font=\scriptsize] {noise};
+    \fill[red!70!black] (0.9,0.5) circle (0.006);
+    \draw[black!60, very thin] (0.9,0.508) -- (0.8,0.615);
+    \node[anchor=south, font=\scriptsize, align=center] at (0.78,0.62)
+      {noisy reading: lands\\exactly on the HPT ray};
+  \end{tikzpicture}
+  \caption{The toy problem's geometry. Each fault signature is an arrow in measurement space;
+  the two columns of $\mathbf{H}$ sit only $2.5^{\circ}$ apart. The exact reading of a pure
+  HPC fault (blue dot) lies on the HPC arrow, but a single noise-sized nudge on one axis
+  moves it exactly onto the HPT ray (red dot) --- the diagnosis flips to the wrong component.
+  A well-separated signature (dashed) shows why large angles are immune.}
+  \label{fig:smearing-arrows}
+\end{figure}
 
 Let the truth
 be an HPC fault only: $\mathbf{x} = (-1, 0)^{\mathsf T}$, giving exact measurements

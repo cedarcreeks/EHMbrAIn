@@ -1325,6 +1325,137 @@ def fleet_assets():
     print('  fleet assets done')
 
 
+def fig_degradation_profiles():
+    """The six degradation time profiles, evaluated with the generator's own
+    trajectory code and the versioned catalog (norm N4: the report's shapes
+    and the generator's cannot diverge). Illustrative severity = 1.0."""
+    from ehmbrain.datagen.trajectories import (PARAM_INDEX, _fouling_series,
+                                               _mechanism_series)
+    catalog = yaml.safe_load((REPO_ROOT / 'conf' / 'fault_catalog.yaml').read_text())
+    mechs = catalog['mechanisms']
+    n = 16000
+    cycles = np.arange(n, dtype=float)
+    kc = cycles / 1000
+    fig, axes = plt.subplots(2, 3, figsize=(6.4, 3.7))
+
+    ax = axes[0, 0]
+    washes = list(range(1200, n, 1200))
+    x = _fouling_series(mechs['fouling'], 1.0, cycles, washes, [0.5] * len(washes))
+    ax.plot(kc, x[:, PARAM_INDEX['hpc.flow']], color=BLUE, lw=1.1)
+    for w in washes:
+        ax.axvline(w / 1000, color=BAND, lw=0.5, zorder=0)
+    ax.set_title(r'Fouling + washes ($\Delta\Gamma_{HPC}$)', fontsize=8)
+
+    ax = axes[0, 1]
+    x = _mechanism_series('erosion', mechs['erosion'], 1.0, n, cycles)
+    ax.plot(kc, x[:, PARAM_INDEX['hpc.eta']], color=BLUE, lw=1.1)
+    ax.set_title(r'Erosion ($\Delta\eta_{HPC}$)', fontsize=8)
+
+    ax = axes[0, 2]
+    x = _mechanism_series('clearance', mechs['clearance'], 1.0, n, cycles)
+    ax.plot(kc, x[:, PARAM_INDEX['hpt.eta']], color=BLUE, lw=1.1)
+    ax.set_title(r'Tip clearance ($\Delta\eta_{HPT}$)', fontsize=8)
+
+    ax = axes[1, 0]
+    x = _mechanism_series('hot_section', mechs['hot_section'], 1.0, n, cycles)
+    ax.plot(kc, x[:, PARAM_INDEX['hpt.eta']], color=BLUE, lw=1.1,
+            label=r'$\Delta\eta_{HPT}$')
+    ax.plot(kc, x[:, PARAM_INDEX['hpt.flow']], color='#E8590C', lw=1.1,
+            label=r'$\Delta\Gamma_{HPT}$')
+    ax.legend(frameon=False, fontsize=6, loc='upper left')
+    ax.set_title('Hot section (accelerating)', fontsize=8)
+
+    ax = axes[1, 1]
+    fod = np.zeros(n)
+    for at, mag in ((4000, -0.8), (9500, -1.2)):  # illustrative Poisson arrivals
+        fod[at:] += mag
+    ax.plot(kc, fod, color=BLUE, lw=1.1)
+    ax.set_title(r'FOD steps ($\Delta\eta_{fan}$)', fontsize=8)
+
+    ax = axes[1, 2]
+    onset, ramp, mag = 8000, 500, -1.0  # illustrative episode (catalog ramp range 50-500)
+    ax.plot(kc, mag * np.clip((cycles - onset) / ramp, 0.0, 1.0), color=BLUE, lw=1.1)
+    ax.set_xlim(7.0, 10.0)
+    ax.set_title(r'Acute episode (ramp--hold, zoom)', fontsize=8)
+
+    for ax in axes.flat:
+        if ax is not axes[1, 2]:
+            ax.set_xlim(0, n / 1000)
+    for ax in axes[1]:
+        ax.set_xlabel('Flight cycles [thousands]', fontsize=7)
+    for ax in axes[:, 0]:
+        ax.set_ylabel('deviation [%]', fontsize=7)
+    for ax in axes.flat:
+        ax.tick_params(labelsize=6)
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / 'degradation_profiles.pdf')
+    plt.close(fig)
+
+
+def fig_detector_anatomy():
+    """A synthetic deviation series (chronic aging + step + ramp) run through
+    the pipeline's own detector primitives: Holt innovations, the CUSUM
+    statistic, and the dual-EWMA gap. Illustrates the two detector-design
+    lessons of the traditional-EHM chapter."""
+    from ehmbrain.trad.pipeline import ewma, holt_smooth
+    rng = np.random.default_rng(0)
+    n = 8000
+    t = np.arange(n, dtype=float)
+    step_at, ramp_at, ramp_len = 3000, 5500, 400
+    dev = 1.2 * (1 - np.exp(-t / 3000.0)) + rng.normal(0, 0.22, n)
+    dev[step_at:] += 1.2
+    dev += 1.0 * np.clip((t - ramp_at) / ramp_len, 0.0, 1.0)
+
+    level, _, innov = holt_smooth(dev)
+    z = innov / np.nanstd(innov[200:2000])
+    z = np.where(np.isfinite(z), z, 0.0)
+    k_ref, h = 0.75, 8.0
+    gp = np.zeros(n)
+    g = 0.0
+    for i, v in enumerate(z):  # same recursion as pipeline.cusum (g+ branch)
+        g = max(0.0, g + v - k_ref)
+        gp[i] = g
+    gap = ewma(dev, 0.1) - ewma(dev, 0.005)
+
+    fig, axes = plt.subplots(4, 1, figsize=(6.2, 5.2), sharex=True)
+    kc = t / 1000
+    for ax in axes:
+        ax.axvline(step_at / 1000, color=GRAY, lw=0.7, linestyle='--', zorder=0)
+        ax.axvline(ramp_at / 1000, color=GRAY, lw=0.7, linestyle=':', zorder=0)
+        ax.tick_params(labelsize=6)
+
+    axes[0].plot(kc, dev, color=BAND, lw=0.4)
+    axes[0].plot(kc, level, color=BLUE, lw=1.2)
+    axes[0].set_ylabel('deviation [%]', fontsize=7)
+    axes[0].set_title('measured deviation (gray) and Holt level (blue); '
+                      'step (dashed) and ramp (dotted) onsets', fontsize=7)
+
+    axes[1].plot(kc, z, color=BLUE, lw=0.5)
+    axes[1].set_ylabel(r'innovation [$\sigma$]', fontsize=7)
+    axes[1].set_title('Holt innovations: the chronic trend is gone; the step shouts, '
+                      'the slow ramp stays inside the noise', fontsize=7)
+
+    axes[2].plot(kc, gp, color=BLUE, lw=1.0)
+    axes[2].axhline(h, color='#A61E4D', lw=0.8, linestyle='--')
+    axes[2].set_ylabel(r'CUSUM $g^{+}$', fontsize=7)
+    axes[2].set_title('CUSUM on the innovations: fires on the step, blind to the ramp',
+                      fontsize=7)
+
+    base = gap[200:2500]
+    med = np.nanmedian(base)
+    mad = np.nanmedian(np.abs(base - med))
+    axes[3].plot(kc, gap, color=BLUE, lw=1.0)
+    axes[3].axhline(med + 5.0 * 1.4826 * mad, color='#A61E4D', lw=0.8, linestyle='--')
+    axes[3].set_ylabel('EWMA gap [%]', fontsize=7)
+    axes[3].set_title('dual-EWMA gap: opens by the fault magnitude on both events '
+                      '(threshold dashed)', fontsize=7)
+    axes[3].set_xlabel('Flight cycles [thousands]', fontsize=7)
+
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / 'detector_anatomy.pdf')
+    plt.close(fig)
+
+
 def artifact_assets():
     """Assets derived from on-disk analysis artifacts (ICM, CEA, decks)."""
     icm_path = REPO_ROOT / 'data' / 'processed' / 'icm' / 'icm_report.json'
@@ -1361,6 +1492,8 @@ def artifact_assets():
     fig_wall()
     fig_lrul()
     fig_confusable_angles()
+    fig_degradation_profiles()
+    fig_detector_anatomy()
     fig_isolation_confusion()
     fig_detection_delays()
     fig_optuna_convergence()

@@ -41,12 +41,18 @@ can be checked.
     \node[gate, below=1.5mm of f5] {verdicts H1--H5};
   \end{tikzpicture}
   \caption{The six project phases, their gates (H1--H6) and their key artifacts. Everything to
-  the left of an arrow must pass its gate before the next phase starts.}
+  the left of an arrow must pass its gate before the next phase starts. The gate labels H1--H6
+  are \emph{milestone} numbers, independent of the scientific hypotheses H1--H5 of
+  \cref{tab:hypotheses}.}
   \label{fig:pipeline}
 \end{figure}
 
 The testbed is organized in six chained phases, each closed by a milestone (\emph{gate}) with a
-measurable acceptance criterion:
+measurable acceptance criterion. One naming warning before the list: the milestone gates are
+historically numbered H1--H6, a numbering that predates and is \emph{independent of} the
+scientific hypotheses H1--H5 of \cref{tab:hypotheses} --- ``gate H2'' (the dataset audit) and
+``hypothesis H2'' (confusable-fault isolation) are different objects, and the text always says
+which is meant:
 
 \begin{enumerate}
   \item[\textbf{F1.}] \textbf{Thermodynamic twin} of the CFM56-7B26 in pyCycle: design point,
@@ -70,6 +76,13 @@ measurable acceptance criterion:
     statistical tests, ablations, and sim-to-real validation on N-CMAPSS. Gate H5.
   \item[\textbf{F6.}] Case studies, interactive dashboard, and final writing. Gate H6.
 \end{enumerate}
+
+The six phases are the \emph{main study}; the chapters beyond \cref{ch:cases} extend the
+chain under the same gate discipline (a hypothesis frozen before each run, a gate allowed to
+fail): F7, operating-point tomography (\cref{ch:tomography}); F8, the limitation-overcoming
+program (\cref{ch:overcoming}); F10/F11, the two ground-truth-validated certificates
+(\cref{ch:breakthrough}); and the economic study (\cref{ch:economics}). Their drivers and
+pre-registration tags are inventoried in \cref{sec:replication}.
 
 \section{Machine learning without prior background}
 \label{sec:ml-primer}
