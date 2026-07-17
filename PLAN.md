@@ -25,7 +25,7 @@ extendido (P25/T25, PS3/T3) · flota ~100 motores run-to-failure.
 **Para TODO el documento, sin excepción**: explicaciones sobre el origen de los datos, qué
 representan, cómo se generan y qué es synthetic data; explicaciones sobre las metodologías;
 detalles sobre cada técnica de IA. El report debe ser un **handbook completo** y a la vez
-servir como **tesis doctoral**: un trabajo con **todos los ingredientes que intervienen bien
+alcanzar **nivel de tesis doctoral**: un trabajo con **todos los ingredientes que intervienen bien
 presentados y caracterizados** (origen · significado físico/matemático · modelo formal ·
 explicación guiada · rol en el argumento). Aplica retroactivamente (checklist §F9) y a todo
 texto futuro desde el primer borrador. Ningún capítulo se considera terminado si un
@@ -169,7 +169,7 @@ El proyecto produce cuatro artefactos publicables:
 
 ## 1. Contribuciones académicas (la innovación, explícita)
 
-Un TFM/paper vive de sus *claims*. Estos son los que este plan permite defender, ordenados de más
+Un paper vive de sus *claims*. Estos son los que este plan permite defender, ordenados de más
 seguro a más ambicioso:
 
 - **C1. Benchmark abierto SynCFM56.** Primer dataset sintético público de GPA sobre un motor
@@ -377,7 +377,7 @@ EHMbrAIn/
 ├── notebooks/       # exploración; nada de lógica de producción
 ├── data/            # DVC-tracked: raw/ interim/ processed/
 ├── dashboard/       # Streamlit
-└── paper/           # LaTeX del paper/TFM, figuras generadas por eval/
+└── paper/           # LaTeX del report/paper, figuras generadas por eval/
 ```
 
 Herramientas: **uv** (entorno), **DVC** (datos + pipeline `dvc.yaml` con stages
@@ -391,7 +391,7 @@ Cuatro bloques con fichas de 1 página: (a) GPA clásico — Urban 1972, Volponi
 Kalman, fusión), Doel; (b) benchmarks — Saxena C-MAPSS 2008, Arias-Chao N-CMAPSS 2021, PHM08;
 (c) IA en PHM de turbinas — surveys recientes + LSTM/TCN/Transformer para RUL; (d) huecos que
 justifican C1–C7 (conformal en PHM, XAI física, pre-registro). Salida directa al estado del arte
-del TFM.
+del report.
 **DoD:** documento `paper/related_work.md` con ≥40 referencias clasificadas y los huecos marcados.
 
 **WP0.3 — Especificación de datos y fallos (contrato).**
@@ -433,7 +433,7 @@ operación. Análisis SVD: rank, número de condición, ángulos entre firmas (d
 **WP1.5 — Validación y documento del modelo.**
 Tabla modelo-vs-referencias, curvas off-design, límites declarados (sin transitorios, sin
 humedad, sin Reynolds — documentados como fuera de alcance).
-**DoD:** informe `paper/model_validation.md` listo para ser sección del TFM.
+**DoD:** informe `paper/model_validation.md` listo para ser sección del report.
 
 **★ H1 (gate):** errores WP1.2 dentro de objetivo; ICM físicamente coherente; decks + interpolador
 publicados como artefacto DVC versionado.
@@ -572,7 +572,7 @@ IA (y por el Kalman aumentado — matiz importante);
 **WP6.2 — Dashboard Streamlit.** Vista flota (ranking de riesgo), vista motor (tendencias, salud
 estimada vs verdad, RUL con intervalos), vista comparación (tradicional vs IA lado a lado), replay
 temporal de casos de estudio.
-**WP6.3 — Paper/TFM.** Estructura TFM: 1 Introducción y motivación · 2 Estado del arte ·
+**WP6.3 — Report/paper.** Estructura del report: 1 Introducción y motivación · 2 Estado del arte ·
 3 Modelo de performance CFM56-7B · 4 Generación de flota sintética · 5 EHM tradicional ·
 6 EHM con IA · 7 Protocolo experimental pre-registrado · 8 Resultados · 9 Discusión y limitaciones
 · 10 Conclusiones y trabajo futuro. Paper derivado (formato corto) para venue.
@@ -673,7 +673,7 @@ crítico es F1→F2 (todo depende del gemelo y del dataset).
 9. **Licencias:** código MIT, dataset CC-BY 4.0, pyCycle es Apache-2.0 (compatible).
 10. **Hardware:** todo el pipeline debe correr en un portátil (CPU) salvo entrenamiento de redes
     (GPU pequeña); presupuesto de cómputo se registra y reporta.
-11. **Idioma:** memoria TFM en español, paper y repo en inglés.
+11. **Idioma:** report, paper y repo en inglés.
 12. **Criterio de fin de vida:** EGTM ≤ 0 en despegue día caliente (ISA+15 derate real) o fallo
     discreto — el mismo para verdad-terreno, tradicional e IA.
 
@@ -739,7 +739,7 @@ hipótesis pre-registrable y gate propio, misma disciplina H0–H6.
 ## F9 — Estándar handbook/tesis doctoral para TODO el report (directriz 2026-07-04, ampliada)
 
 **Directriz ampliada del usuario**: las reglas de completitud no son solo para conceptos
-sueltos — el documento entero debe ser handbook completo Y tesis doctoral: todos los
+sueltos — el documento entero debe ser handbook completo Y de nivel de tesis doctoral: todos los
 ingredientes que intervienen bien presentados y caracterizados (origen de los datos, qué
 representan, cómo se generan, qué es synthetic data, metodologías explicadas, cada técnica
 de IA detallada). Norma permanente N7.
