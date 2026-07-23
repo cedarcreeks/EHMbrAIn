@@ -8,7 +8,12 @@ Outputs under data/processed/fleet/:
     events.parquet      wash / FOD events per engine
     fleet_index.json    per-engine life, split, EGTM_new, severity multipliers
 
-Usage: uv run python scripts/make_fleet.py [n_engines]
+Usage: uv run python scripts/make_fleet.py [n_engines] [surrogate] [noise=<mult>]
+
+`noise=<mult>` scales every sensor sigma in the catalog by <mult> and writes to
+data/processed/fleet_noise<mult>/ — the noise axis of the determinability map
+(contribution C6). Health trajectories, seeds and splits are untouched, so the
+only variable that moves is measurement quality.
 """
 
 import json
@@ -65,6 +70,19 @@ def main():
         catalog['fleet']['emitter'] = 'surrogate'
         catalog['fleet']['version'] = '2.0'
         out_dir = OUT_DIR.parent / 'fleet_v2'
+
+    noise = next((a for a in sys.argv[1:] if a.startswith('noise=')), None)
+    if noise:
+        mult = float(noise.split('=', 1)[1])
+        for spec in catalog['sensors'].values():
+            if not isinstance(spec, dict):
+                continue
+            for key in ('sigma', 'sigma_pct'):
+                if key in spec:
+                    spec[key] *= mult
+        catalog['fleet']['version'] = f"{catalog['fleet']['version']}-noise{mult:g}"
+        out_dir = OUT_DIR.parent / f'fleet_noise{mult:g}'
+        print(f'sensor noise scaled by {mult:g} -> {out_dir.name}')
     out_dir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
     dfs, all_events, index = [], [], []

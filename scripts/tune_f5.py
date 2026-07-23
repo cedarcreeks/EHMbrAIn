@@ -29,6 +29,7 @@ from ehmbrain.trad.pipeline import (COCKPIT, BaselineModel, cusum, ewma,
 REPO_ROOT = Path(__file__).resolve().parents[1]
 F5 = REPO_ROOT / 'data' / 'processed' / 'f5'
 FLEET_DIR = REPO_ROOT / 'data' / 'processed' / 'fleet'
+_FLEET_DEFAULT = FLEET_DIR
 
 CONFUSABLE = ('hpc.eta', 'hpt.eta', 'hpt.flow')
 EVAL_FRACS = (0.5, 0.7, 0.9)
@@ -40,9 +41,18 @@ RUL_CAP_CY = 12000.0
 _CACHE = {}
 
 
+def use_fleet(fleet_dir):
+    """Point the shared evaluators at another fleet directory and clear the
+    cache. Used only by the noise sweep (C6); the F5/F7 paths never call it, so
+    their frozen behaviour is unchanged."""
+    global FLEET_DIR
+    FLEET_DIR = Path(fleet_dir)
+    _CACHE.clear()
+
+
 def fleet_cache():
     if 'fleet' not in _CACHE:
-        fleet = load_fleet_features()
+        fleet = load_fleet_features(FLEET_DIR if FLEET_DIR != _FLEET_DEFAULT else None)
         _CACHE['fleet'] = fleet
         _CACHE['norm'] = normalization(fleet)
         bm = BaselineModel()
