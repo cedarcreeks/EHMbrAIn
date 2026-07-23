@@ -67,7 +67,10 @@ report:
 onepager:
 	cd paper/onepager && latexmk -pdf -outdir=build EHMbrAIn.tex && cp build/EHMbrAIn.pdf EHMbrAIn.pdf
 
+slides:
+	cd paper/slides && latexmk -pdf -outdir=build EHMbrAIn-slides.tex && cp build/EHMbrAIn-slides.pdf EHMbrAIn-slides.pdf
+
 test:
 	uv run pytest -q
 
-.PHONY: all model fleet audits pipelines f5 f8 evidence report onepager test
+.PHONY: all model fleet audits pipelines f5 f8 evidence report onepager slides test
