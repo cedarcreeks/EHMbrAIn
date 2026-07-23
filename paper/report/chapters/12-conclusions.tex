@@ -63,6 +63,9 @@ visible as wins.
     $0$--$25\,\%$; capped early by the floor & \cref{sec:ops-conversion} \\
   Which sensor rescues which fault? & Station probes: HPC efficiency $45\times$; isolation
     0.15$\to$0.92 & \cref{sec:bt-honesty}, \cref{sec:f8-lh2} \\
+  Would quieter sensors of the same set help? & \textbf{No}: halving every $\sigma$ leaves
+    confusable isolation at $0.31$--$0.38$; buy new stations, not better probes &
+    \cref{sec:noise-sweep} \\
   Can a virtual sensor or clever algorithm substitute a physical one? & \textbf{No} --- it
     adds no information (rank unchanged) & \cref{sec:f8-lh2} \\
   How much will a compressor wash recover? & Estimable from trajectory shape, $R^2=0.86$ &
@@ -125,7 +128,14 @@ Three confirmations, two refutations (\cref{tab:verdicts}), and the split is the
     would fail.
   \item \textbf{Sensors bound everyone}: the confusable wall (H2) is informational, not
     algorithmic. The extended gas-path set quintuples the worst signature angle; no model
-    recovers what probes never measured.
+    recovers what probes never measured --- and halving the noise of the \emph{existing}
+    probes does not help either (\cref{sec:noise-sweep}), which makes the recommendation
+    specific: new stations, not better probes at the old ones.
+  \item \textbf{Learning degrades gracefully, thresholds fall off a cliff}: across a factor of
+    eight in sensor noise the AI's remaining-life error is flat and its detection recall falls
+    by a third, while the tuned classical detector goes from $0.48$ recall to zero and the
+    margin extrapolation loses $40\,\%$ of its accuracy. Robustness to instrumentation quality,
+    not peak accuracy, may be learning's most transferable advantage here.
 \end{itemize}
 
 \section{Guidance for adoption}

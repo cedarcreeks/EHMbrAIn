@@ -431,6 +431,113 @@ document that rests on \emph{the confusable core} (H2, the certificate, the sens
 recommendation) is calibration-robust, and the claims that rest on the exact confusable
 \emph{count} are now known not to be.
 
+\section{Closing C6: the noise axis of the determinability map}
+\label{sec:noise-sweep}
+
+\paragraph{The axis that was missing.} Contribution C6 promised a determinability map over
+three axes --- \emph{sensors} $\times$ \emph{noise} $\times$ \emph{data size} --- telling an
+operator when each approach wins. Two were delivered and one was not. The sensor axis runs
+through the whole document (cockpit versus extended, from \cref{sec:icm} to
+\cref{ch:gpa-practice} to the certificate); the data-size axis is the H4 ablation at
+$10/25/100\,\%$ of the training engines (\cref{sec:ai-hybrid}). But every result in this
+document, without exception, lives at \emph{one} sensor-quality setting: the literature
+values frozen in the fault catalog. Whether the verdicts survive better or worse
+instrumentation was, until this section, unknown --- and unknown in the direction that
+matters, because sensor quality is the one axis an operator can buy along.
+
+\paragraph{Design.} The fleet is regenerated with every sensor $\sigma$ scaled by
+$0.5$, $1$, $2$ and $4$, holding everything else byte-identical: same seed, same health
+trajectories, same splits, same fault magnitudes and onsets. Measurement quality is the only
+variable that moves, so any change in a score is attributable to it alone; the $1\times$ level
+reproduces the frozen v1.1 fleet exactly (median life $15\,139$ cycles either way). Both
+families are scored at their \textbf{F5-tuned configurations, unchanged}. That choice is
+disclosed rather than buried: the map therefore measures how the systems an operator would
+have \emph{fielded} degrade as sensors change, not the best score reachable at each level ---
+which would need eight further Optuna campaigns and answers a different question.
+Pre-registered as \code{docs/prereg-v14.md}, tag \code{prereg-v14}.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The determinability map, noise axis: both tuned families across a
+  $0.5$--$4\times$ range of sensor noise. Auto-generated.}
+  \label{tab:noise-sweep}
+  \input{tables/table_noise_sweep}
+\end{table}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{Noise-axis pre-registered verdicts (\texttt{prereg-v14}). Auto-generated.}
+  \label{tab:noise-verdicts}
+  \input{tables/table_noise_verdicts}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{noise_sweep}
+  \caption{How the two tuned families degrade as sensor noise is scaled from half to four
+  times its nominal value, on prognosis (left), confusable isolation (centre) and detection
+  (right). The $1\times$ point is the fleet every other chapter uses. Auto-generated.}
+  \label{fig:noise-sweep}
+\end{figure}
+
+\paragraph{Prognosis is noise-proof, and the advantage widens --- H-N.1 confirmed.} The AI's
+RUL error at $90\,\%$ of life is essentially \emph{flat} across a factor of eight in sensor
+noise: $867$, $862$, $860$, $815$ cycles, a spread smaller than the seed-to-seed variation of
+the training itself ($\pm44$--$66$ cycles). The traditional margin extrapolation, over the
+same range, degrades from $1\,955$ to $2\,786$. The advantage therefore does not merely
+survive worse sensors --- it \textbf{grows}, from $2.3\times$ at half noise to $3.4\times$ at
+quadruple. The mechanism is the one H3 rested on all along: remaining life is a
+temporal-aggregation task, and a sequence model that reads a thousand flights averages
+per-flight noise into insignificance, while a Theil--Sen slope through a noisier margin series
+gets both a worse slope and a worse extrapolation from it. For an operator, this is the
+robustness statement that matters commercially: the prognosis business case of
+\cref{ch:economics} does not depend on sensor quality.
+
+\paragraph{Detection tells the same story more sharply.} Traditional recall collapses from
+$0.48$ at half noise to $0.13$ at nominal, $0.04$ at double and $0.00$ at quadruple --- with
+false alarms falling to zero alongside it, because the tuned persistence rules simply stop
+firing at all. The AI detector goes $0.52 \to 0.48 \to 0.39 \to 0.35$ at a constant single
+false alarm. This puts the H1 result (\cref{sec:res-h1}) in a new light: the tuned traditional
+detector is not merely worse at nominal noise, it is \emph{brittle} to sensor quality, and it
+happened to be measured just past the edge of where its thresholds work. Its thresholds were
+selected on a validation split with two clean engines, and that fragility is now visible as a
+slope rather than as a single unlucky number.
+
+\paragraph{The tie does not hold everywhere --- H-N.2 refuted, and carefully.} The
+confusable-isolation gap between the families is $7.7$\,pp at half noise, exactly $0.0$\,pp at
+nominal (the H2 tie, reproduced), then $23.1$ and $30.8$\,pp at double and quadruple noise ---
+the AI ahead. Beyond $10$\,pp twice, so the frozen criterion fails and stays failed. Two things
+must be said about it, in this order. First the honest caveat: there are \textbf{thirteen}
+confusable test episodes, so $10$\,pp is $1.3$ episodes and the $23$\,pp gap is three of them.
+A threshold that fine was mis-calibrated against the sample it would be judged on --- the same
+error that retired H7.3 --- and no claim of statistical separation is made here. Second, the
+direction is mechanistically what one would expect and is worth recording as a hypothesis for
+someone with more episodes: the nearest-signature rule decides from a single measured step, so
+noise hits it undiluted, while the learner's features average step, slope and level over
+hundreds of cycles. \emph{If} that holds up, the practical corollary is that the physics rule's
+edge at nominal noise is conditional on good instrumentation, and degrades where the learner
+does not.
+
+\paragraph{And the wall is geometric, not noise-driven --- H-N.3 confirmed.} This is the
+result C6 was owed. Halving every sensor $\sigma$ --- a genuinely expensive instrumentation
+upgrade --- leaves confusable isolation at $0.38$ (traditional) and $0.31$ (AI), both below
+the coin-flip line and both far from the $0.92$ that \emph{different} sensors deliver
+(\cref{sec:f8-lh2}). Quieter sensors of the same set do not break the wall, because two
+signatures $1.3^{\circ}$ apart stay $1.3^{\circ}$ apart however precisely they are measured:
+noise sets how far apart two faults must be to be separable, but the geometry decides whether
+they ever are. The purchase order the document has been writing since \cref{sec:res-h2} is
+therefore specific in a way it could not be before: \textbf{buy probes at new stations, not
+better probes at the old ones}.
+
+\paragraph{The map, assembled.} With this axis, C6 is complete and reads as three different
+answers to ``when does each approach win''. Along \emph{data size}, the learner saturates at
+about seventeen engines and physics features never help (\cref{sec:ai-hybrid,sec:f8-l6}).
+Along \emph{sensors}, both families are bounded by the same geometry, and the extended set
+moves both (\cref{ch:gpa-practice,sec:f8-lh2}). Along \emph{noise}, the two families diverge:
+learning degrades gracefully and classical thresholds fall off a cliff. The single sentence an
+adopting organization should take away is that \emph{sensor quality changes who wins, sensor
+placement changes what is knowable, and only the second one has a ceiling}.
+
 \section{The F8 program so far}
 \label{sec:f8-summary}
 
@@ -446,7 +553,7 @@ are allowed to fail.
   \centering\small
   \caption{The ten executed F8 limitation-overcoming lines and their pre-registered verdicts.}
   \label{tab:f8-summary}
-  \begin{tabular}{>{\raggedright\arraybackslash}p{0.06\textwidth}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}}
+  \begin{tabular}{>{\raggedright\arraybackslash}p{0.085\textwidth}>{\raggedright\arraybackslash}p{0.40\textwidth}>{\raggedright\arraybackslash}p{0.435\textwidth}}
     \toprule
     Line & Question & Verdict \\
     \midrule
@@ -460,6 +567,7 @@ are allowed to fail.
     L-H2 & Does breaking the wall need a \emph{real} sensor? & \textbf{Yes} --- real station sensors lift confusable isolation 0.15$\to$0.92; a virtual one adds nothing (\cref{sec:f8-lh2}) \\
     L-RUL & Does an advanced classical prognostic narrow H3? & \textbf{Yes, but} --- it halves the traditional error (1981$\to$1118); the AI still wins 858 (\cref{sec:f8-lrul}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
+    C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\
     \bottomrule
   \end{tabular}
 \end{table}

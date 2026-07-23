@@ -93,7 +93,9 @@ differently --- and the class tells them what evidence their alternative needs.
     scatter is a manufacturing-variability assumption [A] \\
   Severity multiplier spread & LogNormal $(0,\,0.3)$ & [A] & produces the observed-in-service
     spread of lives (\cref{tab:fleet}); a fleet-realism knob, not a fitted quantity \\
-  Sensor noise / quantization & catalog table & [L] & typical ACARS-class instrumentation \\
+  Sensor noise / quantization & catalog table & [L] & typical ACARS-class instrumentation;
+    sensitivity now \emph{measured} rather than declared --- swept $0.5$--$4\times$ in
+    \cref{sec:noise-sweep} \\
   Acute-fault targets \& magnitudes & 6 params, 0.4--1.5\,\% & [D] & drawn from the ICM
     confusable set; magnitudes bracket the detectability edge (sub-noise to clearly visible) \\
   Acute probability / onset & 0.5 / 30--90\,\% of life & [T] & enough episodes per class for

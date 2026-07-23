@@ -59,3 +59,5 @@ data/processed/icm/icm_robustness.json
 
 # v2 fleet parquets (regenerable, large)
 data/processed/fleet_v2/*.parquet
+# noise-axis fleets (C6): regenerable from the catalog with noise=<mult>
+data/processed/fleet_noise*/

@@ -48,6 +48,7 @@ f8:
 	$(PY) scripts/f8_lrul_advanced.py
 	$(PY) scripts/f8_l9_pcs.py
 	$(PY) scripts/f_icm_robustness.py
+	$(PY) scripts/f_noise_sweep.py
 	$(PY) scripts/f10_certificate.py
 	$(PY) scripts/f11_prognostic_floor.py
 	$(PY) scripts/f_ops_conversion.py
