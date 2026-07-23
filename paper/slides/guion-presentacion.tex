@@ -1,0 +1,898 @@
+% Guión de la presentación EHMbrAIn (castellano).
+% Build:  latexmk -pdf -outdir=build guion-presentacion.tex   (desde paper/slides/)
+%
+% Acompaña a EHMbrAIn-slides.pdf. Las diapositivas están en inglés: los títulos
+% se citan aquí en inglés para poder localizarlas, la narración va en castellano.
+%
+% NOTA (repositorio público): el autor permanece anónimo en el repositorio.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.6cm,right=2.6cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+% es-noshorthands: los shorthands de babel-spanish ("~, "<, etc.) rompen
+% tikz/siunitx y dieron problemas en este proyecto. Desactivados a propósito.
+\usepackage[spanish,es-noshorthands,es-noquoting]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{inkc}{HTML}{212529}
+\definecolor{bluec}{HTML}{4263EB}
+\definecolor{redc}{HTML}{A61E4D}
+\definecolor{grayc}{HTML}{868E96}
+\color{inkc}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\linespread{1.06}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{grayc} EHMbrAIn --- guión de presentación}
+\fancyhead[R]{\footnotesize\color{grayc}\thepage}
+\renewcommand{\headrulewidth}{0.2pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{grayc}\leaders\hrule height \headrulewidth\hfill}}
+
+% --- marcadores de diapositiva ------------------------------------------
+% \diapo{nº pdf}{título en pantalla}
+\newcommand{\diapo}[2]{%
+  \vspace{0.9em}%
+  \noindent{\color{bluec}\rule{\linewidth}{0.6pt}}\par\vspace{-0.35em}%
+  \noindent{\bfseries\color{bluec} Diapositiva #1}\quad{\bfseries #2}\par
+  \vspace{-0.15em}}
+
+% narración: lo que se dice en voz alta
+\newenvironment{decir}%
+  {\begin{list}{}{\leftmargin=1.1em \rightmargin=0em \listparindent=0pt
+       \itemindent=0pt \parsep=0.5em \topsep=0.4em}\item[]\ignorespaces}%
+  {\end{list}}
+
+% acotación escénica: no se dice
+\newcommand{\escena}[1]{{\itshape\color{grayc}[#1]}}
+% énfasis de cifra clave
+\newcommand{\cifra}[1]{\textbf{#1}}
+
+\title{\vspace{-1.5cm}\textbf{EHMbrAIn}\\[2mm]
+  \large Guión de la presentación}
+\author{}
+\date{\small Acompaña a \texttt{EHMbrAIn-slides.pdf} (44 páginas, 31 diapositivas numeradas)}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-1.2cm}
+
+\section*{Cómo usar este guión}
+
+Los números de diapositiva son \textbf{páginas del PDF}. El texto sangrado es lo
+que se dice en voz alta; lo que aparece \escena{así} son acotaciones, no se
+pronuncian.
+
+Las diapositivas están en inglés y sus títulos se citan aquí en inglés para poder
+localizarlas de un vistazo. Los términos técnicos que aparecen en pantalla se
+mantienen en inglés la primera vez que salen, con la traducción al lado.
+
+\begin{center}\small
+\begin{tabular}{@{}llr@{}}
+  \toprule
+  Bloque & Diapositivas & Tiempo \\
+  \midrule
+  Apertura & 1--2 & 2\,min \\
+  1. El problema & 3--6 & 4\,min \\
+  2. La física, y por qué el diagnóstico es difícil & 7--11 & 6\,min \\
+  3. El banco de pruebas & 12--16 & 5\,min \\
+  4. Qué entrega el GPA clásico & 17--21 & 5\,min \\
+  5. El concurso pre-registrado & 22--28 & 7\,min \\
+  6. Más allá del muro & 29--35 & 7\,min \\
+  7. Qué llevarse & 36--40 & 4\,min \\
+  \midrule
+  \textbf{Total} & & \textbf{40\,min} $+$ 10 de preguntas \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Si vas justo de tiempo}, recorta en este orden: diapositiva 20
+(detectabilidad), 28 (sim-to-real), 33 (piso prognóstico), 35 (economía).
+\textbf{No recortes nunca} la 10, la 11, la 25 ni la 31: el muro de
+observabilidad es la espina dorsal del argumento y sin esas cuatro la conclusión
+de compra no se sostiene.
+
+% =========================================================================
+\section*{Apertura --- diapositivas 1--2 \hfill \normalsize\color{grayc} 2 min}
+% =========================================================================
+
+\diapo{1}{Portada}
+\begin{decir}
+Este es un estudio sobre una comparación que la literatura lleva tiempo haciendo
+mal. El aprendizaje automático se aplica ya de forma rutinaria a la monitorización
+de salud de motores, y de forma igual de rutinaria se publica que gana a los
+métodos clásicos. Lo que voy a defender es que casi ninguna de esas comparaciones
+es justa; que cuando haces una que sí lo es, la respuesta se parte de una manera
+interesante; y que esa partición te dice exactamente dónde hay que gastar el
+dinero.
+\end{decir}
+
+\diapo{2}{Where this talk goes}
+\begin{decir}
+Voy a trabajar en dos niveles todo el rato. Cada diapositiva abre con la
+afirmación en una línea y debajo enseña el mecanismo que la produce. Si solo
+sigues las líneas de arriba te llevas el argumento completo; el resto está ahí
+para quien quiera comprobarlo.
+\end{decir}
+\escena{No leas el índice en voz alta. Señálalo, una frase, y sigue.}
+
+% =========================================================================
+\section*{1. El problema --- diapositivas 3--6 \hfill \normalsize\color{grayc} 4 min}
+% =========================================================================
+
+\diapo{4}{An engine degrades where nobody can look}
+\begin{decir}
+Esta es la situación física. Un turbofán comercial se queda atornillado a un ala
+durante años. En ese tiempo el polvo y la contaminación ensucian los álabes del
+compresor, la sección caliente sufre fluencia y se oxida, las holguras de punta
+de álabe se abren, los sellos se desgastan. Nada de eso se ve. Nadie abre el
+motor para mirar.
+
+Lo que la aerolínea recibe a cambio es esto: un puñado de números por vuelo.
+Velocidades de eje, temperatura de gases de escape, consumo de combustible. Esa
+es toda la ventana.
+
+\escena{señala la figura} Y este es el agregado que un operador vigila de verdad:
+el margen de temperatura de gases de escape, la distancia al límite certificado.
+Los dientes de sierra son lavados de compresor. Cuando llega a cero el motor sale
+del ala. Una visita a taller cuesta millones de dólares; una retirada no
+programada le destroza la programación a una flota entera durante días.
+\end{decir}
+
+\diapo{5}{Two schools, and a broken comparison}
+\begin{decir}
+Hay dos familias de métodos que interpretan esa ventana.
+
+La clásica viene de los años setenta: el \emph{gas path analysis}, el análisis del
+camino de gases. Construyes un modelo termodinámico del motor y lo inviertes: a
+partir de los síntomas, trabajas hacia atrás hasta saber qué componente se ha
+degradado y cuánto. Alrededor de ese núcleo la industria construyó una caja de
+herramientas madura: modelos de referencia, suavizado de tendencias, filtros de
+Kalman, reglas expertas.
+
+La segunda es el aprendizaje automático, sobre todo en la última década, sobre
+todo en predicción de vida remanente, y sobre todo sobre bancos de pruebas
+sintéticos.
+
+\escena{baja el ritmo aquí: esta es la afirmación que motiva toda la charla} Y
+aquí está el problema. A la IA casi nunca se la compara contra un pipeline
+tradicional implementado con el mismo cuidado: mismos datos, mismas métricas,
+mismo esfuerzo de ajuste. Lo que el campo tiene es un flujo continuo de
+comparaciones contra hombres de paja. Lo cual significa que en realidad no
+sabemos qué aporta la IA, bajo qué condiciones, ni a qué coste.
+\end{decir}
+
+\diapo{6}{What this project builds}
+\begin{decir}
+Así que este proyecto construye la comparación justa. Tres piezas.
+
+Un gemelo termodinámico de un motor concreto --- el CFM56-7B, el que llevan la
+mayoría de los 737NG --- construido únicamente a partir de datos públicos
+certificados. Cien motores virtuales llevados hasta el fallo, en el formato de
+datos exacto que recibe una aerolínea. Y las dos familias de métodos sobre datos
+idénticos, métricas idénticas, particiones idénticas y presupuesto de ajuste
+idéntico, juzgadas bajo un protocolo congelado antes de ver ningún resultado.
+
+\escena{la idea clave de la charla: aterrízala} La razón de hacerlo sintético está
+abajo en la diapositiva. En una flota real puedes preguntar «¿predijo bien el
+método?». Lo que no puedes preguntar es «¿le echó la culpa al componente
+correcto?», porque nadie conoce el estado interno verdadero de un motor montado en
+un ala. Con verdad-terreno sintética sí puedes. Y la atribución es precisamente
+donde el GPA clásico es más débil y donde la IA es menos transparente --- así que
+es la pregunta que justifica construir un banco de pruebas entero.
+\end{decir}
+
+% =========================================================================
+\section*{2. La física --- diapositivas 7--11 \hfill \normalsize\color{grayc} 6 min}
+% =========================================================================
+
+\escena{Este es el cimiento de bajo nivel. Si el público es aeronáutico, ve
+rápido. Si es de aprendizaje automático, esta es la parte que más necesitan.}
+
+\diapo{8}{The machine, in one picture}
+\begin{decir}
+Muy brevemente, la máquina. El aire entra por el fan. La mayor parte rodea el
+núcleo y produce la mayor parte del empuje. El resto se comprime, se quema, y se
+expande a través de dos turbinas que mueven los compresores.
+
+El hecho estructural importante es que hay dos ejes mecánicamente independientes,
+dos \emph{spools}. El de baja presión: fan y booster movidos por la turbina de
+baja, girando a una velocidad que se llama N1. El de alta presión: compresor y
+turbina de alta, a N2.
+
+Los números de abajo son numeración de estaciones y van a reaparecer en
+diapositivas posteriores. Y la frase del pie es la restricción bajo la que vive
+toda esta charla: la aerolínea recibe cuatro canales. N1, N2, temperatura de
+escape y consumo de combustible. Algunas flotas compran un paquete opcional con
+presiones y temperaturas dentro del núcleo. La mayoría no.
+\end{decir}
+
+\diapo{9}{Gas path analysis: the model to invert}
+\begin{decir}
+Ahora la matemática, y es corta.
+
+Describimos la condición interna del motor con dos números por turbomáquina. El
+rendimiento isentrópico --- cuánto del trabajo ideal consigue de verdad; la
+suciedad y el desgaste lo reducen. Y la capacidad de paso --- cuánto aire traga;
+el ensuciamiento cierra un compresor, la erosión abre una turbina. Cinco
+turbomáquinas, así que diez números. Ese vector es lo que mantenimiento quiere
+saber, y no es medible.
+
+Lo que sí es medible son las desviaciones de los canales medidos respecto de lo
+que leería un motor sano en la misma condición de operación. Para las desviaciones
+pequeñas del desgaste en servicio la relación es lineal: desviaciones medidas igual
+a una matriz de influencia por el vector de salud, más sesgo de sensor, más ruido.
+
+\escena{pausa} Y ahora mira la forma de ese problema. Diez incógnitas. Tres
+medidas utilizables --- N1 no cuenta, es el parámetro de empuje comandado, no un
+síntoma. Así que la matriz tiene rango tres. Hay infinitos estados de salud
+compatibles con cualquier medida. La respuesta clásica regulariza: penaliza
+desviaciones implausiblemente grandes y elige una solución. Eso funciona, y te
+cuesta precisión de una forma que vamos a medir exactamente.
+\end{decir}
+
+\diapo{10}{Smearing: how a diagnosis flips to the wrong component}
+\begin{decir}
+Esto es lo que hace ese mal condicionamiento en la práctica, en un problema lo
+bastante pequeño como para comprobarlo a mano.
+
+Dos parámetros de salud, dos medidas. La verdad es una pérdida del uno por ciento
+de rendimiento en el compresor de alta. Metes las medidas exactas en la inversión
+y lo recuperas exactamente.
+
+Ahora perturba una medida una décima de por ciento --- una desviación típica de
+ruido de sensor. \escena{señala} La respuesta pasa a ser: compresor sano, turbina
+degradada un uno por ciento. El diagnóstico ha saltado al componente equivocado
+por completo.
+
+El dibujo de la derecha explica por qué. Cada fallo produce su propio patrón de
+movimiento de los indicadores; piénsalo como una flecha en el espacio de medidas.
+Diagnosticar es preguntar a lo largo de qué flecha apunta la lectura observada.
+Cuando dos flechas son casi paralelas, un empujón del tamaño del ruido mueve la
+lectura de una a la otra. Esto se llama \emph{smearing}, embadurnamiento, y no hay
+nada mal en el álgebra. Sencillamente, la información no está en las medidas.
+\end{decir}
+
+\diapo{11}{This engine's actual geometry}
+\begin{decir}
+Eso era un juguete. Este es el motor real.
+
+Con el conjunto de sensores de cabina, el ángulo más pequeño entre dos firmas de
+fallo en este motor es de \cifra{1,3 grados} --- entre el rendimiento del compresor
+de alta y el rendimiento de la turbina de alta. Siete pares quedan por debajo de
+quince grados, que es más o menos donde el ruido de sensor funde dos fallos en
+uno. Rango tres para diez incógnitas.
+
+Añade las cuatro sondas de estación y el rango sube a siete y el peor ángulo se
+multiplica por cinco.
+
+\escena{esta es la afirmación portante de la charla: dila despacio} Y repetimos
+esto sobre una rejilla de seis puntos que cubre la envolvente de vuelo. La
+estructura apenas se mueve: entre 1,2 y 1,4 grados en todas partes. O sea que la
+ceguera no es una propiedad de una condición de vuelo concreta de la que puedas
+escapar midiendo en otro sitio. Es intrínseca al conjunto de sensores. Quedaos con
+eso, porque todo lo que viene en la segunda mitad de la charla es una consecuencia.
+\end{decir}
+
+% =========================================================================
+\section*{3. El banco de pruebas --- diapositivas 12--16 \hfill \normalsize\color{grayc} 5 min}
+% =========================================================================
+
+\diapo{13}{The twin: certified data in, predictions out}
+\begin{decir}
+El gemelo está construido en pyCycle, la librería abierta de modelado de ciclo de
+la NASA, transformando un ejemplo validado hacia este motor: como máximo tres
+parámetros por paso, exigiendo convergencia en cada paso. Suena quisquilloso; es
+la diferencia entre tener un modelo y pasar tres semanas depurando un solver de
+Newton.
+
+La calibración es la parte que merece atención. Usa exclusivamente datos medidos
+certificados: la hoja de certificado de tipo, y la base de datos de emisiones de
+la OACI, que publica algo silenciosamente valioso --- consumos de combustible
+\textbf{medidos} en banco a nivel del mar, en cuatro regímenes de empuje, para
+esta variante exacta de motor, gratis.
+
+Y resolvemos los puntos de anclaje con el empuje impuesto. Así que el consumo del
+modelo es una \textbf{predicción}, confrontada contra una medida a la que nunca se
+ajustó. Ese es el examen honesto, y sale dentro del uno y medio al tres por ciento
+en despegue, ascenso y aproximación. El consumo específico en crucero cae dentro
+del dos por ciento del valor publicado sin haber sido nunca un objetivo.
+\end{decir}
+
+\diapo{14}{The fleet: six mechanisms, one hundred lives}
+\begin{decir}
+A partir de ese gemelo generamos cien motores viviendo vidas completas. Seis
+mecanismos de degradación, cada uno una función en forma cerrada del ciclo de
+vuelo, con magnitudes tomadas de la literatura de degradación de turbinas de gas.
+
+\escena{recorre los paneles} Ensuciamiento saturando hacia una asíntota con
+recuperaciones por lavado. Erosión lineal. Holgura de punta que se abre rápido y
+luego despacio. Sección caliente acelerando al final --- rendimiento abajo,
+capacidad de paso arriba: ese par es la firma de una tobera de turbina erosionada.
+Daño por objeto extraño como escalones de Poisson. Y episodios de fallo agudo
+discretos.
+
+El detalle que importa después: la contribución de cada mecanismo se guarda por
+separado. Así que la flota no registra solo cuánto está degradado un motor, sino
+\textbf{por qué}.
+\end{decir}
+
+\diapo{15}{Making the benchmark hard on purpose}
+\begin{decir}
+Ahora bien: la enfermedad más común de un dataset sintético es ser
+accidentalmente fácil, y un banco de pruebas que halaga a tu método no vale nada.
+Así que pusimos un umbral por adelantado: un clasificador deliberadamente débil
+--- una regresión logística simple sobre canales crudos --- tiene que
+\textbf{fallar} en la tarea de aislamiento, por debajo del sesenta por ciento.
+
+Primera pasada: sacó casi un ochenta y dos por ciento. El umbral falló.
+
+\escena{este es un momento de credibilidad: no lo corras} Diagnosticamos por qué.
+Nuestras etiquetas de fallo eran el mecanismo crónico dominante, y los mecanismos
+crónicos co-evolucionan con la edad en todos los motores. Así que la etiqueta era
+un proxy de la edad, y los niveles crudos de los canales codifican la edad
+directamente. La tarea que habíamos definido no era aislamiento de fallos en
+absoluto.
+
+Había dos respuestas posibles: relajar el umbral, o arreglar el diseño.
+Rediseñamos el dataset --- episodios de fallo discretos de un solo parámetro,
+elegidos entre los pares confundibles --- y pasó con un cincuenta y cuatro por
+ciento. Después, en una versión posterior de la flota, el umbral mordió
+\textbf{otra vez} con un sesenta y dos por ciento, y escalamos las magnitudes de
+fallo hacia abajo hasta que pasó.
+
+Los dos fallos están en el informe con todo detalle, porque un umbral que no puede
+fallar no certifica nada.
+\end{decir}
+
+\diapo{16}{Four safeguards, fixed before any contestant ran}
+\begin{decir}
+Cuatro salvaguardas, todas fijadas antes de que corriera ningún método.
+
+Pre-registro: hipótesis, umbrales, particiones con hashes de fichero, tests
+estadísticos, todo congelado bajo una etiqueta de git antes de la pasada
+confirmatoria. Prestado de los ensayos clínicos: declaras qué te convencería antes
+de mirar la respuesta.
+
+Presupuesto de ajuste simétrico: cincuenta pruebas de búsqueda automática para
+cada familia. Esta importa más de lo que parece. Cualquier asimetría de esfuerzo
+convierte silenciosamente una comparación de métodos en una comparación de
+esfuerzo, y esa es exactamente la enfermedad de la literatura.
+
+Partición por motor, nunca por vuelo: los vuelos de un mismo motor son casi
+duplicados, y partir por vuelo permite que un modelo memorice motores concretos.
+
+Y una línea base de verdad fuerte: el pipeline tradicional construido con forma
+industrial, cada regla experta justificada.
+
+El bloque de abajo es la disciplina que hace creíble todo lo demás. Los números
+existen en dos castas y nunca se mezclan. Exploratorios, producidos mientras
+construyes. Confirmatorios, producidos una sola vez, después del congelado, sobre
+datos tocados exactamente una vez. Solo los segundos sostienen un veredicto.
+\end{decir}
+
+% =========================================================================
+\section*{4. Qué entrega el GPA clásico --- diapositivas 17--21 \hfill \normalsize\color{grayc} 5 min}
+% =========================================================================
+
+\escena{Esta sección es nueva respecto a cómo se suele presentar este trabajo, y
+es el suelo cuantitativo de todo lo que viene después. No te saltes la 19.}
+
+\diapo{18}{The experiment: honest forward, classical inverse}
+\begin{decir}
+Antes de comparar nada con nada, una pregunta que en esta literatura nadie parece
+responder: ¿qué entrega de verdad el método de libro de texto sobre este motor?
+
+El diseño importa. Para la dirección directa --- la que hace de motor --- usamos un
+gemelo neuronal \textbf{no lineal} del modelo termodinámico, con toda la curvatura
+de la física. Para la inversa --- la que hace de sistema de monitorización --- usamos
+los mínimos cuadrados regularizados \textbf{lineales} sobre la matriz de
+influencia. Dos instrumentos distintos a propósito: invertir la misma matriz que
+generó los datos sería circular y exacto por construcción, y no nos diría nada.
+
+Aquí va una ejecución. El compresor pierde un uno por ciento de rendimiento. La
+cabina ve el consumo subir medio punto, la temperatura subir medio punto, la
+velocidad del núcleo bajar una décima. Inviertes eso y recuperas \cifra{un cuarto}
+del fallo. Repítelo quinientas veces con ruido de sensor fresco y el método nombra
+el componente correcto el \cifra{veintidós por ciento} de las veces. Su respuesta
+equivocada favorita es la turbina.
+\end{decir}
+
+\diapo{19}{What the inversion gives back}
+\begin{decir}
+Ahora sistemáticamente, un fallo cada vez, los dos conjuntos de sensores.
+
+Panel izquierdo, la magnitud que vuelve. Con el conjunto de cabina, entre un dos y
+un setenta y seis por ciento según el parámetro. Con las sondas de estación, entre
+treinta y noventa.
+
+El panel derecho es el que hay que mirar. El índice de \emph{smearing}: la parte de
+la magnitud diagnosticada que aterriza sobre componentes que en realidad están
+sanos. Mediana \cifra{0,85}. Seis séptimas partes de lo que el método reporta se
+atribuye al sitio equivocado. Y fíjate en que las sondas de estación apenas lo
+mejoran: más sensores te compran magnitud, no limpieza, porque el estimador sigue
+repartiendo lo que no puede separar.
+
+El caso extremo merece nombrarse. Capacidad de paso de la turbina de alta: la
+cabina recupera \cifra{un uno coma nueve por ciento} --- el fallo es prácticamente
+invisible --- y el conjunto extendido recupera un noventa. Eso es un factor
+cuarenta y siete comprado con una sonda de presión a la salida del compresor.
+\end{decir}
+
+\diapo{20}{How small a fault can be named} \escena{recortable}
+\begin{decir}
+Traduciendo eso al número que pediría un operador: ¿cómo de pequeño puede ser un
+fallo para que este paquete de sensores todavía lo nombre bien nueve de cada diez
+veces?
+
+Conjunto de cabina: lo consigue para \cifra{uno} de los diez parámetros. El
+conjunto extendido lo consigue para siete, varios por debajo del uno por ciento.
+
+Y los fallos de nuestra flota están entre el 0,3 y el 1,1 por ciento. O sea que la
+mayoría de los fallos de este banco de pruebas caen por debajo del límite de
+resolución del conjunto de cabina --- lo cual va a explicar, dentro de unos cinco
+minutos, por qué el concurso de aislamiento acaba como acaba.
+\end{decir}
+
+\diapo{21}{A real engine, eight faults at once}
+\begin{decir}
+Los fallos individuales son el ejercicio de libro. Los motores reales se degradan
+por todas partes a la vez, así que aquí hay un motor real de la flota al final de
+su vida, diagnosticado.
+
+En negro, la verdad. El motor está dominado por daño de sección caliente:
+rendimiento de turbina cuatro puntos abajo, y la capacidad de paso abierta dos
+coma cuatro.
+
+El diagnóstico de cabina, en rojo, acierta el titular: rendimiento de turbina tres
+coma tres abajo. Y luego falla justo en la física que lo confirmaría: la apertura
+de capacidad vuelve como \cifra{cero coma seis} en vez de dos coma cuatro. Así que
+la firma clásica de tobera erosionada sencillamente no es visible en el
+diagnóstico. El conjunto extendido, en azul, sí la recupera.
+
+\escena{la parte honesta: dila} Y los dos se inventan daño que no existe. La
+pérdida real de rendimiento del fan es de menos de medio punto; ambos reportan el
+triple. La capacidad de paso real de la turbina de baja es esencialmente cero;
+ambos reportan alrededor de menos uno coma tres --- equivocados en el signo además
+de en el tamaño. Una decisión de mantenimiento tomada sobre esos dos números abre
+un módulo sano.
+\end{decir}
+
+% =========================================================================
+\section*{5. El concurso pre-registrado --- diapositivas 22--28 \hfill \normalsize\color{grayc} 7 min}
+% =========================================================================
+
+\diapo{23}{Five hypotheses, one confirmatory pass}
+\begin{decir}
+Ahora sí, la comparación. Las dos familias ajustadas bajo el presupuesto congelado
+de cincuenta pruebas, los veinte motores de test evaluados exactamente una vez,
+Wilcoxon emparejado por motor, McNemar exacto para los resultados binarios,
+corrección de Holm entre hipótesis.
+
+Tres confirmadas, dos refutadas. \escena{deja que lo lean un momento} Y quiero
+dejar claro que las dos refutaciones no son fallos del estudio: son dos de sus
+cuatro resultados más útiles. Las voy a tomar en orden.
+\end{decir}
+
+\diapo{24}{H1 --- the story is the tuning, not the model}
+\begin{decir}
+Detección primero, y aquí la historia va de método, no de modelos.
+
+Antes del ajuste, nuestro detector de IA sacaba un recall de 0,06 y escribimos en
+el informe que aquello parecía un problema de diseño, no de umbral. El espacio de
+búsqueda congelado contenía justamente la palanca que sospechábamos: la longitud
+de las ventanas de características. Con cincuenta pruebas el optimizador estiró
+esas ventanas, y el recall pasó de 0,06 a \cifra{0,48}, con un retardo mediano de
+499 ciclos. Doce veces antes que el detector clásico ajustado, con el mismo número
+de falsas alarmas.
+
+De aquí salen dos cosas transferibles. La longitud de ventana es la primera perilla
+de la que vive o muere cualquier detector de cambios. Y --- la incómoda --- la
+configuración ajustada del lado tradicional se seleccionó sobre una partición de
+validación con solo dos motores limpios, y generalizó peor que sus propios valores
+por defecto sin ajustar. La selección de umbrales sobre muestras limpias pequeñas
+es frágil para \textbf{cualquier} método. Presupuestad motores limpios en
+consecuencia.
+\end{decir}
+
+\diapo{25}{H2 refuted --- the wall binds everyone}
+\begin{decir}
+Aislamiento. Esta es la hipótesis que más esperábamos confirmar, y queda refutada.
+
+Sobre los trece episodios confundibles de test las dos familias empatan
+exactamente. Treinta y uno por ciento cada una. Y el patrón de desacuerdo es
+perfectamente simétrico: cuatro episodios que solo acierta la IA, cuatro que solo
+acierta la regla clásica. Está muy cerca de ser una moneda al aire cuál de las dos
+se lleva el punto.
+
+\escena{esta es la conclusión central de la charla} Ahora bien, esto lo predijimos
+antes de que corriera ningún modelo, a partir de la geometría de la matriz de
+influencia: firmas separadas 1,3 grados en un espacio de medidas de rango tres.
+Las dos familias están limitadas por la misma información, y ninguna cantidad de
+modelado recupera información que los sensores nunca capturaron.
+
+Lo cual convierte una pregunta de software en una pregunta de compras. Si el
+aislamiento de fallos confundibles importa en tu operación, la solución es
+instrumentación.
+\end{decir}
+
+\diapo{26}{H3 and H5 --- prognosis is where learning pays}
+\begin{decir}
+La prognosis es donde el aprendizaje se gana el sueldo, y de forma decisiva.
+
+Error de vida remanente de 858 ciclos al noventa por ciento de la vida, contra
+1981 de la extrapolación clásica ajustada. Tamaño de efecto 0,89: coge al azar el
+error de un motor de cada método y el clásico es mayor alrededor del noventa y
+cuatro por ciento de las veces.
+
+Pero mira la forma más que el número. \escena{señala} Los errores clásicos son
+anchos y están sesgados hacia el \textbf{optimismo}: predice más vida remanente de
+la que hay, sistemáticamente, que es la dirección peligrosa. Los de la IA son
+estrechos y casi insesgados. El mecanismo es simple: una recta no puede curvarse
+para seguir la degradación acelerada de la sección caliente, y un modelo de
+secuencia aprende esa curvatura de los datos.
+
+Y la declaración de incertidumbre que viene con ello, que es la hipótesis cinco. El
+intervalo conformal cubre el ochenta y ocho por ciento empíricamente contra un
+noventa nominal, con más menos dos mil ciclos. La banda clásica sobre-cubre al
+noventa y ocho por ciento pero mide más menos once mil quinientos. Esa es la
+diferencia entre una ranura de taller planificable y un encogimiento de hombros.
+\end{decir}
+
+\diapo{27}{H4 refuted --- physics features are not free wins}
+\begin{decir}
+La segunda refutación, y la que más me gustaría que un profesional se llevara.
+
+«Physics-informed» es una etiqueta popular. La implementación obvia es meterle a
+la red tus estimaciones de estado basadas en física junto con los datos crudos.
+Pre-registramos la predicción de que eso ayudaría sobre todo cuando los datos
+escasean.
+
+Empeoró las cosas \textbf{en todas las fracciones de datos}, y empeoró más
+justamente donde predijimos que más ayudaría. El mecanismo se entiende a
+posteriori: esas estimaciones de estado están fuertemente embadurnadas. Son diez
+canales ruidosos y mutuamente correlacionados cuyo contenido de información ya
+está presente en las tres desviaciones a partir de las cuales se calcularon. Con
+siete motores de entrenamiento, diez dimensiones de entrada extra son varianza
+pura.
+
+Después reabrimos esto por una segunda vía independiente --- otra característica,
+otra flota, física no lineal --- y volvió a quedar refutado. Dos negativos. La
+inyección de física necesita un canal de información que los datos crudos no
+tengan; concatenar salidas de un estimador no lo es.
+\end{decir}
+
+\diapo{28}{Does the ranking survive outside our own simulator?} \escena{recortable}
+\begin{decir}
+La objeción obvia a todo lo anterior es que nosotros construimos el mundo en el
+que se está puntuando a estos métodos. Así que reejecutamos la pregunta de
+prognosis sobre C-MAPSS, de la NASA, el banco de pruebas de referencia del campo,
+en cuya generación no tuvimos ninguna mano.
+
+Misma dirección, magnitud comparable: 14,9 ciclos contra 42,1. El orden no es un
+artefacto de nuestro simulador.
+
+Una divulgación, a la derecha: nuestro plan nombraba el banco sucesor, más grande,
+cuya distribución de varios gigabytes rompe la regla de este proyecto de que todo
+tiene que correr en un ordenador de escritorio. Sustituimos, y lo decimos en el
+registro de decisiones en lugar de cambiar el plan en silencio.
+\end{decir}
+
+% =========================================================================
+\section*{6. Más allá del muro --- diapositivas 29--35 \hfill \normalsize\color{grayc} 7 min}
+% =========================================================================
+
+\diapo{30}{Can observability be bought without hardware?}
+\begin{decir}
+El resultado de aislamiento terminaba en «compra sensores», que es una conclusión
+cara. Así que buscamos salidas más baratas, y encontramos dos.
+
+La matriz de influencia no es una sola matriz: cambia con la condición de vuelo.
+Así que una ventana de instantáneas ordinarias tomadas en condiciones dispersas es
+un conjunto de proyecciones distintas del mismo estado de salud, y fusionarlas es
+un problema de tomografía.
+
+La auditoría dio una respuesta de dos caras. \escena{señala la figura} La dispersión
+gratis --- la variación de ambiente y potencia que te sale sin pagar --- restaura el
+rango algebraico inmediatamente, pero los ángulos saturan casi de inmediato. La
+variación gratuita es real pero delgada.
+
+Entonces: salida uno. Tratar el \textbf{calendario de reportes rutinarios} como una
+variable de diseño de observabilidad, lo cual, hasta donde sabemos, es un
+planteamiento nuevo. Añadir un reporte periódico de crucero estabilizado a baja
+potencia compra un setenta y nueve por ciento más de separabilidad en la
+ambigüedad de la turbina. El coste es un boletín de procedimiento, no aviónica.
+
+Salida dos. Fusiona la ventana con un modelo aprendido, pero conserva la inversión
+física. Una red alimentada con las inversiones físicas vuelo a vuelo aísla al 0,65
+contra el 0,17 del apilado clásico. La misma red alimentada con secuencias crudas
+fracasa directamente al 0,12. La división del trabajo es la lección: deja que la
+física haga la inversión que hace bien, y que la red haga la fusión temporal que
+hace bien.
+
+Y lo que ningún calendario arregla: el par rendimiento de compresor contra
+rendimiento de turbina se queda por debajo de 1,8 grados en toda la envolvente.
+Ese es fundamental.
+\end{decir}
+
+\diapo{31}{Only a real sensor breaks the wall}
+\begin{decir}
+Lo cual plantea la pregunta que te hará un proveedor: ¿y no podemos
+\textbf{predecir} el sensor que falta a partir de los que ya tienes? Tenemos un
+gemelo calibrado; que calcule una sonda de presión virtual.
+
+Tres condiciones, pre-registradas. Solo cabina: 0,15. Cabina más canales de
+estación \textbf{virtuales}: 0,15, con p igual a uno. Cabina más canales de estación
+\textbf{reales}: \cifra{0,92}.
+
+Esto es la desigualdad de procesamiento de datos hecha operación. Una cantidad
+calculada a partir de los datos de cabina no puede llevar información que los datos
+de cabina no tuvieran ya, así que no puede separar fallos que la cabina no puede
+separar. Ningún proveedor de software, por sofisticado que sea, sustituye a la
+medida que falta.
+
+La nota práctica está abajo, y es una noticia inusualmente buena: los parámetros
+que rompen el muro ya los mide el ordenador de control del motor. La barrera es
+registrarlos y bajarlos a tierra, no instalar hardware.
+\end{decir}
+
+\diapo{32}{A certificate of what a diagnosis can know}
+\begin{decir}
+Esta es la parte que más me gustaría que sobreviviera a la charla.
+
+Todo diagnóstico de camino de gases en la industria es una estimación puntual que
+esconde lo que no puede saber. Entonces: acumula información de Fisher sobre las
+condiciones que un motor individual voló de verdad, a través del gemelo calibrado.
+Invierte. Obtienes la cota de Cramér-Rao --- la mejor precisión por dirección que
+\textbf{cualquier} estimador insesgado puede alcanzar con los datos de ese motor.
+Eso es un certificado por motor, resuelto por su historia, de lo que su diagnóstico
+puede afirmar honestamente.
+
+Análisis de observabilidad de turbinas de gas existen. Lo que nunca ha sido posible
+es el panel de la derecha: \textbf{comprobar que el certificado es honesto}, porque
+en un motor real el estado verdadero de los componentes es incognoscible.
+
+Aquí sí es cognoscible. La precisión certificada ordena el error real del filtro
+contra la verdad-terreno con una correlación de 0,70. Las direcciones que el
+certificado llama identificables son las que el estimador acierta; las que llama
+inobservables son donde la estimación no vale nada. Hasta donde sabemos, esa es la
+primera garantía de identificabilidad validada contra verdad-terreno para
+diagnóstico de camino de gases --- y es una validación que solo un banco de pruebas
+con verdad sintética puede llevar a cabo.
+\end{decir}
+
+\diapo{33}{Is a large RUL error the method's fault, or the future's?} \escena{recortable}
+\begin{decir}
+El mismo truco, aplicado al futuro en lugar de al presente.
+
+Antes de financiar un mejor prognóstico, un operador debería preguntarse: ¿mi error
+es grande porque mi método es débil, o porque el futuro es genuinamente
+incognoscible a partir de lo que puedo ver hoy? Esas dos cosas tienen remedios
+opuestos, y confundirlas o desperdicia presupuesto o abandona un objetivo que
+estaba al alcance.
+
+Así que condicionamos sobre la salud \textbf{verdadera} actual de cada motor,
+buscamos sus vecinos más próximos en el espacio de salud --- motores en una
+condición presente casi idéntica --- y medimos la dispersión de sus vidas
+remanentes verdaderas. Dos motores en el mismo estado que fallan con cientos de
+ciclos de diferencia difieren por razones que ninguna medida presente contiene. Esa
+dispersión es un suelo irreducible.
+
+A mitad de vida, el \cifra{ochenta y siete por ciento} de la incertidumbre de vida
+remanente es irreducible. La vida remanente, a primer orden, no está escrita en el
+presente --- lo cual es una corrección sobria a bastante trabajo de prognosis. Pero
+al final de la vida se abre una brecha reducible de un factor cuatro. Ahí es donde
+un mejor prognóstico paga, y solo ahí.
+\end{decir}
+
+\diapo{34}{The determinability map: when does each approach win?}
+\begin{decir}
+Un eje más, porque todo lo anterior vive en un único ajuste de calidad de sensor.
+Regeneramos la flota con ruido de sensor a la mitad, al uno, al doble y al
+cuádruple --- misma semilla, mismos motores, mismos fallos, solo se mueve la calidad
+de medida --- y volvimos a puntuar las dos familias ajustadas.
+
+Tres hallazgos, de izquierda a derecha.
+
+La prognosis es esencialmente inmune al ruido: el error de la IA es plano a lo
+largo de un factor ocho en ruido mientras que la extrapolación clásica se degrada
+un cuarenta por ciento. La ventaja \textbf{se ensancha} de 2,3 a 3,4 veces. O sea
+que el caso de negocio no depende de la calidad de los sensores.
+
+El panel central es el que cierra el argumento de esta charla. Reducir a la mitad
+todas las sigmas de sensor --- una mejora cara --- deja el aislamiento confundible
+en 0,31 y 0,38. Ni de lejos el 0,92 que entregan sensores \textbf{distintos}. Dos
+firmas separadas 1,3 grados siguen separadas 1,3 grados por precisamente que las
+midas. Así que la orden de compra es específica: sondas en estaciones nuevas, no
+mejores sondas en las de siempre.
+
+Y a la derecha, el detector clásico se cae por un precipicio --- recall de 0,48 a
+cero --- mientras que la IA se degrada con elegancia. La robustez frente a la
+calidad de instrumentación puede que sea la ventaja más transferible del
+aprendizaje aquí.
+\end{decir}
+
+\diapo{35}{What it is worth --- and why it might be nothing} \escena{recortable}
+\begin{decir}
+Brevemente, cuánto vale, y este capítulo abre con sus propias reservas a propósito.
+
+Monetizamos exactamente \textbf{un} mecanismo, el único que los resultados
+sostienen: una prognosis menos sesgada que convierte retiradas no programadas en
+programadas. Todo lo demás que un entusiasta podría contar se discute y se deja
+deliberadamente fuera del total.
+
+Para un operador de cien motores, la mediana son tres millones de dólares al año.
+Pero hay que leer la dispersión, no la mediana: percentil diez, 0,9 millones;
+percentil noventa, 8 millones; y negativo neto en un uno por ciento de los
+sorteos.
+
+Y la columna de la derecha es por qué podría no valer nada: el muro de aislamiento
+sigue en pie, así que un operador que espere mejor diagnóstico de esta inversión se
+llevaría un chasco; las falsas alarmas erosionan confianza y dinero; y la
+comprobación sim-to-real preservó el orden pero no necesariamente la magnitud.
+\end{decir}
+
+% =========================================================================
+\section*{7. Qué llevarse --- diapositivas 36--40 \hfill \normalsize\color{grayc} 4 min}
+% =========================================================================
+
+\diapo{37}{The split verdict}
+\begin{decir}
+Entonces, la respuesta a la pregunta con la que empezó la charla.
+
+El aprendizaje gana donde la tarea es agregación estadística a lo largo del tiempo.
+Prognosis --- y ese resultado es robusto entre tres arquitecturas y a lo largo de la
+calidad de sensor. Instante de detección. Incertidumbre calibrada.
+
+Nadie gana donde la tarea está limitada por lo que los sensores observaron. El
+aislamiento confundible es un empate, y el arreglo son setenta y siete puntos
+porcentuales que dan las sondas de estación reales, y exactamente cero de las
+virtuales.
+
+\escena{el reencuadre: esta es la idea de cierre} Y quiero tener cuidado con lo que
+eso dice sobre la física, porque es fácil malinterpretarlo. La física no perdió.
+Inyectar física dentro del modelo aprendido falló, dos veces. Pero la física
+\textbf{diagnosticó los límites}: la geometría de la matriz de influencia predijo,
+antes de que corriera ningún aprendizaje, exactamente dónde iba a fallar cada
+método --- y acertó. Usar la física para saber qué es cognoscible funcionó
+completamente.
+\end{decir}
+
+\diapo{38}{What an engineering organization should do on Monday}
+\begin{decir}
+Si os lleváis una sola diapositiva, llevaos esta. En orden de cuánto dinero mueve
+cada punto.
+
+Desplegad aprendizaje para prognosis primero: ese es el caso de negocio. Detección:
+detección de cambios moderna con ventanas ajustadas; la victoria vino de buscar la
+ventana, que es barato y auditable, no de la profundidad de la red. Aislamiento:
+comprad sensores, no modelos --- y concretamente sondas en estaciones nuevas.
+Rediseñad el calendario de reportes antes de comprar nada. Proteged el parque de
+sensores: un termopar a la deriva corrompe a todos los consumidores aguas abajo,
+sean aprendidos o clásicos. Desconfiad de comparaciones sin ajustar en cualquiera
+de las dos direcciones. Y exigid pre-registro de las afirmaciones de vuestros
+proveedores.
+
+\escena{el último punto, con una pausa antes} Un veredicto partido es el aspecto
+que tiene una evaluación honesta. Si un proveedor os enseña un pleno, eso debería
+subir vuestra sospecha, no vuestra confianza.
+\end{decir}
+
+\diapo{39}{What transfers off this simulator --- and what does not}
+\begin{decir}
+Por último, la honestidad intelectual que este tipo de trabajo exige.
+
+Lo que transfiere fuera de un simulador son órdenes, mecanismos y geometría: qué
+método gana dónde y por qué, y la estructura de observabilidad que comparte
+cualquier motor de esta clase. Todas las afirmaciones operativas que he hecho son
+de ese tipo.
+
+Lo que \textbf{no} transfiere son los números absolutos. Un error de 858 ciclos es
+una propiedad de este mundo simulado y de sus ajustes de ruido. No estoy afirmando
+que vuestra flota vaya a ver eso.
+
+Y toda la base de evidencia se regenera en unos once minutos en un solo ordenador
+de escritorio. Cada figura de estas diapositivas salió de un script; ninguna se
+copió a mano.
+\end{decir}
+
+\diapo{40}{The split verdict is the result}
+\begin{decir}
+\escena{pausa. Deja la diapositiva dos segundos antes de hablar.}
+
+El veredicto partido es el resultado. Una comparación de métodos que produce un
+pleno normalmente está midiendo esfuerzo, no método.
+
+Gracias. Encantado de responder preguntas.
+\end{decir}
+
+% =========================================================================
+\section*{Preparación de preguntas}
+% =========================================================================
+
+Las objeciones probables, con respuesta honesta. No te marques un farol: todas
+tienen respuesta real dentro del trabajo.
+
+\vspace{0.4em}
+\textbf{\color{redc}«Vuestra línea base tradicional es una recta. Eso es un hombre de paja.»}
+\begin{decir}
+Es justo, y lo comprobamos. La extrapolación lineal es lo que las aerolíneas usan
+de verdad, así que es la línea base correcta para una afirmación de transferencia a
+la industria; pero no es la frontera de la investigación. Así que implementamos un
+prognóstico basado en similitud, el método clásico estándar en C-MAPSS, que sí
+puede seguir una degradación no lineal. Reduce casi a la mitad el error clásico: de
+1981 a 1118. La IA sigue ganando con 858. Así que la afirmación honesta tiene dos
+escalas: 2,3 veces mejor que lo que los operadores tienen hoy desplegado, y 1,3
+veces mejor que el mejor método clásico. Una ventaja del treinta por ciento, no un
+orden de magnitud.
+\end{decir}
+
+\textbf{\color{redc}«Es todo sintético. ¿Por qué debería creerme nada?»}
+\begin{decir}
+Cuatro defensas, todas construidas antes de los experimentos titulares. El
+generador está anclado a medidas certificadas a las que nunca se ajustó. El dataset
+tuvo que pasar un umbral de dificultad que falló dos veces y forzó rediseños. La
+conclusión central se volvió a probar sobre un banco de pruebas que no generamos
+nosotros. Y decimos explícitamente que los números absolutos no transfieren: solo
+transfieren órdenes, mecanismos y geometría.
+\end{decir}
+
+\textbf{\color{redc}«Veinte motores de test. Trece episodios confundibles. Eso no es nada.»}
+\begin{decir}
+Correcto, y es nuestra principal limitación estadística. Es la razón de que cada
+test esté emparejado por motor, de que usemos tests exactos en lugar de asintóticos,
+y de que reportemos tamaños de efecto e intervalos bootstrap en vez de solo
+p-valores. Es también la razón de que una de nuestras propias hipótesis del eje de
+ruido quedara refutada sobre un umbral más fino de lo que la muestra podía resolver
+--- y lo reportamos en lugar de esconderlo.
+\end{decir}
+
+\textbf{\color{redc}«Habéis refutado vuestras propias hipótesis. ¿No es eso un proyecto fallido?»}
+\begin{decir}
+Al contrario. El pre-registro es lo que hace creíble una refutación, y las
+refutaciones son los resultados que cambiaron nuestras recomendaciones. H2
+convirtió una pregunta de software en una pregunta de compras. H4 mató una técnica
+popular en esta tarea, dos veces. Un estudio que confirma todo lo que predijo suele
+ser un estudio que movió los postes de la portería.
+\end{decir}
+
+\textbf{\color{redc}«¿Por qué no una arquitectura moderna grande?»}
+\begin{decir}
+Comprobamos que el resultado no es un artefacto de la arquitectura: una red
+convolucional temporal y un Transformer baten a la línea base clásica esencialmente
+por el mismo margen que el modelo recurrente. La elección de arquitectura apenas
+importa aquí, y las redes más grandes no ayudaron: el techo es la información que
+hay en las medidas, no el tamaño del modelo.
+\end{decir}
+
+\textbf{\color{redc}«¿Funcionaría esto en un motor del que no tenéis datos?»}
+\begin{decir}
+La receta sí. El gemelo se construye únicamente a partir de una hoja de certificado
+de tipo y de una base de datos pública de emisiones, y las dos existen para todo
+motor certificado. Eso es deliberado: el método es portable aunque nuestros números
+concretos no lo sean.
+\end{decir}
+
+\textbf{\color{redc}«¿Cuál es la aportación más novedosa?»}
+\begin{decir}
+El certificado, en la diapositiva 32. Análisis de observabilidad hay; una garantía
+de identificabilidad por motor y resuelta por su historia que además esté
+\textbf{demostrada honesta contra el estado verdadero de los componentes} no la
+hay, porque en hardware real esa comprobación es imposible. Es la única aportación
+que necesitaba que existiera todo este banco de pruebas.
+\end{decir}
+
+\end{document}

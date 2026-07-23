@@ -3,7 +3,7 @@
 Companion to `EHMbrAIn-slides.pdf` (44 pages, 31 numbered content slides).
 Slide numbers below are **PDF page numbers**.
 
-**Target: 35 minutes + 10 for questions.** Section timings are cumulative.
+**Target: 40 minutes + 10 for questions.** Section timings are per block.
 Passages in _[brackets]_ are stage directions, not things to say.
 
 **If you are short on time**, cut in this order: slide 20 (detectability),

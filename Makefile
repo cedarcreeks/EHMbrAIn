@@ -69,6 +69,7 @@ onepager:
 
 slides:
 	cd paper/slides && latexmk -pdf -outdir=build EHMbrAIn-slides.tex && cp build/EHMbrAIn-slides.pdf EHMbrAIn-slides.pdf
+	cd paper/slides && latexmk -pdf -outdir=build guion-presentacion.tex && cp build/guion-presentacion.pdf guion-presentacion.pdf
 
 test:
 	uv run pytest -q
