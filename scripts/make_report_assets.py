@@ -1063,6 +1063,234 @@ def fig_confusable_angles():
     print('  confusable-angles figure done')
 
 
+GPA_SHORT = {'fan.eta': r'$\eta_{fan}$', 'fan.flow': r'$\Gamma_{fan}$',
+             'lpc.eta': r'$\eta_{LPC}$', 'lpc.flow': r'$\Gamma_{LPC}$',
+             'hpc.eta': r'$\eta_{HPC}$', 'hpc.flow': r'$\Gamma_{HPC}$',
+             'hpt.eta': r'$\eta_{HPT}$', 'hpt.flow': r'$\Gamma_{HPT}$',
+             'lpt.eta': r'$\eta_{LPT}$', 'lpt.flow': r'$\Gamma_{LPT}$'}
+
+
+def gpa_assets():
+    """The end-to-end GPA study of the engine (scripts/gpa_study.py):
+    signature atlas, recovery, detectability and a real multi-fault case."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'gpa' / 'gpa_study.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    params = d['setup']['health_params']
+    ext = d['setup']['channels_extended']
+    cock = d['setup']['channels_cockpit']
+    INK, BLUE, RED, GRAYC = '#212529', '#4263EB', '#A61E4D', '#ADB5BD'
+    plt.rcParams.update({'font.size': 8.5, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    chlabel = [c.split('_')[0] for c in ext]
+
+    # --- A: the fault signature atlas -----------------------------------
+    fig, axes = plt.subplots(2, 5, figsize=(7.0, 3.4), sharey=True)
+    for ax, p in zip(axes.flat, params):
+        vals = [d['signature_atlas'][p][c] for c in ext]
+        colors = [BLUE if c in cock else GRAYC for c in ext]
+        ax.bar(range(len(ext)), vals, color=colors)
+        ax.axhline(0, color=INK, lw=0.6)
+        ax.set_title(GPA_SHORT[p], fontsize=8)
+        ax.set_xticks(range(len(ext)))
+        ax.set_xticklabels(chlabel, fontsize=5, rotation=90)
+        ax.tick_params(labelsize=6)
+    axes[0, 0].set_ylabel('% per +1%', fontsize=7)
+    axes[1, 0].set_ylabel('% per +1%', fontsize=7)
+    fig.suptitle('Fault signatures: measured response to a +1% deviation '
+                 '(blue = cockpit channels)', fontsize=8)
+    fig.tight_layout(rect=(0, 0, 1, 0.95))
+    fig.savefig(FIG_DIR / 'gpa_atlas.pdf')
+    plt.close(fig)
+
+    # --- B/C: recovery and smearing --------------------------------------
+    rec = d['recovery']
+    xs = np.arange(len(params))
+    fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.0))
+    ax = axes[0]
+    ax.bar(xs - 0.2, [100 * rec[p]['cockpit']['recovered_frac_noisefree'] for p in params],
+           0.4, color=RED, label='cockpit')
+    ax.bar(xs + 0.2, [100 * rec[p]['extended']['recovered_frac_noisefree'] for p in params],
+           0.4, color=BLUE, label='extended')
+    ax.set_ylabel('magnitude recovered [% of truth]')
+    ax.set_title('What the inversion gives back', fontsize=8)
+    ax = axes[1]
+    ax.bar(xs - 0.2, [rec[p]['cockpit']['smearing_mean'] for p in params], 0.4,
+           color=RED, label='cockpit')
+    ax.bar(xs + 0.2, [rec[p]['extended']['smearing_mean'] for p in params], 0.4,
+           color=BLUE, label='extended')
+    ax.set_ylabel('smearing index')
+    ax.set_ylim(0, 1)
+    ax.set_title('Fraction landing on healthy components', fontsize=8)
+    for ax in axes:
+        ax.set_xticks(xs)
+        ax.set_xticklabels([GPA_SHORT[p] for p in params], rotation=90, fontsize=6.5)
+        ax.legend(frameon=False, fontsize=7)
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / 'gpa_recovery.pdf')
+    plt.close(fig)
+
+    # --- D: isolation rate vs fault magnitude ----------------------------
+    md = d['min_detectable']
+    grid = md[params[0]]['cockpit']['grid_pct']
+    show = ['hpc.eta', 'hpt.eta', 'hpt.flow', 'fan.flow']
+    fig, axes = plt.subplots(1, len(show), figsize=(7.0, 2.3), sharey=True)
+    for ax, p in zip(axes, show):
+        ax.plot(grid, md[p]['cockpit']['isolation_rate'], 'o-', ms=3, lw=1.1,
+                color=RED, label='cockpit')
+        ax.plot(grid, md[p]['extended']['isolation_rate'], 's-', ms=3, lw=1.1,
+                color=BLUE, label='extended')
+        ax.axhline(0.9, color=INK, ls='--', lw=0.8)
+        ax.set_title(GPA_SHORT[p], fontsize=8)
+        ax.set_xlabel('fault magnitude [%]', fontsize=7)
+        ax.tick_params(labelsize=6.5)
+    axes[0].set_ylabel('correct isolation rate', fontsize=7)
+    axes[0].set_ylim(0, 1.02)
+    axes[-1].legend(frameon=False, fontsize=6.5, loc='lower right')
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / 'gpa_detectability.pdf')
+    plt.close(fig)
+
+    # --- E: the realistic multi-fault case -------------------------------
+    mf = d['multifault']
+    fig, ax = plt.subplots(figsize=(6.4, 2.6))
+    true = [mf['true_pct'][p] for p in params]
+    ax.bar(xs - 0.27, true, 0.27, color=INK, label='truth')
+    for k, (ss, col) in enumerate((('cockpit', RED), ('extended', BLUE))):
+        ax.bar(xs + (k * 0.27), [mf[ss]['estimate_mean_pct'][p] for p in params], 0.27,
+               yerr=[mf[ss]['estimate_std_pct'][p] for p in params],
+               error_kw=dict(lw=0.6, ecolor=GRAYC), color=col,
+               label=f"{ss} (RMSE {mf[ss]['rmse_pct']:.2f}%)")
+    ax.axhline(0, color=INK, lw=0.6)
+    ax.set_xticks(xs)
+    ax.set_xticklabels([GPA_SHORT[p] for p in params], fontsize=7)
+    ax.set_ylabel('health deviation [%]')
+    ax.legend(frameon=False, fontsize=7)
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / 'gpa_multifault.pdf')
+    plt.close(fig)
+
+    # --- summary table ----------------------------------------------------
+    def fmt_md(p, ss):
+        v = md[p][ss]['min_detectable_pct']
+        return f'{v:g}' if v else r'$>3$'
+
+    lines = ['% AUTOGENERATED by scripts/make_report_assets.py — do NOT edit by hand',
+             r'\begin{tabular}{@{}l' + 'rr' * 4 + r'@{}}', r'\toprule',
+             r'& \multicolumn{2}{c}{recovered [\%]} & \multicolumn{2}{c}{smearing}'
+             r' & \multicolumn{2}{c}{isolation} & \multicolumn{2}{c}{min.\ detectable [\%]} \\',
+             r'\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}',
+             r'Parameter & ckpt & ext & ckpt & ext & ckpt & ext & ckpt & ext \\',
+             r'\midrule']
+    for p in params:
+        c, e = rec[p]['cockpit'], rec[p]['extended']
+        lines.append(
+            f"{GPA_SHORT[p]} & {100 * c['recovered_frac_noisefree']:.0f} & "
+            f"{100 * e['recovered_frac_noisefree']:.0f} & "
+            f"{c['smearing_mean']:.2f} & {e['smearing_mean']:.2f} & "
+            f"{c['isolation_rate_signature']:.2f} & {e['isolation_rate_signature']:.2f} & "
+            f"{fmt_md(p, 'cockpit')} & {fmt_md(p, 'extended')} \\\\")
+    lines += [r'\bottomrule', r'\end{tabular}']
+    (TAB_DIR / 'table_gpa_study.tex').write_text('\n'.join(lines) + '\n')
+    print('  GPA study assets done')
+
+
+def icm_robustness_assets():
+    """L-ICM (prereg-v13): does the observability verdict survive calibration
+    error? Figure + verdict table, both read from the study artifact."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'icm' / 'icm_robustness.json'
+    if not path.exists():
+        return
+    d = json.loads(path.read_text())
+    INK, BLUE, RED, GRAYC = '#212529', '#4263EB', '#A61E4D', '#868E96'
+    plt.rcParams.update({'font.size': 8.5, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+
+    pts = list(d['points'])
+    labels = list(d['points'][pts[0]]['perturbations'])
+    fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.4))
+    ys = np.arange(len(labels))
+
+    ax = axes[0]
+    for k, pt in enumerate(pts):
+        e = d['points'][pt]
+        vals = [e['perturbations'][l]['min_angle_deg'] for l in labels]
+        ax.scatter(vals, ys + (k - 0.5) * 0.22, s=16,
+                   color=(BLUE if k == 0 else RED), label=pt.replace('_', ' '),
+                   zorder=3)
+        ax.axvline(e['nominal']['min_angle_deg'], color=(BLUE if k == 0 else RED),
+                   lw=0.8, ls=':', zorder=1)
+    ax.axvline(15, color=INK, ls='--', lw=1)
+    ax.annotate('confusable\nthreshold', (14.4, len(labels) - 1.2), ha='right',
+                fontsize=6.5, color=INK)
+    ax.set_yticks(ys)
+    ax.set_yticklabels(labels, fontsize=6.5)
+    ax.set_xlim(0, 17)
+    ax.set_xlabel('minimum signature angle [deg]')
+    ax.set_title('The verdict does not move', fontsize=8)
+    ax.legend(frameon=False, fontsize=6.5, loc='lower right')
+
+    ax = axes[1]
+    for k, pt in enumerate(pts):
+        e = d['points'][pt]
+        med = [e['perturbations'][l]['column_shift_median_deg'] for l in labels]
+        mx = [e['perturbations'][l]['column_shift_max_deg'] for l in labels]
+        col = BLUE if k == 0 else RED
+        off = (k - 0.5) * 0.22
+        ax.hlines(ys + off, med, mx, color=col, lw=0.8, alpha=0.5, zorder=2)
+        ax.scatter(med, ys + off, s=16, color=col, zorder=3)
+        ax.scatter(mx, ys + off, s=9, color=col, marker='|', zorder=3)
+    ax.axvline(5, color=INK, ls='--', lw=1)
+    ax.annotate('pre-registered\n$5^\\circ$ bound', (5.4, len(labels) - 1.6),
+                fontsize=6.5, color=INK)
+    ax.set_yticks(ys)
+    ax.set_yticklabels([])
+    ax.set_xlabel('signature direction shift [deg]')
+    ax.set_title('median (dot) to worst fault (tick)', fontsize=8)
+    fig.tight_layout()
+    fig.savefig(FIG_DIR / 'icm_robustness.pdf')
+    plt.close(fig)
+
+    v = d['verdicts']
+
+    def yn(k):
+        return r'\textbf{confirmed}' if v[k]['confirmed'] else r'\textbf{refuted}'
+
+    lo, hi = v['H-ICM.1']['min_angle_range_deg']
+    rows = [
+        ('H-ICM.1', 'Rank, minimum angle and most-confusable pair unchanged '
+                    'under every calibration perturbation',
+         f"{yn('H-ICM.1')} --- min.\\ angle stays in {lo:.2f}--{hi:.2f}$^\\circ$, "
+         f"rank 3, top pair unchanged"),
+        ('H-ICM.2', 'Median signature-direction shift $\\leq 5^\\circ$ and the '
+                    'confusable set unchanged in $\\geq 90$\\,\\% of perturbations',
+         f"{yn('H-ICM.2')} --- median {v['H-ICM.2']['median_column_shift_deg']:.2f}"
+         f"$^\\circ$, worst {v['H-ICM.2']['max_column_shift_deg']:.2f}$^\\circ$; "
+         f"set unchanged in {100 * v['H-ICM.2']['confusable_set_unchanged_frac']:.0f}\\,\\%"),
+        ('H-ICM.3', 'The $\\pm0.5$\\,\\% finite-difference step is in the linear regime '
+                    '($<2^\\circ$, $<5$\\,\\% vs 0.25/1.0\\,\\%)',
+         f"{yn('H-ICM.3')} --- {v['H-ICM.3']['max_direction_deg']:.2f}$^\\circ$, "
+         f"{v['H-ICM.3']['max_magnitude_dev_pct']:.2f}\\,\\% magnitude"),
+    ]
+    lines = ['% AUTOGENERATED by scripts/make_report_assets.py — do NOT edit by hand',
+             r'\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.09\textwidth}'
+             r'>{\raggedright\arraybackslash}p{0.42\textwidth}'
+             r'>{\raggedright\arraybackslash}p{0.43\textwidth}@{}}',
+             r'\toprule', r'ID & Frozen criterion & Verdict \\', r'\midrule']
+    for hid, crit, verdict in rows:
+        lines.append(f'{hid} & {crit} & {verdict} \\\\')
+    lines += [r'\bottomrule', r'\end{tabular}']
+    (TAB_DIR / 'table_icm_robustness.tex').write_text('\n'.join(lines) + '\n')
+    print('  ICM robustness assets done')
+
+
 def fig_rul_distribution():
     """Per-engine confirmatory RUL error distribution, traditional vs AI."""
     import matplotlib.pyplot as plt
@@ -1492,6 +1720,8 @@ def artifact_assets():
     fig_wall()
     fig_lrul()
     fig_confusable_angles()
+    gpa_assets()
+    icm_robustness_assets()
     fig_degradation_profiles()
     fig_detector_anatomy()
     fig_isolation_confusion()

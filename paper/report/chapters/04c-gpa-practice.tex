@@ -1,0 +1,228 @@
+\chapter{Gas path analysis of the CFM56-7B26, in practice}
+\label{ch:gpa-practice}
+
+\begin{quote}\itshape
+This chapter in brief: \cref{ch:background} gave the theory of gas path analysis and
+\cref{ch:model} built the influence matrix. Here the two meet the engine: known faults are
+injected into the nonlinear twin, the measurements are inverted exactly as a fielded GPA
+system would invert them, and we measure what comes back --- how much of the fault, spread
+over which components, how small a fault can still be named, and what happens when a real
+engine carries eight of them at once. This is the classical GPA performance study for this
+specific engine, and it is the quantitative floor every later chapter is measured against.
+\end{quote}
+
+\keyidea{Run the textbook GPA on this engine and the cockpit sensor set returns, on average, a
+quarter of the injected fault with $85\,\%$ of the estimated magnitude smeared onto healthy
+components --- the wall is visible before any learning, any fleet, or any hypothesis. Station
+probes turn most of that around, which is why the sensor conclusion recurs in every later
+chapter.}
+
+
+\section{The experiment: honest forward, classical inverse}
+\label{sec:gpa-setup}
+
+A GPA study is only as honest as its forward model. Inverting the same linear matrix that
+generated the measurements would be circular --- the answer would be exact by construction and
+would say nothing about the real thing. So the two directions are deliberately different
+instruments:
+
+\begin{description}
+  \item[Forward (truth).] The \textbf{nonlinear} neural twin of \cref{sec:f8-l1}: a health
+    state goes in, the eight gas-path channels come out with the full curvature of the pyCycle
+    physics, $13$--$19\times$ closer to it than a linearization. This plays the engine.
+  \item[Inverse (the diagnosis).] The \textbf{linear} regularized weighted least squares of
+    \cref{eq:wls} on the F1 cruise influence matrix, at the engineering defaults registered in
+    \cref{ch:decisions} (prior $\sigma = 2\,\%$, $\lambda = 1$). This plays the monitoring
+    system --- and, like every fielded GPA, it does not know the physics is curved.
+  \item[Sensors.] Gaussian noise per channel at the magnitudes of the versioned fault catalog,
+    expressed as a percentage of the healthy cruise value: N2 $0.05\,\%$, $W_f$ $0.50\,\%$,
+    EGT $0.22\,\%$, P25 $0.40\,\%$, T25 $0.42\,\%$, PS3 $0.40\,\%$, T3 $0.28\,\%$. Every
+    experiment is run twice, once with the cockpit set (N2, $W_f$, EGT) and once with the
+    extended set that adds the four station probes.
+\end{description}
+
+All of it is \code{scripts/gpa_study.py}; every number below is read from its artifact
+(\code{data/processed/gpa/gpa_study.json}), never transcribed.
+
+\paragraph{One run, end to end.} Take the canonical fault: the HPC loses $1\,\%$ of
+efficiency, nothing else. The twin says the cockpit sees N2 fall by $0.12\,\%$, fuel flow rise
+by $0.57\,\%$ and EGT rise by $0.52\,\%$. Feed that to the inversion and it returns
+$-0.26\,\%$ on HPC efficiency --- a quarter of the truth --- with the rest of the magnitude
+scattered across the other nine parameters. Repeat the run 500 times with fresh sensor noise
+and the diagnosis names the HPC correctly in $22\,\%$ of them; its favourite wrong answer is
+the HPT. Nothing has gone wrong: this is what the textbook method does on this engine with
+these sensors, and the rest of the chapter is the systematic version of that one run.
+
+\section{The fault signature atlas}
+\label{sec:gpa-atlas}
+
+Before any inversion, the forward half deserves to be seen. \Cref{fig:gpa-atlas} is the
+classical GPA deliverable --- one panel per health parameter, showing how each measured channel
+responds to a $+1\,\%$ deviation of it. It is the same information as the heat map of
+\cref{fig:icm}, drawn the way a practitioner reads it: as ten fingerprints to be told apart.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{gpa_atlas}
+  \caption{Fault signature atlas at cruise: the response of every measured channel to a
+  $+1\,\%$ deviation of each health parameter. Blue bars are the cockpit channels, grey the
+  station probes an operator may not have. Read across the blue bars only and several panels
+  become hard to tell apart --- that is the diagnosis problem in one picture.
+  Auto-generated.}
+  \label{fig:gpa-atlas}
+\end{figure}
+
+Two readings matter. First, \emph{shape}: covering the grey bars, the HPC-efficiency and
+HPT-efficiency panels are near-copies of one another (N2 $+0.12$ vs $+0.16$, $W_f$ $-0.57$ vs
+$-0.70$, EGT $-0.52$ vs $-0.68$ \%\,per\,\%) --- proportional to within a couple of degrees of
+angle, the pair \cref{sec:icm} measured at $1.3^{\circ}$. Second, \emph{size}: the panels are
+not drawn to the same effective scale. Fan flow capacity moves the cockpit channels seventeen
+times harder than HPT flow capacity does; a turbine whose effective nozzle area has opened by
+$1\,\%$ barely disturbs the three numbers an airline receives. The station probes are what
+break both problems --- PS3 alone responds to HPT flow capacity at $-1.05\,\%$ per \%, an
+order of magnitude more than any cockpit channel.
+
+\section{What the inversion gives back}
+\label{sec:gpa-recovery}
+
+Inject each fault at $1\,\%$ in its physically expected direction, invert, and compare
+(\cref{fig:gpa-recovery} and \cref{tab:gpa-study}). Two quantities matter to a maintenance
+engineer: how much of the magnitude comes back, and how much of what comes back is attached to
+the wrong component --- the \emph{smearing index}, the fraction of $\|\hat{\mathbf{x}}\|_1$
+sitting on healthy parameters.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{gpa_recovery}
+  \caption{Single-fault recovery at $1\,\%$, cockpit versus extended sensors. Left: the
+  fraction of the injected magnitude the estimator returns on the correct parameter (noise-free
+  --- so this is the ceiling, not an average case). Right: the smearing index, the share of the
+  estimated magnitude landing on components that are in fact healthy. Auto-generated.}
+  \label{fig:gpa-recovery}
+\end{figure}
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The GPA scorecard for this engine, per health parameter and sensor set: magnitude
+  recovered, smearing index, correct-isolation rate at a $1\,\%$ fault, and the smallest fault
+  the nearest-signature rule names correctly in $90\,\%$ of noisy draws. Auto-generated from
+  \texttt{scripts/gpa\_study.py}.}
+  \label{tab:gpa-study}
+  \input{tables/table_gpa_study}
+\end{table}
+
+With the cockpit set the recovered fraction spans $2$--$76\,\%$ and the median smearing index
+is $0.85$: on a typical single fault, six sevenths of the diagnosed magnitude is attributed to
+components that are fine. The extended set lifts recovery to $32$--$90\,\%$ while barely
+moving the smearing index ($0.82$) --- more sensors buy \emph{magnitude}, not tidiness, because
+the estimator still spreads what it cannot separate.
+
+The extremes are the instructive part. \textbf{HPT flow capacity} is the pathological case:
+$1.9\,\%$ of it comes back from the cockpit --- the fault is, for practical purposes, invisible
+--- and $90\,\%$ from the extended set, a $47\times$ improvement bought by one probe at the HPC
+exit. \textbf{HPC efficiency}, the parameter an operator most wants, goes from $26\,\%$ to
+$89\,\%$. At the other end, the two LPT parameters improve barely at all ($21\to32\,\%$ and
+$15\to32\,\%$): no probe in either set sits downstream of the low-pressure turbine, so no
+sensor package considered here can see it. The certificate of \cref{ch:breakthrough} states
+the same fact as a Fisher-information calculation; here it is simply measured.
+
+\paragraph{Why nothing reaches $100\,\%$, even without noise.} The regularization is not a
+defect but a choice, and it costs magnitude. The $\lambda\mathbf{P}_0^{-1}$ term of
+\cref{eq:wls} pulls the estimate toward zero wherever the measurements do not insist
+otherwise, so an unobservable direction returns almost nothing and an observable one returns
+most of the truth. That shrinkage is exactly what keeps the ill-conditioned inversion from
+exploding into the noise-amplified nonsense of the toy example in \cref{sec:gpa}; the price is
+paid in bias.
+
+\paragraph{A bias the certificate had to learn about.} The trade is visible in the numbers.
+Under cockpit sensors the estimator's \emph{spread} is small ($0.02$--$0.35\,\%$) while its
+\emph{bias} is large ($0.27$--$0.98\,\%$); total error stays between $0.44$ and $0.98\,\%$,
+comfortably \emph{below} the Cram\'er--Rao bound of $1.04$--$1.98\,\%$. There is no paradox: the
+Cram\'er--Rao bound constrains \emph{unbiased} estimators, and this one is deliberately biased,
+so it is allowed to beat the bound in mean-square error by giving up accuracy of the mean.
+This is the same discovery that refuted hypothesis H10.2 in \cref{sec:bt-honesty} --- the bound
+gives the right \emph{shape} of the uncertainty and the wrong \emph{scale} --- reached here from
+the opposite direction, on a single snapshot rather than an accumulated history.
+
+\section{How small a fault can be named}
+\label{sec:gpa-detectability}
+
+Recovery measures magnitude; an operator also wants to know when a diagnosis can be
+\emph{trusted}. Sweeping the injected magnitude and asking the classical nearest-signature rule
+(\cref{sec:trad-overview}) to name the fault gives the detectability curves of
+\cref{fig:gpa-detectability}: the smallest fault named correctly in $90\,\%$ of noisy draws is
+the practical resolution limit of the sensor set.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{gpa_detectability}
+  \caption{Correct-isolation rate against fault magnitude for four representative parameters,
+  cockpit versus extended sensors; the dashed line is the $90\,\%$ criterion. The extended set
+  crosses it between $0.75$ and $1.5\,\%$ for most faults; the cockpit set mostly never does
+  within the $3\,\%$ range swept. Auto-generated.}
+  \label{fig:gpa-detectability}
+\end{figure}
+
+The result is stark. Across the ten parameters the cockpit set reaches the $90\,\%$ criterion
+for \textbf{one} of them (fan flow capacity, at $2\,\%$); the extended set reaches it for
+\textbf{seven}, several as low as $0.75$--$1.5\,\%$. Three parameters --- LPC efficiency, HPC
+flow capacity and LPT efficiency --- are never resolved by either set inside the swept range;
+for those the classical rule usually abstains rather than guessing wrong, which is the correct
+behaviour and worth more than a confident error. Set against the fleet's own fault magnitudes
+($0.3$--$1.1\,\%$ after the v1.1 difficulty gate, \cref{sec:fleet-v11}), the reading is that
+\emph{most faults in this benchmark sit below the cockpit set's resolution limit} --- which is
+precisely why the isolation contest of \cref{sec:res-h2} ends in a tie near chance level, and
+why it was pre-registered as a hypothesis about information rather than about algorithms.
+
+\section{A real engine, eight faults at once}
+\label{sec:gpa-multifault}
+
+Single-fault studies are the textbook exercise; real engines deteriorate everywhere at once.
+\Cref{fig:gpa-multifault} takes engine 99 of the fleet at cycle $19\,489$ --- late life, still
+on wing --- and asks both sensor sets to diagnose its true ten-component state.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{gpa_multifault}
+  \caption{A real fleet engine's end-of-life health state (black) and the GPA diagnosis of it
+  under each sensor set, with the sensor-noise spread as error bars. The cockpit inversion
+  recovers the hot-section efficiency loss but almost entirely misses the turbine flow-capacity
+  opening that accompanies it; the extended set recovers both. Auto-generated.}
+  \label{fig:gpa-multifault}
+\end{figure}
+
+The engine's true state is dominated by hot-section deterioration: HPT efficiency
+$-4.20\,\%$ with the flow capacity opened $+2.39\,\%$, plus HPC efficiency $-2.33\,\%$ from
+fouling and wear. The cockpit diagnosis gets the headline right --- HPT efficiency
+$-3.28\,\%$, HPC efficiency $-2.47\,\%$ --- and then fails on the physics that would confirm it:
+the turbine flow opening comes back as $+0.61\,\%$ of the true $+2.39$, so the classic
+eroded-nozzle fingerprint is not visible in the diagnosis at all. The extended set recovers it
+($+2.49\,\%$) and cuts the overall error from $1.05$ to $0.85\,\%$ RMSE.
+
+Both sets share the same failure, and it is the honest lesson of the chapter: they invent
+deterioration that is not there. True fan efficiency loss is $-0.46\,\%$; both diagnoses report
+three times that. True LPT flow capacity is $+0.14\,\%$; both report about $-1.3\,\%$, wrong in
+sign as well as magnitude. The estimator must place the measured residual \emph{somewhere}, and
+in directions the sensors cannot resolve it places it wherever the regularization finds
+cheapest. A maintenance decision taken on those two numbers would open a healthy module.
+
+\section{What this chapter fixes in place}
+
+Everything that follows is measured against this baseline, and three of its conclusions recur
+so often that it is worth naming them here:
+
+\begin{enumerate}
+  \item \textbf{The wall is in the sensors, and it is visible before any learning.} With the
+    cockpit set the textbook method recovers a quarter of a typical fault, smears $85\,\%$ of
+    what it finds onto healthy components, and resolves one parameter in ten. No estimator
+    choice in this document changes that, because \cref{sec:f8-lh2} shows the missing quantity
+    is information, not algorithm.
+  \item \textbf{Station probes are worth more than they cost.} Recovery, isolation and
+    resolution all improve by roughly a factor of three, and the parameters they rescue
+    (HPC efficiency, HPT flow capacity) are exactly the ones a shop visit is scheduled around.
+    \Cref{sec:bt-honesty} turns that into a per-sensor purchasing calculation.
+  \item \textbf{A GPA number without a confidence statement is not a diagnosis.} The same
+    inversion returns a reliable HPC efficiency under one sensor set and reads pure noise under
+    another, with nothing in its output to distinguish the two cases. That is the gap the
+    certificate of \cref{ch:breakthrough} exists to close.
+\end{enumerate}

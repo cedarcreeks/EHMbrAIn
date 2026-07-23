@@ -343,6 +343,7 @@ estimator: this is the smearing mechanism measured, and it defines the ``confusa
 which hypothesis H2 will compare the AI's isolation ability against WLS-GPA. The extended
 sensor set (adding P25/T25/PS3/T3) raises the rank to 7 and multiplies the minimum angle by
 roughly five ---the quantitative basis for the sensor-set ablation of contribution C6.
+\Cref{ch:gpa-practice} takes this geometry and measures what it costs a working diagnosis.
 
 The analysis is repeated over a six-point grid spanning the envelope ---both snapshot
 conditions plus power, altitude, climb and hot-day variations (\cref{tab:icm-grid}). The
@@ -393,7 +394,12 @@ the HPT-exit temperature (station 45), a consistent proxy ---identical for groun
 both EHM pipelines--- of the certified T49.5, whose displayed value additionally carries the
 shunt and trim functions described in \cref{sec:engine}; and (vi) the idle error quoted above.
 None of these limitations affects the validity of the AI-versus-traditional comparison, which
-rests on the model's sensitivity structure (the ICM), not on its absolute values.
+rests on the model's sensitivity structure (the ICM), not on its absolute values --- an
+assertion that is no longer left as one: \cref{sec:f-icm} perturbs every calibration knob
+inside its own contract tolerance and finds the observability verdict (rank, the
+$1.3^{\circ}$ confusable pair, the sensor conclusion) invariant, while flagging the one part
+that is \emph{not} robust --- the exact membership of the confusable list at its $15^{\circ}$
+boundary.
 
 \section{Automated verification}
 

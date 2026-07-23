@@ -20,11 +20,13 @@ Ten declared limitations, ten research lines. The ordering is by synergy, not se
 the two physics-injection mechanisms H4 left untested --- exact-gradient physics losses and
 twin-residual features --- (L6), and fast analysis-by-synthesis diagnosis. Mission-mix
 generation (L2) then feeds the report-schedule findings of \cref{ch:tomography} with data
-rather than geometry alone. This chapter reports the nine lines executed to date: L1 (the twin), L2 (the nonlinear
+rather than geometry alone. This chapter reports the ten lines executed to date: L1 (the twin), L2 (the nonlinear
 fleet), L6 (H4 re-opened), L5 (architecture breadth, \cref{sec:f8-l5}), L4 (the recoverable
 fraction, \cref{sec:f8-l4}), L9 (the PCS metric, \cref{sec:f8-l9}), L7 (sensor drift,
-\cref{sec:f8-l7}), L-H2 (real vs virtual sensors, \cref{sec:f8-lh2}) and L-RUL (an advanced
-classical prognostic, \cref{sec:f8-lrul}). The heavier remaining lines --- real-station
+\cref{sec:f8-l7}), L-H2 (real vs virtual sensors, \cref{sec:f8-lh2}), L-RUL (an advanced
+classical prognostic, \cref{sec:f8-lrul}) and L-ICM, which turns the study's own premise ---
+that the ICM's \emph{structure} outlives the twin's calibration error --- into a measurement
+(\cref{sec:f-icm}). The heavier remaining lines --- real-station
 EGT, N-CMAPSS DS02 and map-shape calibration --- queue behind those, each a pre-registrable
 study in its own right.
 Every line inherits the house discipline: a hypothesis frozen before the run, and a gate that
@@ -332,18 +334,117 @@ not --- but it is a $30\,\%$ edge over a good classical method, not an order of 
   \label{fig:lrul}
 \end{figure}
 
-\section{The F8 program so far}
-\label{sec:f8-summary}
+\section{L-ICM: the sensitivity study the premise owed}
+\label{sec:f-icm}
 
-\Cref{tab:f8-summary} collects the nine executed lines and their verdicts. The shape of the
-table is the point: capability-extending lines (L1, L2, L4, L5) succeed, while lines that
-probe the confusable-isolation wall (L7, L9) return partial results that reinforce it, and
-the one physics-injection line (L6) is a clean negative. The honest ledger is what a research
-program looks like when its gates are allowed to fail.
+\paragraph{Why this one is different.} Every line above tests a \emph{result}. This one tests
+a \emph{premise} --- and the load-bearing one. \Cref{sec:limitations} closes the model chapter
+with an assertion: the declared limitations (generic maps, no transients, approximate speed
+labels) do not endanger the comparison, ``which rests on the model's sensitivity structure
+(the ICM), not on its absolute values.'' Everything downstream leans on it: the H2 wall is a
+statement about ICM geometry, the confusable subset is defined by ICM angles, the F10
+certificate inverts the same matrix. Yet the assertion was never measured. If a calibration
+error inside the contract's own tolerance moved the signature angles appreciably, the
+observability verdict would inherit the twin's uncertainty and every claim built on it would
+need that caveat. This line performs the classical GPA sensitivity study on our own premise
+(\code{docs/prereg-v13.md}, tag \code{prereg-v13}).
+
+\paragraph{What is perturbed.} Each calibration knob is moved inside the tolerance its own
+contract declares (\cref{tab:tcds}, \cref{ch:decisions}), one at a time and then jointly at
+adverse signs: the HPC design pressure ratio and the HP map speed reference ($\pm3$\,\%, the
+two quantities \cref{sec:calibration} actually calibrated), the design thrust and rating
+temperature ($\pm3$\,\%, the class-[A] and class-[D] values), the design bypass ratio
+($\pm0.2$, the EEDB tolerance) and all five component efficiencies ($\pm2$\,\% relative ---
+the generic-map limitation made numeric). The cockpit ICM is recomputed from scratch at
+cruise and at hot-day takeoff for every perturbation, and the observability verdict is
+re-read: rank, minimum signature angle, the identity and membership of the confusable set,
+and the angle by which each individual fault signature rotates. The same run sweeps the
+finite-difference step ($\pm0.25$ / $\pm0.5$ / $\pm1.0$\,\%), until now a reasoned
+convention rather than a measured one.
 
 \begin{table}[htbp]
   \centering\small
-  \caption{The nine executed F8 limitation-overcoming lines and their pre-registered verdicts.}
+  \caption{L-ICM pre-registered verdicts (\texttt{prereg-v13}): does the observability
+  verdict survive calibration error? Auto-generated.}
+  \label{tab:icm-robustness}
+  \input{tables/table_icm_robustness}
+\end{table}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\textwidth]{icm_robustness}
+  \caption{L-ICM. Left: the minimum cockpit signature angle under every calibration
+  perturbation, at both snapshot conditions; dotted lines are the nominal values, the dashed
+  line the $15^{\circ}$ confusability threshold. Right: how far each fault signature rotates
+  (dot = median over the ten health parameters, tick = worst one) against the pre-registered
+  $5^{\circ}$ bound. Auto-generated.}
+  \label{fig:icm-robustness}
+\end{figure}
+
+\paragraph{The premise holds --- H-ICM.1 confirmed.} Under all twenty-six
+perturbation-condition combinations the cockpit matrix keeps rank 3, the minimum signature
+angle stays between $0.94$ and $1.45^{\circ}$ (nominal $1.32^{\circ}$ at cruise,
+$1.25^{\circ}$ at hot-day takeoff), and the most-confusable pair remains
+$\eta_{\mathrm{HPC}}\!\sim\!\eta_{\mathrm{HPT}}$ every single time --- including under the
+joint adverse draw that moves every knob at once. The H2 wall is not an artifact of how the
+twin was calibrated. Neither is it fragile to \emph{how} the matrix is computed: the finite
+differences are insensitive to the design thrust and the map speed reference almost entirely
+(median shifts of $0.00$--$0.03^{\circ}$ --- the speed reference is a labelling convention, so
+the physics behind the sensitivities never notices it), and even the rating temperature, the
+most influential knob, leaves the verdict intact.
+
+\paragraph{But the margins are not --- H-ICM.2 refuted, and worth the refutation.} The median
+signature rotation is $0.61^{\circ}$, an order of magnitude inside the pre-registered
+$5^{\circ}$ bound, and no perturbation exceeds $1.86^{\circ}$ at the median. The clause that
+fails is the second one: the confusable set is unchanged in only $81\,\%$ of perturbations,
+under the frozen $90\,\%$ requirement. Five perturbations at hot-day takeoff move a pair
+across the $15^{\circ}$ line --- $\Gamma_{\mathrm{LPC}}\!\sim\!\Gamma_{\mathrm{LPT}}$ enters,
+$\eta_{\mathrm{fan}}\!\sim\!\eta_{\mathrm{LPC}}$ leaves --- taking the count from seven to six
+or eight. The mechanism is the same one that produces the $31.7^{\circ}$ worst-case rotation,
+and it has a name in this document already: $\Gamma_{\mathrm{LPC}}$ carries one of the
+weakest cockpit signatures (a column norm of $0.27$ against fan flow capacity's $2.68$), so
+its \emph{direction} is numerically soft and swings under any change to the cycle. The
+directions whose geometry is unstable are precisely the directions the F10 certificate
+already labels unobservable, and whose diagnosis \cref{ch:gpa-practice} already showed to be
+worthless. The refutation therefore sharpens rather than damages the picture: \textbf{the
+load-bearing verdict is calibration-invariant, the marginal membership of the confusable list
+is not}, and any future work that treats the seven-pair count as a fixed property of the
+engine --- rather than the core pair plus a soft fringe --- would be over-reading it.
+
+\paragraph{And the step needs saying out loud --- H-ICM.3 refuted.} Recomputing the matrix at
+$\pm0.25\,\%$ and $\pm1.0\,\%$ moves column magnitudes by at most $4.2\,\%$ (inside the frozen
+$5\,\%$) but rotates the worst column by $5.99^{\circ}$, three times the frozen $2^{\circ}$.
+Once more the offender is $\Gamma_{\mathrm{LPC}}$, with $\Gamma_{\mathrm{LPT}}$ second at
+$2.15^{\circ}$; for the seven parameters that matter operationally the shift is a small
+fraction of a degree. The honest statement is therefore narrower than the one the register
+carried before this line ran: the $\pm0.5\,\%$ central difference is in the linear regime
+\emph{for the observable directions}, and is not a well-posed quantity for the two near-null
+ones --- because a near-zero vector has no stable direction to measure. That is a property of
+the engine, not of the step.
+
+\paragraph{What it costs, and what it buys.} Two of three frozen criteria failed, and both
+failures trace to one cause that the study had no way to anticipate --- weak columns have
+unstable directions --- which is exactly the kind of thing pre-registration is supposed to
+catch rather than let an author quietly discover and then present as if it had been expected.
+The premise the chapter set out to test survives in the form that matters: every claim in this
+document that rests on \emph{the confusable core} (H2, the certificate, the sensor
+recommendation) is calibration-robust, and the claims that rest on the exact confusable
+\emph{count} are now known not to be.
+
+\section{The F8 program so far}
+\label{sec:f8-summary}
+
+\Cref{tab:f8-summary} collects the ten executed lines and their verdicts. The shape of the
+table is the point: capability-extending lines (L1, L2, L4, L5) succeed, while lines that
+probe the confusable-isolation wall (L7, L9) return partial results that reinforce it, the
+one physics-injection line (L6) is a clean negative, and the one line that audits the
+project's own premise (L-ICM) confirms it where it is load-bearing and refutes two of its
+own frozen margins. The honest ledger is what a research program looks like when its gates
+are allowed to fail.
+
+\begin{table}[htbp]
+  \centering\small
+  \caption{The ten executed F8 limitation-overcoming lines and their pre-registered verdicts.}
   \label{tab:f8-summary}
   \begin{tabular}{>{\raggedright\arraybackslash}p{0.06\textwidth}>{\raggedright\arraybackslash}p{0.42\textwidth}>{\raggedright\arraybackslash}p{0.44\textwidth}}
     \toprule
@@ -358,6 +459,7 @@ program looks like when its gates are allowed to fail.
     L9 & Can the PCS metric be validated? & \textbf{Partly} --- tracks correctness weakly; no strongly-physical classifier to test against (\cref{sec:f8-l9}) \\
     L-H2 & Does breaking the wall need a \emph{real} sensor? & \textbf{Yes} --- real station sensors lift confusable isolation 0.15$\to$0.92; a virtual one adds nothing (\cref{sec:f8-lh2}) \\
     L-RUL & Does an advanced classical prognostic narrow H3? & \textbf{Yes, but} --- it halves the traditional error (1981$\to$1118); the AI still wins 858 (\cref{sec:f8-lrul}) \\
+    L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     \bottomrule
   \end{tabular}
 \end{table}

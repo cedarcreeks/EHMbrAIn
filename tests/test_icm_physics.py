@@ -70,3 +70,22 @@ def test_icm_matrix_consistency():
     assert H[egt, params_idx['hpc.eta']] < 0
     # Underdetermination: 3 measurements for 10 unknowns
     assert np.linalg.matrix_rank(H) == 3
+
+
+def test_calibration_override_moves_the_model_not_the_verdict():
+    """The `overrides` hook (L-ICM) must actually perturb the calibration --- a
+    silently ignored override would make the robustness study vacuous --- while
+    leaving the cockpit underdetermination that every GPA claim rests on."""
+    base = build_study_problem()
+    base.set_solver_print(level=-1)
+    base.run_model()
+    opr_nominal = snapshot(base, 'OD')['OPR']
+
+    pert = build_study_problem(overrides={'DESIGN.hpc.PR': (9.35 * 1.03, None)})
+    pert.set_solver_print(level=-1)
+    pert.run_model()
+    s = snapshot(pert, 'OD')
+    assert s['OPR'] > opr_nominal * 1.01      # the override reached the cycle
+    assert np.linalg.matrix_rank(
+        compute_icm(channels=COCKPIT, step=0.005,
+                    overrides={'DESIGN.hpc.PR': (9.35 * 1.03, None)})[0]) == 3

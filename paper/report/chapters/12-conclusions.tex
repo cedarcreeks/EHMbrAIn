@@ -55,6 +55,8 @@ visible as wins.
     intervals) & \cref{ch:results} \\
   What can today's sensors know? & Exactly the identifiable subspace the certificate maps &
     \cref{ch:breakthrough} \\
+  What does textbook GPA deliver here? & A quarter of the fault recovered, $85\,\%$ smeared,
+    1 parameter of 10 resolved --- before any learning & \cref{ch:gpa-practice} \\
   Is a large RUL error the method's fault or the future's? & Both, by life stage: $87\,\%$
     irreducible early; a $4\times$ reducible gap late & \cref{sec:bt-prognostic-floor} \\
   How many unscheduled removals become scheduled? & AI nets $35$--$50\,\%$ vs traditional
@@ -82,6 +84,8 @@ visible as wins.
     tuning budget, frozen by pre-registration & \cref{sec:fair-design} \\
   How to trust a synthetic dataset? & Three audits and a difficulty gate that is allowed to
     fail (and did) & \cref{sec:audits} \\
+  How to test your own premise? & Perturb the calibration inside its tolerance and re-read the
+    verdict: robust at the core, not at the fringe & \cref{sec:f-icm} \\
   How to build the benchmark from public data alone? & Certified TCDS/EEDB measurements
     $\rightarrow$ calibrated twin & \cref{ch:model}, \cref{ch:data} \\
   How to prove an uncertainty statement is honest? & Validate it against ground truth ---
@@ -94,7 +98,9 @@ visible as wins.
 
 From nothing but certified public data, this work produced: a calibrated thermodynamic twin
 of the CFM56-7B26 whose fuel-flow predictions sit within 3\,\% of certification test-bed
-measurements (C1's foundation); \textbf{SynCFM56}, a 100-engine run-to-failure fleet with
+measurements (C1's foundation); a full classical gas-path-analysis characterization of that
+engine --- signature atlas, recovery, smearing and detectability limits per sensor set
+(\cref{ch:gpa-practice}); \textbf{SynCFM56}, a 100-engine run-to-failure fleet with
 complete per-flight ground truth in airline snapshot format, gated by three audits that
 failed and were fixed twice (C1); a traditional EHM pipeline built to industrial shape and a
 matched AI suite consuming identical inputs (C2's fairness); conformal uncertainty for

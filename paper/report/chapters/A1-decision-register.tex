@@ -66,8 +66,10 @@ differently --- and the class tells them what evidence their alternative needs.
   HPC design PR & 9.35 & [M] & calibrated to the measured SLS OPR 27.61 \\
   HP map speed reference & 13 940 rpm & [M] & placed so rated-thrust N2 respects the TCDS redline \\
   Rating temperature $T_{4,\max}$ & 3200\,°R & [D] & from the calibrated takeoff anchor (\cref{sec:decks}) \\
-  ICM perturbation step & $\pm0.5$\,\% & [C] & central-difference standard: large enough to
-    dominate the $10^{-8}$ solver tolerance, small enough for linearity \\
+  ICM perturbation step & $\pm0.5$\,\% & [C]/[D] & central-difference standard: large enough to
+    dominate the $10^{-8}$ solver tolerance, small enough for linearity --- and, since
+    L-ICM, \emph{measured} rather than argued: swept against $\pm0.25$/$\pm1.0$\,\%
+    (\cref{sec:f-icm}) \\
   Confusable threshold & $15^{\circ}$ & [T] & pre-registered definition for H2; sensitivity
     checked implicitly by reporting all angles \\
   Deck envelope blocks \& PC $\geq 0.5$ & \cref{sec:decks} & [C] & EHM trending conditions \\
@@ -169,6 +171,10 @@ Tuning budget & 50 Optuna (TPE) trials per family & [C] & symmetric by design; e
     & [M] & the residual the linear GPA cannot explain; H4 refuted a 2nd way \\
   M3 (physics loss) & deferred & [D] & two H4 negatives shift the burden; needs its own
     pre-registration \\
+  ICM robustness to calibration & measured, not assumed & [D] & the premise that the study
+    rests on the ICM's \emph{structure}, not the twin's absolute values, is tested by
+    perturbing every calibration knob inside its contract tolerance (L-ICM, prereg-v13,
+    \cref{sec:f-icm}) \\
   Certificate instrument (F10) & first-order Fisher (linear $\mathbf{H}$) & [D] & curvature
     below the noise floor (measured), so first-order governs identifiability \\
   Certificate region scale & CRB shape $+$ split-conformal scale & [D] & CRB is a lower bound
