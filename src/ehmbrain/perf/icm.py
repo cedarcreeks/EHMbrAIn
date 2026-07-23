@@ -46,14 +46,17 @@ def _icm_column(args):
 
 
 def compute_icm(mn=0.78, alt_ft=35000.0, dTs=0.0, n1_rpm=4666.0, step=0.005,
-                channels=EXTENDED, guesses=None, verbose=False, n_workers=None):
+                channels=EXTENDED, guesses=None, verbose=False, n_workers=None,
+                overrides=None):
     """Central-difference ICM at one operating point.
 
     Returns (H, baseline) where H[i, j] = % change of channels[i] per +1 % of
     HEALTH_PARAMS[j], and baseline is the healthy snapshot dict.
     n_workers > 1 computes the columns in parallel processes (norm N1).
+    `overrides` perturbs the design/calibration inputs (see build_study_problem).
     """
-    op = dict(mn=mn, alt_ft=alt_ft, dTs=dTs, n1_rpm=n1_rpm, guesses=guesses)
+    op = dict(mn=mn, alt_ft=alt_ft, dTs=dTs, n1_rpm=n1_rpm, guesses=guesses,
+              overrides=overrides)
     H = np.zeros((len(channels), len(HEALTH_PARAMS)))
 
     if n_workers and n_workers > 1:

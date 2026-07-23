@@ -522,13 +522,21 @@ STUDY_CRUISE_GUESS = dict(FAR=0.0251, W=314.0, BPR=5.1, lp_Nmech=4666.0, hp_Nmec
 
 
 def build_study_problem(mn=0.78, alt_ft=35000.0, dTs=0.0, n1_rpm=4666.0,
-                        throttle_mode='N1', guesses=None):
-    """MPCFM56Study problem, solved-ready, healthy (all health factors = 1)."""
+                        throttle_mode='N1', guesses=None, overrides=None):
+    """MPCFM56Study problem, solved-ready, healthy (all health factors = 1).
+
+    `overrides` replaces (or adds to) DESIGN_INPUTS entries, same {name:
+    (value, units)} shape — the calibration-perturbation hook used by the
+    ICM robustness study.
+    """
     prob = om.Problem()
     prob.model = MPCFM56Study(throttle_mode=throttle_mode)
     prob.setup()
 
-    for name, (val, units) in DESIGN_INPUTS.items():
+    inputs = dict(DESIGN_INPUTS)
+    if overrides:
+        inputs.update(overrides)
+    for name, (val, units) in inputs.items():
         prob.set_val(name, val, units=units)
     prob['DESIGN.balance.FAR'] = 0.025
     prob['DESIGN.balance.W'] = 100.
