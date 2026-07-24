@@ -466,6 +466,11 @@ a gas path analysis testbed on the CFM56-7B with synthetic ground truth}
   {\small Both families tuned under the frozen 50-trial budget; the 20 test
   engines evaluated \alert{exactly once}; Wilcoxon paired by engine, one-sided
   exact McNemar for binary outcomes, Holm correction, BCa intervals.}
+  \medskip
+
+  {\small \alert{The two refutations did more work than the three confirmations:} H2 turned
+  an algorithm question into a purchase order, H4 removed a popular technique from the
+  shortlist.}
 \end{frame}
 
 \begin{frame}[t]{H1 --- the story is the tuning, not the model}
@@ -518,24 +523,26 @@ a gas path analysis testbed on the CFM56-7B with synthetic ground truth}
 \begin{frame}[t]{H3 and H5 --- prognosis is where learning pays}
   \lead{Not just a lower error: a differently shaped error.}
   \begin{columns}[T]
-    \begin{column}{0.58\textwidth}
+    \begin{column}{0.5\textwidth}
       \centering
-      \includegraphics[width=\linewidth]{rul_distribution}
+      \includegraphics[width=0.98\linewidth]{rul_distribution}
     \end{column}
-    \begin{column}{0.42\textwidth}
+    \begin{column}{0.5\textwidth}
       RMSE \alert{$1694/1042/858$} cycles at $50/70/90\,\%$ of life, against
       $3816/4544/1981$. Cliff's $\delta = 0.89$, Holm $p = 8.6\times10^{-6}$.
       \medskip
 
-      The traditional errors are wide and \alert{skewed optimistic} --- late
-      retirement predictions, the dangerous direction. The AI's are tight and
-      near-unbiased.
+      \textbf{Two scales, both true:} $\sim$2.3$\times$ over the extrapolation an operator
+      fields \emph{today}, $\sim$1.3$\times$ over the best \emph{advanced} classical
+      prognostic.
       \medskip
 
-      \textbf{H5}: conformal intervals cover $88.3\,\%$ at $\pm1957$ cycles
-      versus the slope band's over-covering $98.3\,\%$ at $\pm11\,509$ ---
-      \alert{a maintenance window six times narrower, with honest stated
-      confidence}.
+      Traditional errors are wide and \alert{skewed optimistic} --- the dangerous direction;
+      the AI's are tight and near-unbiased.
+      \medskip
+
+      \textbf{H5}: conformal intervals \alert{six times narrower} than the slope band
+      ($\pm1957$ vs $\pm11\,509$ cy) at honest coverage.
     \end{column}
   \end{columns}
 \end{frame}
@@ -760,8 +767,9 @@ a gas path analysis testbed on the CFM56-7B with synthetic ground truth}
       \textbf{\textcolor{bluec}{Learning wins}} where the task is
       \emph{statistical aggregation over time}:
       \begin{itemize}\small
-        \item prognosis: $858$ vs $1981$ cycles, robust across three architectures
-          and across sensor quality
+        \item prognosis: $858$ vs $1981$ cycles ($\sim$2.3$\times$ over fielded practice,
+          $\sim$1.3$\times$ over the best classical method), robust across architectures and
+          sensor quality
         \item detection timing: $12\times$ earlier at equal false alarms
         \item calibrated uncertainty: $6\times$ tighter at honest coverage
       \end{itemize}
@@ -776,11 +784,11 @@ a gas path analysis testbed on the CFM56-7B with synthetic ground truth}
       \end{itemize}
     \end{column}
   \end{columns}
-  \vspace{4mm}
+  \vspace{3mm}
   \begin{alertblock}{And physics did not lose --- it diagnosed the limits}
-    The influence-matrix geometry predicted, \emph{before any learning ran},
-    exactly where every method would fail. Injecting physics into the learner
-    failed twice; using physics to know what is knowable succeeded.
+    The influence-matrix geometry predicted, \emph{before any learning ran}, where every
+    method would fail. Injecting physics into the learner failed twice; using it to know the
+    limits succeeded.
   \end{alertblock}
 \end{frame}
 

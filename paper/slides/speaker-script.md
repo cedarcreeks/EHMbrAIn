@@ -352,7 +352,11 @@ the quantitative floor for everything after. Do not skip 19.]_
 >
 > Three confirmed, two refuted. _[let them read for a beat]_ And I want to be
 > clear that the two refutations are not failures of the study — they are two of
-> its four most useful results. I will take them in order.
+> its four most useful results. In fact the two refutations did more work than
+> the three confirmations: the confirmations said roughly what the field
+> expected — learning predicts life better, detects earlier, quantifies
+> uncertainty better. It is the refutations that changed our recommendations. I
+> will take them in order.
 
 **Slide 24 (H1 — detection).**
 
@@ -399,6 +403,13 @@ the quantitative floor for everything after. Do not skip 19.]_
 > the tuned classical extrapolation. Effect size 0.89 — pick any engine's error
 > from each method at random and the classical one is larger about ninety-four
 > percent of the time.
+>
+> _[state both scales — do not quote only the big one]_ And be honest about which
+> baseline that is against. The 2.3-fold figure is against the linear
+> extrapolation an operator fields today. Against the best advanced classical
+> prognostic — similarity-based, which can follow the curve — it narrows to about
+> 1.3 times. Both are true. Quoting only the first would be exactly the straw man
+> this whole project criticizes.
 >
 > But look at the shape rather than the number. _[point]_ The classical errors
 > are wide and skewed **optimistic** — it predicts more life remaining than there
@@ -594,7 +605,8 @@ the quantitative floor for everything after. Do not skip 19.]_
 > So, the answer to the question the talk started with.
 >
 > Learning wins where the task is statistical aggregation over time. Prognosis —
-> and that result is robust across three architectures and across sensor quality.
+> 2.3 times better than fielded practice, 1.3 times better than the best classical
+> method, and robust across three architectures and across sensor quality.
 > Detection timing. Calibrated uncertainty.
 >
 > Nobody wins where the task is bounded by what the sensors observed. Confusable

@@ -135,8 +135,12 @@ Strip the statistics away and the five verdicts become five decisions a fleet ma
 act on. In order of how much money each moves:
 
 \begin{enumerate}
-  \item \textbf{Deploy learning for prognosis first.} The 3--6$\times$ RUL advantage with
-    calibrated intervals is the clear business case (maintenance slotting, lease planning).
+  \item \textbf{Deploy learning for prognosis first.} The confirmatory RUL advantage ---
+    $2.3$--$4.4\times$ depending on life fraction, with calibrated intervals --- is the clear
+    business case (maintenance slotting, lease planning). State it against the right baseline:
+    that factor is against the linear extrapolation an operator fields \emph{today}; against
+    the best \emph{advanced} classical prognostic the margin narrows to $\sim$1.3$\times$
+    (\cref{sec:f8-lrul}), which is still a win but a different sales pitch.
   \item \textbf{Detection: modern change-detection with tuned windows} --- the AI's win came
     from window search, a cheap, auditable mechanism, not from depth.
   \item \textbf{Isolation: buy sensors, not models.} The confusable wall is informational.
