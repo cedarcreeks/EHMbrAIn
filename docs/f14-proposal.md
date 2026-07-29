@@ -300,7 +300,7 @@ Current: AI 35–50 %, traditional 0–25 %. *Baseline KPI, unchanged.*
 $$\mathrm{URR} = \frac{n_{\text{unscheduled}}}{\text{engine-cycles}} \times 1000$$
 Directly the operator's pain metric, and the one AOG cost is proportional to.
 
-**K3 — Workscope hit rate at horizon $H$ (new, and the load-bearing one).**
+**K3 — Workscope hit rate at horizon $H$. WITHDRAWN (§16): degenerate — `hot_section` dominates 100/100 engines at 95 % of life, so a constant predictor scores 100 %.** Original definition retained below for the record.
 $$\mathrm{WHR}(H) = \frac{\#\{\text{removals where the dominant mechanism was correctly called} \ge H \text{ cycles early}\}}{\#\text{removals}}$$
 The dominant mechanism is the argmax of the true share vector (ground truth from the seed
 replay); the call is the model's argmax at cut $= t_{\text{removal}} - H$. $H$ is the parts
@@ -380,97 +380,119 @@ reported as such.
    cockpit-sensor limits — a legitimate simulation question — and must not be written as
    though it discovered that mechanisms differ.
 
-## 16. Second target: resolving GPA's ambiguity — as a clock, not as a verdict
+## 16. Second target: the attribution horizon
 
-### What must not be re-litigated
+### What this replaces, and why
 
-H2 is refuted and stays refuted: on **instantaneous, single-episode** isolation of confusable
-faults, AI scored 0.3077 against GPA's 0.3077, and halving every sensor $\sigma$ leaves it at
-0.31–0.38 (§sec:noise-sweep). The wall is informational at a point in time. Nothing below
-claims otherwise, and any design that amounts to "run H2 again with a bigger network" is out
-of scope by construction.
+An earlier draft of this section proposed treating GPA ambiguity as a *clock*: fire a trigger
+when the certificate tags two directions non-identifiable, then measure the "ambiguity
+resolution latency" until a calibrated model names the true mechanism and holds it. That
+target is **withdrawn**, on three grounds that the project's own results supplied:
 
-### The reframe
+1. **Its stated main risk materialised.** The draft said the clock argument fails if the
+   ambiguity is driven by *acute* episodes, which ramp over 50–500 cycles and then hold with no
+   discriminating future event. H2's confusable pair is exactly that population
+   (`acute_hpc.eta`, `acute_hpt.eta`, `acute_hpt.flow` in the catalogue). No event, no clock.
+2. **H15.8 is corroborating evidence** (§17.1). Sensor drift was a case where two
+   snapshot-confusable things were expected to diverge over a history, and they did not,
+   because a slow additive ramp has no shape. The rule that emerged from F13 and H15.8 together
+   — *trajectory shape separates what has shape* — predicts acute ramps behave the same way.
+3. **Its refutation branch is already in the report.** The draft argued a null would mean "buy
+   the station probe rather than a model". That is L-H2, measured at $0.15 \to 0.92$
+   (§sec:f8-lh2). A study whose negative branch reproduces an existing result buys nothing.
 
-GPA does not fail silently when it is ambiguous — it produces an estimate smeared across
-directions the certificate has already tagged `confounded` or `unobservable`
-(`Certificate.certify()` thresholds: identifiable < 0.7 %, confounded < 1.5 %, unobservable
-above). So ambiguity is **detectable at the moment it occurs**, per engine and per direction,
-without ground truth. That trigger is free.
+The abstention and calibration apparatus is likewise dropped: F7 already delivers calibrated,
+physics-tracking ambiguity sets (§ch:tomography). What survives is the one question underneath
+it that is both cheap and load-bearing.
 
-The open question is not *whether* an ambiguity can be resolved from one snapshot — it cannot,
-that is H2 — but **how long the ambiguity lasts**. The confusable mechanisms diverge over
-time even though their instantaneous signatures do not: hot-section creep drags flow capacity
-*up* while efficiency falls, fouling is partially undone at every wash, clearance break-in
-finishes and stops contributing. Each of those is a future event that discriminates.
+### The surviving question
 
-> **Target: GPA ambiguity is a clock, not a permanent state. Measure how many cycles of
-> further observation it takes to run out, and whether a sequence model reads it sooner than
-> the physics-only rule.**
+> **How early before removal can the dominant degradation mechanism be called, and how
+> reliably?**
 
-This is a different estimand from H2, and it is the one that decides a maintenance action.
+This is K3 restated, and K3 is what the entire Part B availability argument runs through:
+workscope pre-positioning happens at procurement lead time or it does not happen at all.
 
-### Why it is operationally decisive
+**K3 — attribution horizon curve.** For each engine, score the dominant-mechanism call at cuts
+indexed by *remaining* life rather than pooled across life, giving
 
-An ambiguity that resolves 900 cycles before removal is harmless — parts get ordered on time.
-The same ambiguity resolving 80 cycles before removal is an AOG. **The decision-relevant
-quantity is resolution latency measured against procurement lead time**, which is exactly the
-horizon $H$ already swept in K3. The two targets share an axis.
+$$P\big[\text{correct dominant mechanism} \;\big|\; H \text{ cycles before removal}\big]$$
 
-### Definitions
+swept over $H$. The reportable object is the curve, not a point: an operator reads their own
+lead time off the $x$-axis. **K7 is folded into K3** — one horizon axis, not two.
 
-**Ambiguity trigger.** Fires at cycle $t$ when the certificate tags $\ge 2$ directions
-non-identifiable *and* the GPA estimate places mass above threshold on more than one of them.
-Computed from `identifiability.py` + the existing Kalman path; no new machinery, no truth.
+### Why this is nearly free
 
-**K7 — Ambiguity resolution latency (ARL).** For each triggered engine, the number of
-additional observed cycles until the model names the true dominant mechanism and holds it,
-with calibrated confidence, to removal. Report the full distribution, not a mean; the tail is
-the operational risk. Paired against $H$: the reportable figure is
-$\Pr[\mathrm{ARL} \le H]$ — the fraction of ambiguities that clear in time to act.
+F13 gate one already generates the data. `build()` samples cuts from 2 500 cycles to end of
+life and retains `(engine, cut)` metadata; the only change is to bucket accuracy by remaining
+life instead of pooling. One script change and one run.
 
-**Abstention is mandatory.** The model must be allowed to output "still ambiguous", and be
-calibrated when it does. Forcing a label on an unresolvable case is how the published
-literature manufactures accuracy, and F7 already established the honest alternative in this
-project — calibrated, physics-tracking ambiguity sets (§ch:tomography, learned fusion at 0.65
-vs classical stacking's 0.17, "ambiguity is now a calibrated, physics-explained deliverable").
-K7 extends that from a static set to a **shrinking** set.
+It also needs none of the withdrawn machinery: no trigger definition, no abstention
+calibration, no leakage check — there is no "resolution moment" that could be faked, only a
+conditional accuracy at a stated horizon.
 
-### The built-in leakage check
+### MEASURED FIRST, AND IT KILLS THE KPI (2026-07-29)
 
-If a model resolves an ambiguity, it did so using either (a) later observations, or (b) a
-fleet prior. Both are legitimate; conflating them is not. The certificate is the referee: it
-proves the *instantaneous* data at the trigger could not have contained the answer, so any
-resolution at latency 0 is leakage, not skill. Pre-registered check: **the measured ARL
-distribution must have essentially no mass at zero.** If it does, the pipeline is broken and
-the result is void — the same fraud-detector role G5 plays in `docs/f12-proposal.md`.
+Before writing the horizon experiment, one cheap check: how often is each mechanism the
+dominant one at the moment a workscope is decided?
 
-### Hypotheses
+**At 95 % of life, `hot_section` is the dominant contributor to lost EGT margin for 100 of 100
+engines.** Mean shares across the fleet: `hot_section` 0.534, `clearance` 0.157, `erosion`
+0.095, `fouling` 0.063, `lpt_wear` 0.044.
 
-- **H15.6 — ambiguity decays, and the clock is readable.** Among triggered engines, the
-  sequence model attains $\Pr[\mathrm{ARL} \le H] \ge 0.5$ at the nominal procurement horizon,
-  against the GPA rule's rate on the same triggered subset.
-  *Refutes:* GPA ambiguity persists to removal on this benchmark, meaning the confusable pair
-  is operationally unresolvable and the correct engineering answer is the station probe
-  (§sec:f8-lh2, 0.15 → 0.92) rather than any model. That negative is worth as much as the
-  positive and should be stated as plainly.
+A constant predictor that always answers "hot section" scores **100 %**. So the workscope hit
+rate K3 — *was the correct module called in advance* — is not a hard problem on this
+benchmark, it is a degenerate one. There is no classification task, because there is no
+variation to classify.
 
-- **H15.7 — resolution is honest.** The abstention channel is calibrated: among cases the
-  model declines to call, the true dominant mechanism is genuinely mixed; among cases it
-  calls, empirical accuracy matches stated confidence within the conformal guarantee. And the
-  ARL distribution has no mass at zero.
-  *This one is a gate on the whole target: an uncalibrated resolver is worthless regardless of
-  its accuracy.*
+**Consequences, stated rather than worked around.**
 
-### Where this could still be a repeat of H2
+1. **K3 is withdrawn**, and with it the attribution channel of K4 (availability) and K5
+   (spares). Part B's availability argument rested on workscope pre-positioning shortening
+   turnaround; if every engine needs hot-section work, an operator learns nothing from being
+   told so, and there is no turnaround to shorten. What remains of K4/K5 is the conversion
+   channel alone, which is K1 and already measured.
+2. **This is a property of SynCFM56, and should be declared as one.** Every engine draws all
+   five mechanisms with lognormal severity multipliers, and `hot_section` carries the largest
+   rate, so the fleet is homogeneous in workscope by construction. Real fleets are not:
+   module-specific failures, FOD-driven removals and build-standard variation produce workscope
+   heterogeneity this generator does not model. **Add to the declared limitations.**
+3. **F13's scientific finding is untouched.** That mechanism *shares* are partially recoverable
+   from trajectory shape where the instantaneous state is certified unidentifiable is a
+   statement about identifiability, it is measured, and it is in the report
+   (§sec:f13-mech). What does not follow is the operational cash-out.
+4. **The one share with clear operational meaning already had a better number.** The washable
+   fraction is L4, at $R^2 = 0.86$ (§sec:f8-l4) — better than F13's fouling share at
+   $0.45$–$0.51$, on essentially the same quantity with a simpler estimator. F13 did not
+   improve on it.
 
-Stated plainly, because it is the main risk. If the ambiguity that matters is driven by
-**acute episodes** — which ramp over 50–500 cycles and then hold, with no discriminating
-future event — then there is no clock to read and H15.6 fails. The clock argument depends on
-the *chronic* mechanisms, where wash sawtooth and flow-capacity divergence supply the future
-evidence. So the trigger population should be reported split by acute-driven versus
-chronic-driven ambiguity, and the two are likely to give opposite answers. That split is the
-result, whichever way it lands.
+**What survives as a question worth asking:** not *which* mechanism, but *how much* — the split
+between washable and permanent loss, at a stated horizon. That is L4's question, L4 answered
+it, and the only open extension is whether its $R^2 = 0.86$ holds as the horizon lengthens.
+That is one afternoon, and it is the honest remainder of this section.
+
+### Hypotheses (reduced)
+
+- **H15.9 — the washable-fraction estimate degrades gracefully with horizon.** L4's
+  $R^2 = 0.86$ is measured at cuts from 1 600 cycles with a trailing window. Re-slice by
+  *remaining* life and report $R^2(H)$. Useful if it holds at a procurement horizon; a
+  declared limitation if it collapses.
+  *No pass/fail: a curve, with the operator reading their own lead time off the axis.*
+
+~~- **H15.9 — the horizon curve is operationally useful.**~~
+
+~~- **superseded — the horizon curve is operationally useful.** At a procurement horizon of 600
+  cycles, the dominant mechanism is called correctly for a majority of engines, and the curve
+  is monotone in remaining life (later is easier).
+  *Refutes:* attribution only becomes reliable after the decision has to be made, which would
+  make K4/K5's attribution channel worthless and leave Part B resting on the conversion channel
+  alone. Worth knowing before the KPI layer is built on it.
+
+- **H15.10 — the curve is mechanism-specific.** The horizon at which attribution becomes
+  reliable differs by mechanism, tracking F13's split: `hot_section` and `clearance` early,
+  the two plain-linear mechanisms never.
+  *This is a measurement, not a pass/fail, and it is the deliverable an operator would actually
+  use: which findings can be anticipated and which cannot.*
 
 ## 17. Adopted from the ACTIVE EHM proposal
 
@@ -552,7 +574,7 @@ argument, previously stated for a single snapshot, now holds empirically over wh
 > instances, two families, two fault populations.
 
 **Consequences, recorded not softened.** Part B is *not* a general structure — it is specific
-to mechanisms whose temporal signature has features. The ambiguity-clock target (H15.6) loses
+to mechanisms whose temporal signature has features. The ambiguity-clock target loses
 expected value for exactly the population §16 already flagged as its main risk: acute episodes
 that ramp and then hold with no future event to read. K3 (workscope hit rate) stands, since
 `hot_section`, `clearance` and `fouling` are the recoverable ones.
@@ -632,8 +654,9 @@ Ordered by cost-to-information, cheapest decisive experiment first.
    knowing before building anything.
 4. Attribution task: Bi-LSTM vs unidirectional vs GPA rule → H15.1, H15.2.
 5. Certificate-gated hybrid → H15.3.
-6. Ambiguity trigger + ARL distribution, split acute vs chronic → H15.6, H15.7.
-7. KPI layer K1–K7 with the turnaround sweep → H15.4, H15.5.
+6. **Attribution horizon curve** (§16) — re-slice F13's cuts by remaining life → H15.9, H15.10.
+   Cheapest remaining item and the input K4/K5 depend on.
+7. KPI layer K1–K6 with the turnaround sweep → H15.4, H15.5.
 8. `docs/safety-case-boundaries.md` (A17.2); conceptual test into `tests/` (A17.3).
 9. **Gate T** (A17.4) — the transient angle question, physics only, no ML. Decides whether the
    external proposal's route is reopened or closed with a stated negative.

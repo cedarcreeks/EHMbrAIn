@@ -197,12 +197,29 @@ unscheduled removals to scheduled --- plausibly saves low single-digit millions 
 unquantified prize is the diagnostic instrumentation the certificate would justify buying.
 
 \section{Honest limitations}
+\label{sec:limitations-conclusions}
 
 The world here is synthetic and linearized (audited to the noise floor, but still a model
 of a model); the mission mix is two snapshot conditions with scatter; the EGT is a
 station-4.5 proxy; chronic labels correlate with age by construction; the AI family is one
 compact architecture per task, not the state of the art; and H4's verdict covers one of
-three planned hybrid mechanisms. None of these caveats is hidden in fine print --- each is
+three planned hybrid mechanisms.
+
+One limitation was found while trying to build on the fleet and deserves naming, because it
+bounds what \cref{sec:f13-mech} can be used for. \textbf{The fleet is homogeneous in
+workscope.} Every engine draws all five degradation mechanisms with lognormal severity
+multipliers, and \code{hot\_section} carries the largest rate, so at $95\,\%$ of life it is the
+dominant contributor to lost EGT margin in \textbf{100 of 100 engines} (mean share $0.53$,
+against $0.16$ for \code{clearance} and $0.06$ for \code{fouling}). A shop-visit question of
+the form ``which module will this engine need'' therefore has a constant answer here, and any
+hit-rate metric built on it is scored against a $100\,\%$ majority class. Real fleets are not
+like this --- module-specific failures, foreign-object damage and build-standard variation
+produce workscope heterogeneity this generator does not model. The consequence is specific:
+\cref{sec:f13-mech}'s result is a statement about \emph{identifiability} --- how much of each
+mechanism is recoverable from a trajectory --- and must not be read as a claim that maintenance
+planning can be predicted from it on this benchmark. The operationally meaningful residue is
+\emph{how much} rather than \emph{which}, and that question already has its answer in
+\cref{sec:f8-l4}. None of these caveats is hidden in fine print --- each is
 in the decision register or the relevant chapter.
 
 \section{The capstone: earned-confidence diagnosis}
