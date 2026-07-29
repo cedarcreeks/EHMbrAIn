@@ -32,8 +32,9 @@ visible as wins.
     \textbf{vs the best classical method, late life only}: $1.34\times$ at $90\,\%$
     ($p=0.006$), a tie at $70\,\%$. Robust across architectures &
     \cref{sec:res-h3h5}, \cref{sec:f8-l5,sec:f8-lrul,sec:f8-lrul-sweep} (H3) \\
-  Does injecting physics into the learner help? & \textbf{No}, twice: estimate-stacking and
-    twin-residual both hurt & \cref{sec:res-h4}, \cref{sec:f8-l6} (H4) \\
+  Does injecting physics into the learner help? & \textbf{Task-dependent}: no for
+    prognosis, twice refuted; \textbf{yes} for mechanism attribution ($+0.139$ $R^2$,
+    $p=0.0004$) & \cref{sec:res-h4}, \cref{sec:f8-l6} (H4), \cref{sec:f17-hybrid} \\
   Is the AI's uncertainty better calibrated? & \textbf{Yes, but mostly thanks to conformal,
     not to AI}: at equal coverage $1.34\times$ tighter than advanced classical, $2.3\times$
     than practice --- not the frozen $6\times$ & \cref{sec:res-h3h5} (H5),
@@ -49,6 +50,9 @@ visible as wins.
     resist parameters, loses on those that do not (2 of 5) & \cref{sec:f13-mech} \\
   Can we tell a lying sensor from a failing engine? & \textbf{No} --- both families at chance;
     the ICM is surjective, so a real fault also fakes a bias & \cref{sec:f15-instrument} \\
+  Does the certificate work as an injection channel? & \textbf{Not shown}: the control
+    arm fires too, so the gain is channel count. A $C-B$ residual of $+0.053$ is
+    post-hoc only & \cref{sec:f17-hybrid} \\
   Would transients break the confusable pair? & \textbf{Not through operating points}: the
     whole calibrated envelope gives $1.38^{\circ}$, below cruise alone. True dynamics are
     priced ($0.7$ whitened units), not ruled out & \cref{sec:gate-t} \\
@@ -148,9 +152,14 @@ Three confirmations, two refutations (\cref{tab:verdicts}), and the split is the
     model-agnostic and free to the traditional side. The defensible claim is narrow:
     \emph{learning buys the late-life shop-visit horizon}. Quoting the against-practice factor
     alone would be the straw-man comparison this project exists to criticize.
-  \item \textbf{Physics wins where information is scarce}: the ICM rule matched or beat the
-    learner on confusable isolation, and bolting physics-derived features onto a learner
-    (H4) made it worse. Physics' real contribution was \emph{diagnosis of the limits}: the
+  \item \textbf{Physics wins where information is scarce, and physics injection is
+    task-dependent}: the ICM rule matched or beat the learner on confusable isolation, and
+    bolting physics-derived features onto a learner made prognosis \emph{worse} twice (H4, L6)
+    --- yet the same injection makes mechanism attribution decisively \emph{better}
+    ($+0.139$ $R^2$, $p = 0.0004$, \cref{sec:f17-hybrid}). The reconciliation is that remaining
+    life is already carried by the EGT-margin channel the learner sees, while ``which mechanism''
+    is exactly what a health-state estimate encodes, smeared or not. ``Physics-informed'' is
+    neither a free win nor a dead end; the task decides. Physics' real contribution was \emph{diagnosis of the limits}: the
     influence-matrix geometry predicted, before any learning ran, exactly where every method
     would fail.
   \item \textbf{The wall is a wall in \emph{time}, not only in geometry --- and that bounds

@@ -1121,6 +1121,47 @@ def fig_gate_t():
     print('  gate T figure done')
 
 
+def fig_hybrid_arms():
+    """H15.3: per-seed attribution score for the three hybrid arms, with the
+    paired seed lines that carry the statistics."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f17' / 'hybrid_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())
+    arms = ['A_pure', 'B_h4_style', 'C_certificate']
+    labels = ['A: pure\n(5 ch)', 'B: H4-style\n(15 ch)', 'C: certificate\n(25 ch)']
+    pa = v['per_arm']
+    seeds = sorted(pa['A_pure']['per_seed'], key=int)
+    INK, BLUE, TEAL, GRAY = '#212529', '#4263EB', '#1098AD', '#CED4DA'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.4, 3.2))
+    for s in seeds:                                    # one line per seed: the
+        y = [pa[a]['per_seed'][s] for a in arms]       # comparison is paired
+        ax.plot([0, 1, 2], y, color=GRAY, lw=0.8, zorder=1)
+    for i, a in enumerate(arms):
+        y = [pa[a]['per_seed'][s] for s in seeds]
+        ax.scatter([i] * len(y), y, s=26, zorder=3,
+                   color=TEAL if a == 'C_certificate' else BLUE)
+        m = pa[a]['r2_mean_per_seed']
+        ax.plot([i - 0.22, i + 0.22], [m, m], color=INK, lw=2.0, zorder=4)
+        ax.annotate(f'{m:+.3f}', (i, m), xytext=(0, 9),
+                    textcoords='offset points', ha='center', fontsize=8, color=INK)
+    h = v['H15.3_certificate_channel_helps']
+    ax.set_xticks([0, 1, 2]); ax.set_xticklabels(labels, fontsize=8)
+    ax.set_xlim(-0.5, 2.5)
+    ax.set_ylabel('mechanism-attribution $R^2$ (per seed)')
+    ax.set_title('both physics arms beat pure: the control fires, so the gain is '
+                 'channels\nnot the certificate '
+                 f"($p$={h['paired_t_C_vs_A']['p_one_sided']:.4f} and "
+                 f"{h['paired_t_B_vs_A']['p_one_sided']:.4f})", fontsize=7.5)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'hybrid_arms.pdf'); plt.close(fig)
+    print('  hybrid arms figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2059,6 +2100,7 @@ def artifact_assets():
     fig_f14_bilstm()
     fig_f15_instrument()
     fig_gate_t()
+    fig_hybrid_arms()
     fig_confusable_angles()
     gpa_assets()
     noise_sweep_assets()

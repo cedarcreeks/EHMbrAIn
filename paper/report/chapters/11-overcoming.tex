@@ -691,6 +691,79 @@ column was unchanged. The figures quoted are from the run that generated
 whose conclusion needs only that the seed spread exceed $0.603$ cycles, which it does by a
 factor of five.
 
+\section{L-HYB: physics injection fails for prognosis and works for attribution}
+\label{sec:f17-hybrid}
+
+\paragraph{A third attempt, and why it was allowed one.} This document has refuted
+physics-into-learner injection twice: H4 stacked GPA state \emph{estimates} as features and
+lost (\cref{sec:res-h4}), L6 fed twin \emph{residuals} on the nonlinear fleet and lost again
+(\cref{sec:f8-l6}). The stated diagnosis was that smeared estimates are noise-bearing,
+mutually correlated features carrying nothing the learner did not already have, and that
+``physics injection needs an information channel the raw data lacks.'' The F10 certificate is
+such a channel: per engine and per direction it is computed from influence-matrix geometry and
+the engine's \emph{actual flown conditions}, never from measured values, so a learner reading
+the deviation trajectory cannot derive it. That distinction is what H15.3 tests.
+
+The task is mechanism attribution (\cref{sec:f13-mech}), the one place with real signal;
+re-running RUL would only repeat H4. Three arms share F13's selected architecture so the input
+channel is the only variable, and the design was frozen as \code{prereg-v20} before the
+confirmatory run --- ten seeds, a one-sided paired $t$-test on $C - A$, and \textbf{the same
+test on $B - A$ as a control that must not fire}.
+
+\begin{center}\small
+\begin{tabular}{@{}llrrr@{}}
+  \toprule
+  Arm & Input & ch & seed-mean $R^2$ & ensembled \\
+  \midrule
+  A & 4 deviation channels + age & 5 & $+0.248 \pm 0.107$ & $+0.365$ \\
+  B & \quad + raw 10-dim Kalman GPA estimate & 15 & $+0.387 \pm 0.056$ & $+0.499$ \\
+  C & \quad + identifiable-gated estimate + per-direction CRB & 25 & $+0.440 \pm 0.060$ & $+0.540$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{hybrid_arms}
+  \caption{Per-seed attribution score for the three arms; grey lines join the same seed across
+  arms, which is the pairing the statistics use. Auto-generated
+  (\protect\code{prereg-v20}).}
+  \label{fig:hybrid-arms}
+\end{figure}
+
+\textbf{H15.3 refuted by its own control.} $C - A = +0.191$ ($t = 5.48$, $p = 0.0002$), but
+$B - A = +0.139$ ($t = 5.01$, $p = 0.0004$). The control fired. Both physics arms beat the pure
+baseline decisively, so the gain is \emph{having the state estimate at all} --- channel count
+--- not the certificate. The control existed precisely so this could not be claimed, and it
+did its job.
+
+\keyidea{The refutation exposes a bigger result: arm B \emph{won}. H4 and L6 refuted physics injection on the \textbf{prognosis} task; on \textbf{attribution} the identical injection helps decisively. Physics injection is not a free win and not a dead end --- it is task-dependent, and the task decides.}
+
+\paragraph{Why the three results reconcile rather than contradict.} For remaining life, the
+health-state estimate adds nothing over the raw deviations, because life here is driven by EGT
+margin, which is already an input channel --- the learner had that information. For attributing
+\emph{which} mechanism is degrading, the estimated health direction is exactly the relevant
+physical quantity, and it remains so even when smeared across the confusable subspace: a
+smeared estimate still says the loss is hot-section-ish rather than fan-ish. H4's verdict
+should therefore be read as scoped to prognosis, not as a general statement about
+physics-informed learning, and \cref{tab:f8-summary} now records both.
+
+\paragraph{One post-hoc, disclosed and not claimed.} Whether certificate gating adds anything
+\emph{on top of} the raw estimate is $C - B = +0.053$ ($t = 2.24$, $p = 0.026$). Nominally
+significant, outside the frozen design, and it would not survive Holm correction against the
+two pre-registered tests. Per mechanism it concentrates where a working certificate should act
+--- \code{hot\_section} $0.621 \to 0.865$ and \code{clearance} $0.623 \to 0.785$, the
+directions the certificate has most to say about --- while \code{fouling} and \code{lpt\_wear}
+move the other way. Suggestive; the honest status is a pre-registrable hypothesis for a later
+pass, not a result.
+
+\paragraph{Disclosures.} The exploratory three-seed pass (arm means $0.323/0.355/0.412$, paired
+$C-A$ of $+0.088$ at $t = 2.32$) was \emph{inconclusive} against its own criterion, and it is
+what set the confirmatory direction; it is retained in the verdict JSON so the confirmatory
+numbers cannot be read without it. Hyperparameters were selected by F13 for arm A's five
+channels and inherited by B and C, so arms with more channels were never separately tuned ---
+a limitation that cuts against C, not for it.
+
 \section{Gate T: would transients open the confusable angle?}
 \label{sec:gate-t}
 
@@ -1019,6 +1092,7 @@ are allowed to fail.
     L-MECH & Is the wall instantaneous? Can a history attribute mechanism? & \textbf{Yes} --- 3 of 5 mechanisms recover from trajectory shape, \code{hot\_section} at $R^2\,0.78$; but learning beats hand features on only 2 of 5 (\cref{sec:f13-mech}) \\
     L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.52$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
     L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
+    L-HYB & Does the certificate work as a physics-injection channel? & \textbf{Refuted by its control} --- both physics arms beat pure ($p<0.001$), so the gain is channels. But injection \emph{works} on attribution where H4/L6 refuted it on prognosis (\cref{sec:f17-hybrid}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\
