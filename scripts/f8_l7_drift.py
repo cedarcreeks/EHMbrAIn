@@ -28,8 +28,13 @@ EGT_ROW = COCKPIT.index('EGT_degK')
 PHANTOM = ['hpt.eta', 'hpt.flow', 'lpt.eta']     # where an EGT drift smears
 
 
-def kalman(dz, H_at, q_x=2e-4, augmented=False, q_b=1e-5):
-    """Plain (10-state) or augmented (11-state, +EGT bias) random-walk Kalman."""
+def kalman(dz, H_at, q_x=2e-4, augmented=False, q_b=1e-5, bias_row=EGT_ROW):
+    """Plain (10-state) or augmented (11-state, +sensor bias) random-walk Kalman.
+
+    bias_row selects which cockpit channel carries the estimated bias; it
+    defaults to EGT, so L7's frozen prereg-v6 behaviour is unchanged. F15/H15.8
+    sweeps it across channels to score which sensor, if any, is drifting.
+    """
     n = len(dz)
     nx = 10 + (1 if augmented else 0)
     R = np.diag(R_DIAG ** 2)
@@ -38,7 +43,7 @@ def kalman(dz, H_at, q_x=2e-4, augmented=False, q_b=1e-5):
     Q = np.eye(nx) * q_x
     if augmented:
         Q[10, 10] = q_b
-    s = np.zeros((3, 1)); s[EGT_ROW, 0] = 1.0
+    s = np.zeros((3, 1)); s[bias_row, 0] = 1.0
     out = np.zeros((n, nx))
     for i in range(n):
         row = dz[i]
