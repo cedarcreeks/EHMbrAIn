@@ -58,24 +58,45 @@ ALPHA = 0.05
 RUL_CAP = 12000.0
 
 
-def net(ch, n_out, bidirectional, hidden=128, layers=2):
-    """One architecture, one switch. Hidden size is halved when bidirectional so
-    both variants carry the same parameter budget -- otherwise the comparison
-    would confound direction with capacity."""
+def net(ch, n_out, arm, hidden=128, layers=2):
+    """One architecture, three arms, correct pooling.
+
+    POOLING (the bug the first run had). For a unidirectional layer the state at
+    the final step has seen the whole sequence, so o[:, -1] is right. For a
+    BIDIRECTIONAL layer it is wrong: the backward pass starts at the last step,
+    so its output at position -1 has seen exactly ONE sample. Taking o[:, -1]
+    hands the head a complete forward summary concatenated with almost nothing,
+    which cripples the variant by construction. The correct read is the forward
+    state at the LAST step with the backward state at the FIRST step.
+
+    ARMS separate direction from capacity, which the first run conflated:
+      uni         h = hidden                 (128 units, reference)
+      bi_equal    h = hidden/2 per direction (same parameter budget as uni)
+      bi_double   h = hidden   per direction (~2x parameters, the comparison the
+                                              source paper actually makes)
+    """
     import torch.nn as nn
-    h = hidden // 2 if bidirectional else hidden
+    import torch
+    bi = arm != 'uni'
+    h = hidden if arm in ('uni', 'bi_double') else hidden // 2
+    out_dim = 2 * h if bi else h
 
     class Net(nn.Module):
         def __init__(self):
             super().__init__()
+            self.bi, self.h = bi, h
             self.gru = nn.GRU(ch, h, layers, batch_first=True, dropout=0.1,
-                              bidirectional=bidirectional)
-            self.head = nn.Sequential(nn.Linear(hidden, 32), nn.GELU(),
+                              bidirectional=bi)
+            self.head = nn.Sequential(nn.Linear(out_dim, 32), nn.GELU(),
                                       nn.Linear(32, n_out))
 
         def forward(self, x):
             o, _ = self.gru(x)
-            return self.head(o[:, -1])
+            if self.bi:                      # forward @ last, backward @ first
+                z = torch.cat([o[:, -1, :self.h], o[:, 0, self.h:]], dim=-1)
+            else:
+                z = o[:, -1]
+            return self.head(z)
 
     return Net()
 
@@ -123,15 +144,15 @@ def main():
 
     tasks = {'attribution': (Mtr, Mte, len(MECHANISMS)),
              'prognosis': (Rtr, Rte, 1)}
+    ARMS = ('uni', 'bi_equal', 'bi_double')
     res, per_seed = {}, {}
     for task, (Ytr, Yte, n_out) in tasks.items():
         ymean = Ytr.mean(axis=0)
         per_seed[task] = {}
-        for bi in (False, True):
-            key = 'bidirectional' if bi else 'unidirectional'
+        for key in ARMS:
             per_seed[task][key] = {}
             for s in SEEDS:
-                m = train_torch(net(Xtr.shape[2], n_out, bi), Xtr, Ytr,
+                m = train_torch(net(Xtr.shape[2], n_out, key), Xtr, Ytr,
                                 epochs=122, lr=0.0057, bs=128, seed=s)
                 p = predict_torch(m, Xte)
                 if task == 'attribution':
@@ -148,46 +169,69 @@ def main():
 
     verdict = {'design': {
         'seeds': list(SEEDS), 'seq_len': SEQ_LEN,
-        'parameter_budget': ('hidden halved when bidirectional so both variants '
-                             'carry the same parameter count -- otherwise the '
-                             'comparison confounds direction with capacity'),
+        'arms': {'uni': 'hidden 128, unidirectional (reference)',
+                 'bi_equal': 'hidden 64 per direction -- same parameter budget',
+                 'bi_double': 'hidden 128 per direction -- ~2x parameters, the '
+                              'comparison the source paper actually makes'},
+        'pooling_fix': ('the first run read o[:, -1] for the bidirectional arms. '
+                        'For a backward pass that position has seen exactly one '
+                        'sample, so half the representation handed to the head '
+                        'was near-empty and the variant was crippled by '
+                        'construction. Corrected to forward-at-last concatenated '
+                        'with backward-at-first. The first run measured a broken '
+                        'bidirectional layer, not bidirectionality'),
+        'invalidated_first_run': {
+            'attribution': {'uni': 0.241, 'bi': -0.008, 'delta': -0.249},
+            'prognosis_cy': {'uni': 1441.0, 'bi': 1412.3, 'delta': -28.8,
+                             'p': 0.1852},
+            'status': 'void -- pooling bug, retained for the record'},
         'prediction': ('bidirectionality helps attribution (whole history in '
                        'hand at removal; backward pass is smoothing) and barely '
                        'helps prognosis (window is all past)')},
         'per_task': res}
 
     for task, better_is_low in (('attribution', False), ('prognosis', True)):
-        u = [per_seed[task]['unidirectional'][s] for s in SEEDS]
-        b = [per_seed[task]['bidirectional'][s] for s in SEEDS]
         alt = 'less' if better_is_low else 'greater'
-        t = stats.ttest_rel(b, u, alternative=alt)
-        delta = float(np.mean(b) - np.mean(u))
+        u = [per_seed[task]['uni'][s] for s in SEEDS]
         verdict[f'H15.2_{task}'] = {
-            'delta_bi_minus_uni': delta,
-            'paired_t': float(t.statistic), 'p_one_sided': float(t.pvalue),
-            'significant': bool(t.pvalue < ALPHA),
             'direction_tested': ('lower RMSE is better' if better_is_low
                                  else 'higher R2 is better')}
+        for arm in ('bi_equal', 'bi_double'):
+            b = [per_seed[task][arm][s] for s in SEEDS]
+            t = stats.ttest_rel(b, u, alternative=alt)
+            verdict[f'H15.2_{task}'][arm] = {
+                'delta_vs_uni': float(np.mean(b) - np.mean(u)),
+                'paired_t': float(t.statistic),
+                'p_one_sided': float(t.pvalue),
+                'significant': bool(t.pvalue < ALPHA)}
 
-    a, p = verdict['H15.2_attribution'], verdict['H15.2_prognosis']
+    a, pr = verdict['H15.2_attribution'], verdict['H15.2_prognosis']
+    helps_attr = any(a[k]['significant'] for k in ('bi_equal', 'bi_double'))
+    helps_prog = any(pr[k]['significant'] for k in ('bi_equal', 'bi_double'))
     verdict['H15.2_pattern_as_predicted'] = {
-        'attribution_helps': a['significant'],
-        'prognosis_barely': not p['significant'],
-        'confirmed': bool(a['significant'] and not p['significant']),
-        'criterion': ('bidirectionality must help attribution significantly and '
-                      'NOT help prognosis significantly; the reverse pattern '
-                      'falsifies the stated mechanism')}
+        'attribution_helps': helps_attr, 'prognosis_barely': not helps_prog,
+        'confirmed': bool(helps_attr and not helps_prog),
+        'criterion': ('bidirectionality must help attribution significantly in '
+                      'at least one arm and NOT help prognosis; the reverse '
+                      'pattern falsifies the stated mechanism'),
+        'capacity_vs_direction': ('if bi_double helps and bi_equal does not, the '
+                                  'gain is capacity rather than direction -- '
+                                  'which is precisely what the source paper\'s '
+                                  'bi-versus-uni comparison cannot separate')}
     (OUT / 'bidir_verdict.json').write_text(json.dumps(verdict, indent=2))
 
     print()
     for task in tasks:
-        r = res[task]
-        unit = 'R2' if task == 'attribution' else 'cy RMSE'
-        print(f"  {task:12s} uni {r['unidirectional']['mean']:+.3f}"
-              f" +-{r['unidirectional']['sd']:.3f}   "
-              f"bi {r['bidirectional']['mean']:+.3f} +-{r['bidirectional']['sd']:.3f}"
-              f"  [{unit}]  delta {verdict[f'H15.2_{task}']['delta_bi_minus_uni']:+.3f}"
-              f"  p={verdict[f'H15.2_{task}']['p_one_sided']:.4f}")
+        r, unit = res[task], ('R2' if task == 'attribution' else 'cy RMSE')
+        print(f'  {task}  [{unit}]')
+        for arm in ARMS:
+            line = f"    {arm:10s} {r[arm]['mean']:+9.3f} +-{r[arm]['sd']:.3f}"
+            if arm != 'uni':
+                d = verdict[f'H15.2_{task}'][arm]
+                line += (f"   delta {d['delta_vs_uni']:+8.3f}  "
+                         f"p={d['p_one_sided']:.4f}"
+                         f"{'  *' if d['significant'] else ''}")
+            print(line)
     print(f"\n  H15.2 pattern as predicted: "
           f"{verdict['H15.2_pattern_as_predicted']['confirmed']}")
 
