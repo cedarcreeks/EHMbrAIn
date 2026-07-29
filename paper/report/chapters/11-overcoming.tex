@@ -691,6 +691,97 @@ column was unchanged. The figures quoted are from the run that generated
 whose conclusion needs only that the seed spread exceed $0.603$ cycles, which it does by a
 factor of five.
 
+\section{Gate T: would transients open the confusable angle?}
+\label{sec:gate-t}
+
+\paragraph{The proposal, and the question it did not ask.} A natural objection to this
+document's central negative is that the influence coefficient matrix is a \emph{steady-state}
+Jacobian, while an engine's transient response is governed by rotor inertia, heat soak and
+volume dynamics --- physics that depends on health parameters differently. Two faults
+confusable in a steady signature need not be confusable in a step response. The argument is
+sound in general. What it never establishes is whether it holds for \emph{this} pair:
+$\eta_{\mathrm{HPC}}$ and $\eta_{\mathrm{HPT}}$ are both hot-section-adjacent, and their
+dynamic signatures may be as close as their steady ones.
+
+Building a transient deck is a project in itself, so this gate prices it first
+(\code{scripts/f16\_gate\_t\_transient.py}, \code{prereg-v19}). A transient contributes two
+separable things, and only one is computable from what this project owns.
+
+\paragraph{Part 1 --- the quasi-steady content, and its upper bound.} A transient sweeps the
+engine through a range of operating points, and each point has its own measured ICM. Sampling
+many points is exactly the mechanism F7 exploited (\cref{ch:tomography}, $+79\,\%$ from adding
+one report condition). So the generous limit of that route is: sample the \emph{entire}
+measured envelope --- all six calibrated points --- at a fixed total sample budget, and see how
+far the angle opens. Signatures are whitened by $\mathbf{R}^{-1/2}$ first, so ``separable''
+means separable relative to sensor noise.
+
+\begin{center}\small
+\begin{tabular}{@{}lrr@{}}
+  \toprule
+  Operating point & cockpit & extended \\
+  \midrule
+  takeoff        & $0.75^{\circ}$ & $25.74^{\circ}$ \\
+  takeoff\_hot   & $0.78^{\circ}$ & $28.07^{\circ}$ \\
+  climb          & $0.90^{\circ}$ & $26.24^{\circ}$ \\
+  cruise         & $1.55^{\circ}$ & $26.37^{\circ}$ \\
+  cruise\_39k    & $0.83^{\circ}$ & $24.86^{\circ}$ \\
+  cruise\_lowpwr & $0.79^{\circ}$ & $29.76^{\circ}$ \\
+  \midrule
+  \textbf{whole envelope stacked} & $\mathbf{1.38^{\circ}}$ & $\mathbf{26.71^{\circ}}$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{gate_t}
+  \caption{Confusable-pair angle at each calibrated operating point and over the whole measured
+  envelope, noise-whitened, log scale. Auto-generated (\protect\code{prereg-v19}).}
+  \label{fig:gate-t}
+\end{figure}
+
+\textbf{Gate T refuted on the quasi-steady route, decisively.} Stacking every operating point
+the twin has been calibrated at gives $1.38^{\circ}$ --- \emph{below} cruise alone at
+$1.55^{\circ}$, because the extra points pull toward the common direction rather than away from
+it. The pair points nearly the same way at every condition in the envelope; the
+$1.3^{\circ}$ of \cref{sec:icm} was never an artifact of choosing cruise.
+
+The Cram\'er--Rao bound does improve on the spread budget ($1.73 \to 1.12\,\%$ for
+$\eta_{\mathrm{HPC}}$, $1.49 \to 0.92\,\%$ for $\eta_{\mathrm{HPT}}$) --- more conditions means
+more information --- but the \emph{direction} is unchanged, which is what confusability is
+about. More precision along a shared axis does not separate two faults on that axis.
+
+\keyidea{Whatever a transient is worth here, none of it comes from operating-point diversity. Sweeping the entire calibrated envelope leaves the confusable pair at $1.4^{\circ}$. The quasi-steady route is closed.}
+
+\paragraph{Part 2 --- pricing the part that is not computable.} Spool time constants and
+heat-soak lags are genuinely new measurements, not a resampling of the steady map, and they
+need a quasi-steady transient deck this project does not have. Rather than invent one, the gate
+inverts the question: appended to the whole-envelope cockpit stack, how discriminating would a
+time-constant measurement have to be to reach a target angle? In whitened units --- where the
+entire steady signature has norm $8.1$ --- the differential sensitivity required is
+$\mathbf{0.7}$ for $5^{\circ}$, $1.4$ for $10^{\circ}$ and $2.9$ for $20^{\circ}$.
+
+So a dynamic channel carrying about $9\,\%$ of the steady envelope's discriminating power
+would be enough to break the pair. That is not a large number, and a transient study is
+therefore \emph{not} ruled out --- but two cautions belong with it. First, the requirement is on
+the \emph{difference} between the two parameters' dynamic sensitivities, and both act the same
+way on the high-pressure spool: degrading either $\eta_{\mathrm{HPC}}$ or $\eta_{\mathrm{HPT}}$
+reduces net accelerating power and lengthens the spool time constant. The difference is
+therefore much smaller than either sensitivity, which is precisely the trap the steady case
+already fell into. Second, $0.7$ whitened units means a $0.7\sigma$ shift in the estimated time
+constant per $1\,\%$ of health change on a single transient; if the per-transient sensitivity
+is nearer $0.1$--$0.2\sigma$, as a first-order spool balance suggests, then roughly
+$25$--$50$ comparable transients must be averaged to reach it.
+
+\paragraph{What the extended column says, and it is the practical answer.} The pair sits at
+$25$--$30^{\circ}$ at \emph{every} operating point once station probes are present, and the
+$\eta_{\mathrm{HPC}}$ bound tightens to $0.023\,\%$. The wall is a property of the
+\emph{cockpit} sensor set, not of steady-state analysis as such. An operator choosing between
+funding a transient-diagnostics programme and fitting station instrumentation has the answer
+already, and it agrees with \cref{sec:f8-lh2}: real probes lift confusable isolation
+$0.15 \to 0.92$, and nothing in this gate suggests transients would be the cheaper route to the
+same place.
+
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
 
@@ -928,6 +1019,7 @@ are allowed to fail.
     L-MECH & Is the wall instantaneous? Can a history attribute mechanism? & \textbf{Yes} --- 3 of 5 mechanisms recover from trajectory shape, \code{hot\_section} at $R^2\,0.78$; but learning beats hand features on only 2 of 5 (\cref{sec:f13-mech}) \\
     L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.52$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
     L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
+    Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\
     \bottomrule

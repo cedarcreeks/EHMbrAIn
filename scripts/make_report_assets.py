@@ -1084,6 +1084,43 @@ def fig_f15_instrument():
     print('  f15 instrument figure done')
 
 
+def fig_gate_t():
+    """Gate T: confusable-pair angle per operating point and over the whole
+    measured envelope, cockpit versus extended sensor sets."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f16' / 'gate_t_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())['part1_quasi_steady']
+    pts = list(v['cockpit']['angle_per_point_deg'])
+    INK, BLUE, TEAL, RED = '#212529', '#4263EB', '#1098AD', '#E03131'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(6.0, 3.0))
+    x = np.arange(len(pts) + 1); w = 0.36
+    ck = [v['cockpit']['angle_per_point_deg'][p] for p in pts] + \
+         [v['cockpit']['angle_full_envelope_deg']]
+    ex = [v['extended']['angle_per_point_deg'][p] for p in pts] + \
+         [v['extended']['angle_full_envelope_deg']]
+    ax.bar(x - w / 2, ck, w, color=BLUE, label='cockpit set')
+    ax.bar(x + w / 2, ex, w, color=TEAL, label='extended set')
+    ax.axhline(5.0, color=RED, lw=1.0, ls='--')
+    ax.annotate('separability threshold', (len(pts) + 0.45, 5.4), fontsize=7,
+                color=RED, ha='right')
+    ax.set_yscale('log')
+    ax.set_xticks(x)
+    ax.set_xticklabels([p.replace('_', '\\_') for p in pts] + ['\\textbf{whole\nenvelope}'],
+                       fontsize=7, rotation=20, ha='right')
+    ax.set_ylabel('$\\eta_{HPC}$ vs $\\eta_{HPT}$ angle [deg]')
+    ax.set_title('sweeping every operating point does not open the confusable angle',
+                 fontsize=8)
+    ax.legend(frameon=False, fontsize=7.5, loc='center right')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'gate_t.pdf'); plt.close(fig)
+    print('  gate T figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2021,6 +2058,7 @@ def artifact_assets():
     fig_f13_mechanism()
     fig_f14_bilstm()
     fig_f15_instrument()
+    fig_gate_t()
     fig_confusable_angles()
     gpa_assets()
     noise_sweep_assets()
