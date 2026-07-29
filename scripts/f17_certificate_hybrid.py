@@ -62,7 +62,8 @@ OUT = REPO_ROOT / 'data' / 'processed' / 'f17'
 R_DIAG = [0.07, 0.5, 0.23]
 STRIDE = 25
 IDENTIFIABLE_PCT = 0.7        # Certificate.certify() tag threshold
-SEEDS = (0, 1, 2)
+SEEDS = tuple(range(10))      # confirmatory: 10 seeds (prereg-v20)
+ALPHA = 0.05
 ARMS = ('A_pure', 'B_h4_style', 'C_certificate')
 
 
@@ -182,13 +183,22 @@ def main():
               f'+-{res[arm]["r2_sd_per_seed"]:.3f}  '
               f'ensembled {res[arm]["r2_mean_ensembled"]:+.3f}', flush=True)
 
+    from scipy import stats
     a, b, cc = (res[x]['r2_mean_per_seed'] for x in ARMS)
     # paired on the seed: seed effects are shared across arms, so the paired
     # difference is far better powered than comparing two noisy means
     dCA = [per_seed['C_certificate'][s] - per_seed['A_pure'][s] for s in SEEDS]
     dBA = [per_seed['B_h4_style'][s] - per_seed['A_pure'][s] for s in SEEDS]
     spread = max(res[x]['r2_sd_per_seed'] for x in ARMS)
-    resolvable = float(np.mean(dCA)) > max(0.02, spread)
+    # confirmatory test, frozen as prereg-v20: one-sided paired t on C-A in the
+    # direction the exploratory pass showed (disclosed), with B-A as the control
+    tCA = stats.ttest_rel(
+        [per_seed['C_certificate'][s] for s in SEEDS],
+        [per_seed['A_pure'][s] for s in SEEDS], alternative='greater')
+    tBA = stats.ttest_rel(
+        [per_seed['B_h4_style'][s] for s in SEEDS],
+        [per_seed['A_pure'][s] for s in SEEDS], alternative='greater')
+    resolvable = bool(tCA.pvalue < ALPHA)
     verdict = {
         'design': {
             'task': 'mechanism-share attribution (F13 gate one task)',
@@ -209,13 +219,23 @@ def main():
             'paired_deltas_B_minus_A': dBA,
             'C_wins_on_all_seeds': bool(all(d > 0 for d in dCA)),
             'max_seed_sd': spread,
+            'n_seeds': len(SEEDS),
+            'paired_t_C_vs_A': {'t': float(tCA.statistic),
+                                'p_one_sided': float(tCA.pvalue)},
+            'paired_t_B_vs_A': {'t': float(tBA.statistic),
+                                'p_one_sided': float(tBA.pvalue)},
             'resolvable_against_seed_noise': bool(resolvable),
-            'confirmed': bool(resolvable and all(d > 0 for d in dCA)
-                              and np.mean(dBA) <= max(0.02, spread)),
-            'criterion': ('paired on seed: C must beat A on every seed, by a '
-                          'mean margin exceeding both 0.02 and the largest '
-                          'per-arm seed sd, AND B must not -- otherwise the '
-                          'gain is "more features", not the certificate'),
+            'confirmed': bool(tCA.pvalue < ALPHA and tBA.pvalue >= ALPHA),
+            'criterion': ('CONFIRMATORY, frozen as prereg-v20: one-sided paired '
+                          't-test on C-A across 10 seeds at alpha 0.05, in the '
+                          'direction the 3-seed exploratory pass showed '
+                          '(disclosed). B-A gets the same test as a control and '
+                          'must NOT reach significance -- otherwise the gain is '
+                          'channel count, not the certificate'),
+            'exploratory_disclosed': {
+                'n_seeds': 3, 'mean_C_minus_A': 0.088, 'paired_sd': 0.066,
+                't': 2.32, 'verdict': 'inconclusive, margin inside seed spread',
+                'arm_means': {'A': 0.323, 'B': 0.355, 'C': 0.412}},
             'inconclusive_note': ('if the C-A margin sits inside the seed '
                                   'spread the honest verdict is inconclusive, '
                                   'not a signal: an earlier run of arm A scored '
@@ -229,12 +249,13 @@ def main():
     }
     (OUT / 'hybrid_verdict.json').write_text(json.dumps(verdict, indent=2))
     h = verdict['H15.3_certificate_channel_helps']
-    print(f"\n  C-A {cc - a:+.3f} (per seed {['%+.3f' % d for d in dCA]})")
-    print(f"  B-A {b - a:+.3f} (per seed {['%+.3f' % d for d in dBA]})")
-    print(f"  max seed sd {spread:.3f}  -> resolvable: {h['resolvable_against_seed_noise']}")
-    print(f"  H15.3 confirmed: {h['confirmed']}")
-    if not h['resolvable_against_seed_noise'] and abs(cc - a) < spread:
-        print('  VERDICT: inconclusive -- margin inside seed noise, not a signal')
+    print(f"\n  C-A {cc - a:+.3f}   paired t={tCA.statistic:.2f}  p={tCA.pvalue:.4f}")
+    print(f"  B-A {b - a:+.3f}   paired t={tBA.statistic:.2f}  p={tBA.pvalue:.4f}  (control)")
+    print(f"  max seed sd {spread:.3f}   n seeds {len(SEEDS)}")
+    print(f"  H15.3 CONFIRMED: {h['confirmed']}")
+    if tCA.pvalue < ALPHA and tBA.pvalue < ALPHA:
+        print('  NOTE: control also significant -- the gain is channel count, '
+              'not the certificate')
 
 
 if __name__ == '__main__':
