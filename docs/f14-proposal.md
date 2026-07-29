@@ -182,10 +182,52 @@ saturating with a wash sawtooth, erosion linear, clearance bilinear with a break
 hot-section accelerating with efficiency down *and flow capacity up*, LPT wear linear. Per
 engine the true latent is **five scalars**, not a free 10-vector per cycle.
 
-F13 gate one measured the consequence directly, on held-out engines with truth replayed from
-seeds: **four of five mechanisms recover at R² > 0.30 from the deviation trajectory alone, and
-`hot_section` — the mechanism that loads the confusable pair — is the best recovered at
-R² 0.786.** Instantaneously unidentifiable; over a history, readable.
+F13 gate one measured the consequence directly (`data/processed/f13/gate1_verdict.json`,
+symmetric 25-trial budget per family, selected on val, reported on 450 cuts from held-out
+engines, truth replayed from seeds):
+
+| mechanism | truth mean/sd | R² hand features | R² sequence | gain |
+|---|---|---|---|---|
+| hot_section | 0.47 / 0.13 | **0.780** | 0.648 | −0.132 |
+| clearance | 0.22 / 0.09 | 0.286 | **0.735** | **+0.449** |
+| fouling | 0.08 / 0.04 | 0.451 | **0.512** | +0.061 |
+| lpt_wear | 0.04 / 0.01 | 0.217 | 0.190 | −0.026 |
+| erosion | 0.09 / 0.03 | 0.130 | −0.018 | −0.148 |
+| *mean* | | *0.373* | *0.414* | *+0.041* |
+
+**G1a confirmed:** three of five mechanisms recover above R² 0.30 from the deviation
+trajectory alone, and `hot_section` — the mechanism that loads the confusable pair — is
+recovered at R² 0.78. Instantaneously unidentifiable; over a history, readable. Part B's
+premise holds.
+
+**G1b refuted as specified**, and the way it fails is the useful part. The criterion was that
+the sequence model beat hand features on ≥ 3 of 5 mechanisms; it manages 2, at a mean gain of
++0.041. But this is neither "hand features suffice" nor "learning wins" — it is a **split that
+tracks how parameterizable each mechanism's temporal signature is**:
+
+- **`clearance` (bilinear: fast break-in over 800 cycles, then slow) — sequence wins by
+  +0.449.** The signature is a *knee*, and a knee resists closed-form description; the hand
+  set only carries a crude break-in-dominance ratio, while the sequence model reads the shape.
+- **`hot_section` (linear-accelerating, exponent 1.6, efficiency down with flow capacity up) —
+  hand features win by 0.132.** That signature has a simple parametric form, and the hand set
+  encodes it directly as a quadratic term plus cross-channel slope ratios.
+- **`erosion` and `lpt_wear` (both plain linear, small margin shares) — neither family works.**
+  Linear mechanisms competing against other linear mechanisms, contributing 4–9 % of margin
+  loss each. Probably genuinely unidentifiable rather than badly modelled.
+
+> **Revised Part B claim.** Mechanism attribution *is* possible from trajectory shape where the
+> instantaneous state is certified unidentifiable — that part stands. But learning is not
+> generically the tool. It earns its keep specifically where the temporal signature is a shape
+> that does not reduce to a few parameters, and physics-designed features match or beat it
+> everywhere else. The deliverable is the *mechanism-by-mechanism map of which is which*, not
+> a blanket claim for either family.
+
+**Two caveats, both against the sequence side.** First, the hand features were designed by
+someone who had read `fault_catalog.yaml` — one descriptor per mechanism in the catalogue —
+so that baseline is stronger than a practitioner without the generator source would build.
+Second, selection was thin: validation is 245 cuts from ~10 engines, and the val/test gap is
+large (val: hand 0.166 vs sequence 0.507; test: 0.373 vs 0.414). The test numbers are the ones
+quoted; the val ranking should not be.
 
 > **Part B's claim.** The place a sequence model earns its keep in EHM is not RUL, where the
 > margin over a competent classical prognostic is 1.34× and only late in life. It is
@@ -321,10 +363,12 @@ reported as such.
 
 ## 15. Honest risks
 
-1. **F13 gate one G1b is still open.** If physics-designed shape features match the sequence
-   model, the mechanism finding stands but stops being an *AI* finding, and Part B's KPIs
-   should then be attributed to trajectory analysis, not to learning. The plan does not
-   presume the answer.
+1. **F13 gate one is closed, and it partly landed on this risk.** G1a confirmed (attribution
+   is possible); G1b refuted as specified (the sequence model wins 2 of 5 mechanisms, mean
+   gain +0.041). So Part B's KPIs must be attributed to **trajectory analysis** in general,
+   with learning credited only on `clearance`-like signatures. Every KPI below that reads
+   "sequence model" should read "trajectory-shape estimator, learned or hand-built as the
+   mechanism warrants". This weakens the AI framing and does not weaken the operational claim.
 2. **Third hybrid attempt.** H4 and L6 both refuted. The certificate channel is better
    motivated than either, and may still fail.
 3. **K4/K5 are modelled, not measured.** Stated above; the sweep is mandatory, not optional.
@@ -538,8 +582,9 @@ nonlinear-curvature route in F10 before it consumed a milestone.
 
 Ordered by cost-to-information, cheapest decisive experiment first.
 
-1. Wait for F13 gate one (G1b decides whether "sequence model" or "shape features" heads the
-   claim).
+1. ~~Wait for F13 gate one.~~ **Done** (§10): G1a confirmed, G1b refuted as specified. The
+   claim is headed by *trajectory shape*, not by *learning*, with learning credited per
+   mechanism.
 2. Freeze Part B as `prereg-v18`, separately from Part A.
 3. **H15.8 — instrument vs engine.** First, because the labels already exist (22 drifted
    engines), it needs no new generation, and it is a second independent test of Part B's whole
