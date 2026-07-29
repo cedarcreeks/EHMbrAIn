@@ -1,0 +1,183 @@
+% OEM engineering brief -- what survived testing.
+% Build: latexmk -pdf -outdir=build oem-brief.tex
+% Every number traces to a versioned artifact under data/processed/ and to a
+% pre-registration tag; nothing here is hand-copied (norm N4).
+\documentclass[11pt]{article}
+\usepackage[a4paper,margin=2.0cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage{titlesec}
+\usepackage{enumitem}
+\setlist[itemize]{leftmargin=1.1em,itemsep=1pt,topsep=2pt}
+\titlespacing*{\section}{0pt}{9pt plus 2pt}{3pt}
+\titleformat{\section}{\large\bfseries}{}{0pt}{}
+\titlespacing*{\subsection}{0pt}{6pt plus 1pt}{2pt}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0pt}{}
+\setlength{\parskip}{3pt}
+\setlength{\parindent}{0pt}
+\definecolor{inkc}{HTML}{212529}
+\definecolor{bluec}{HTML}{4263EB}
+\definecolor{redc}{HTML}{A61E4D}
+\newcommand{\no}{\textcolor{redc}{\textbf{No}}}
+\newcommand{\yes}{\textcolor{bluec}{\textbf{Yes}}}
+\pagestyle{plain}
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries Which AI claims in engine performance survive testing?\par}
+\vspace{1mm}
+{\large A measurement rig, and what it found --- including about our own numbers\par}
+\vspace{2mm}
+{\small\itshape Engineering brief. All results from a pre-registered testbed on a
+CFM56-7B26 model built entirely from public certification data (TCDS, ICAO EEDB).
+No proprietary inputs.\par}
+\end{center}
+\vspace{1mm}
+
+\hrule
+\vspace{2mm}
+\textbf{Summary.} We built a testbed where the true engine condition is known, so
+a diagnosis can be scored against the answer rather than against another
+estimate. We then ran the comparison everyone quotes and nobody audits: tuned AI
+against a tuned classical gas-path stack, on identical data, with hypotheses
+frozen before the runs. \textbf{Most of the advertised advantage did not
+survive}, including two of our own headline numbers. What did survive is small,
+specific, and --- for an OEM --- points at instrumentation rather than software.
+\vspace{2mm}
+\hrule
+
+\section{1. What failed, and why it matters}
+
+\subsection{A published deep-learning result, replicated}
+A 2026 Springer paper reports a bidirectional LSTM as the best of fifteen
+architectures for remaining-life prediction on NASA's C-MAPSS benchmark. We
+re-implemented it exactly.
+
+\begin{itemize}
+  \item It \emph{does} replicate: $14.56$ cycles RMSE against a reported
+        $14.12$. This is not a straw man.
+  \item Its architecture ranking rests on gaps of $0.12$ to $0.60$ cycles.
+        \textbf{The run-to-run spread from the random seed alone is $2.94$
+        cycles.} The ranking is noise. The paper reports one run per model.
+  \item The published architecture \textbf{fails to train on 5 of 10 runs},
+        collapsing to predicting zero. The cause is specified in the paper's own
+        tables: a ReLU activation on the output layer, plus a scheduler that cuts
+        the learning rate hundredfold to a floor it cannot recover from.
+\end{itemize}
+
+\textbf{Takeaway for evaluation:} ask any vendor or internal team for the seed
+spread before you look at the headline. A ranking inside the noise is not a
+result, and a model that silently fails half the time is not a product.
+
+\subsection{Two of our own headline numbers, corrected downward}
+We audited our own claims the same way and both shrank.
+
+\begin{itemize}
+  \item \emph{``AI gives $6\times$ tighter uncertainty intervals.''} False as
+        stated. Our AI interval was statistically calibrated and the classical
+        one was not. Calibrate both the same way --- a technique the classical
+        side can adopt for free --- and the advantage is $\mathbf{1.34\times}$.
+        About three quarters of that headline was the calibration method, not
+        the model.
+  \item \emph{``AI predicts remaining life $2.3$--$4.4\times$ better.''} True
+        only against the linear extrapolation operators field today. Against a
+        competent classical prognostic it is $\mathbf{1.34\times}$ at $90\,\%$ of
+        life and a \textbf{statistical tie} at $70\,\%$. The advantage is real,
+        late-life, and modest.
+\end{itemize}
+
+\subsection{Where AI lost outright}
+Fault isolation between confusable gas-path faults: \textbf{31\,\% versus
+31\,\%}. Identical. The limit is informational, not algorithmic --- three cockpit
+measurements against ten health parameters, with two fault signatures
+$1.3^{\circ}$ apart. We confirmed it four independent ways: halving every sensor
+noise leaves it at $0.31$--$0.38$; a ``virtual sensor'' adds \emph{exactly}
+nothing; sweeping the entire calibrated operating envelope leaves the angle at
+$1.38^{\circ}$; and no learned method moved it. \textbf{No algorithm removes a
+rank deficiency.}
+
+Also refuted: ``physics-informed'' learning, twice, when applied to remaining
+life. And $87\,\%$ of mid-life remaining-life uncertainty is \emph{irreducible} ---
+two engines in identical measured condition genuinely fail hundreds of cycles
+apart. Most prognostic R\&D spend is chasing that, not a method gap.
+
+\section{2. What survived}
+
+\subsection{An instrumentation design tool --- and it is not AI}
+The strongest result is classical estimation theory applied through the engine
+deck: accumulate Fisher information over an engine's actual flown conditions and
+you get, per engine and per health direction, a bound on what any diagnosis can
+possibly know. Validated against the true component state, which only a
+synthetic-truth testbed permits.
+
+It answers the question an OEM actually owns:
+
+\begin{center}\small
+\begin{tabular}{@{}lr@{}}
+  \toprule
+  Instrumentation decision & Measured effect \\
+  \midrule
+  Add station probes (P25/T25/PS3/T3) & HPC efficiency recoverable $45\times$ better \\
+  Same probes, confusable isolation & $0.15 \rightarrow 0.92$ \\
+  Halve noise on existing cockpit probes & no effect on the wall \\
+  Add a ``virtual sensor'' / better algorithm & no effect (rank unchanged) \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Product-strategy consequence.} Any EHM service built on cockpit-only data
+sits under a hard informational ceiling that no software roadmap removes. The way
+through is instrumentation --- which an OEM controls and a customer does not.
+This tool prices that decision before the hardware is committed, and it runs on
+our own decks, where it is stronger than on the public model used here.
+
+\subsection{The one AI result that held up}
+Injecting physics into a learner \emph{hurts} remaining-life prediction (refuted
+twice) but \textbf{helps module attribution} --- which mechanism is consuming the
+engine --- by a large, significant margin. We ran it with a control arm so the
+gain could not be attributed to simply adding more inputs.
+
+The reconciliation is mechanical: remaining life is already carried by the
+EGT-margin signal the model can see, so a physical state estimate adds nothing;
+\emph{which module} is exactly what that estimate encodes. \textbf{``Physics-informed''
+is neither a free win nor a dead end --- the task decides}, and this tells us
+which of our own EHM products should carry a physics channel and which should not.
+
+\subsection{A related finding on the wall}
+The isolation wall is a property of a \emph{single snapshot}. Over a full
+history, three of five degradation mechanisms become attributable from the shape
+of the trajectory --- including the hot-section mechanism that drives the
+confusable pair. The governing rule we measured: \textbf{trajectory shape
+separates what has shape}. A wash sawtooth and a break-in knee are readable; a
+featureless linear ramp is not, however long you watch.
+
+\section{3. What this is, and what it is not}
+
+\textbf{Not:} a product, a validated tool for operational use, or evidence about
+absolute numbers. The engine model is calibrated to public certification data,
+not to our test-cell data, and the fleet is synthetic. Statistical predictions
+here are not certified conclusions.
+
+\textbf{Is:} a reusable method for deciding which performance-AI claims to fund
+and which to reject, with the discipline that makes the answers trustworthy ---
+hypotheses frozen before runs, equal tuning budgets for both sides, negative
+results reported with the same weight as positive ones, and every figure
+regenerated from data rather than transcribed.
+
+\textbf{Proposed next step.} Re-run the instrumentation analysis on our own
+engine decks and our own candidate sensor suites. It requires no AI, no new data
+collection, and answers a question we already pay to answer by other means.
+
+\vfill
+{\footnotesize\itshape Every number above traces to a versioned artifact and a
+pre-registration tag in the study repository; the supporting document runs to 135
+pages with the full protocol, the refutations, and the audit trail.\par}
+
+\end{document}
