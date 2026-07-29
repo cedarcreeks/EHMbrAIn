@@ -310,14 +310,78 @@ pagando por responder de otra manera.
 \end{decir}
 \escena{y cállate: deja que hable él}
 
-\diapo{14--15}{Reserva}
-No las pases salvo que pregunte. Están para:
-\begin{itemize}
-  \item \textbf{Disciplina de método} --- si pregunta ``¿y cómo sé que no te has
-        engañado?''
-  \item \textbf{El muro es instantáneo} --- si pregunta ``¿entonces no se puede
-        diagnosticar nada?''
-\end{itemize}
+\diapo{14}{Reserva --- The discipline that makes the answers usable}
+\escena{sácala si pregunta ``¿y cómo sé que no te has engañado a ti mismo?''; es la
+pregunta correcta y conviene que la haga}
+\begin{decir}
+Cinco cosas, y cada una tiene una cicatriz detrás.
+
+\textbf{Una: escribir la hipótesis antes de correr.} Antes de cada experimento dejé un
+documento fechado con qué iba a medir y qué umbral contaba como éxito. Cuando el resultado
+salió en contra, quedó en contra. La hipótesis de que la IA aislaría mejor las averías está
+refutada en el informe, con su número, y no la he tocado.
+
+\textbf{Dos: el mismo presupuesto de ajuste para los dos lados}, y aquí está la cicatriz
+más útil. En mi primera versión el detector de IA sacaba un acierto de \cifra{0,06} ---
+inservible --- y el clásico le ganaba de calle. Con el mismo número de intentos de ajuste
+para ambos, la IA subió a \cifra{0,48} y el marcador \textbf{se dio la vuelta}. O sea: si
+me hubiera quedado en la primera comparación habría publicado exactamente la conclusión
+contraria. Por eso, cuando alguien te enseñe un marcador, la pregunta es si las dos partes
+estaban igual de ajustadas.
+
+\textbf{Tres: puertas que pueden fallar, y fallaron.} Puse una condición a mi propia flota
+sintética: un clasificador tonto, de los que no aprenden nada, no debe pasar del 60\,\% de
+acierto. Si lo pasa, es que el problema es demasiado fácil y cualquier método parecerá
+bueno. La primera flota dio \cifra{81,6\,\%}. \textbf{Regeneré la flota, no bajé el
+umbral.} Acabó en \cifra{54\,\%}, y falló dos veces por el camino.
+
+\textbf{Cuatro: trampas para cazarme a mí mismo.} Ejemplo real: metí en la flota ocho
+motores con una deriva en un sensor que los datos de cabina \emph{físicamente no pueden
+ver}. Si mi método hubiera dicho que los detecta, sería que está leyendo otra cosa, y todo
+el resultado sería basura. No los detectó, como debía. Eso es lo que me permite afirmar
+que, cuando digo que algo no se puede distinguir, es que de verdad no se puede.
+
+\textbf{Cinco: ninguna cifra escrita a mano.} Todas las gráficas y tablas se regeneran
+desde el código. Si un número cambia, cambia en el documento solo.
+\end{decir}
+\idea{la credibilidad no está en el resultado, está en haber podido perder.}
+
+\diapo{15}{Reserva --- The wall is a snapshot property}
+\escena{sácala si pregunta ``¿entonces con los sensores de cabina no se puede diagnosticar
+nada?''}
+\begin{decir}
+No, hay un matiz importante, y es el resultado más fino que salió.
+
+El muro del que hablé es sobre \textbf{una foto}. En un informe suelto no puedes separar
+si el rendimiento que se ha perdido es del compresor de alta o de la turbina de alta.
+
+Pero un motor no es una foto, es una película de miles de vuelos. Y ahí sí aparece
+información, porque los mecanismos de degradación tienen \textbf{formas distintas en el
+tiempo}. El ensuciamiento del compresor se recupera en parte con cada lavado: hace dientes
+de sierra. El asentamiento de holguras ocurre rápido al principio y luego para: hace un
+codo. El deterioro de la sección caliente se acelera al final de la vida. Son firmas
+temporales que no se parecen en nada, aunque en una foto suelta sí se parezcan.
+
+Midiéndolo: de cinco mecanismos, \textbf{tres} se pueden atribuir a partir de la forma de
+la trayectoria. Y el mejor recuperado, con \cifra{0,78} de varianza explicada sobre 1, es
+justamente el de la sección caliente, que es el que provoca la confusión en la foto.
+
+La regla que salió de todo esto: \textbf{la forma de la trayectoria separa lo que tiene
+forma}. Un diente de sierra y un codo se leen. Una rampa lisa, no --- por mucho que
+esperes. Y por eso mismo tampoco se puede distinguir un sensor que va derivando poco a
+poco de una degradación real: las dos son rampas lisas.
+\end{decir}
+
+\escena{si pregunta ``¿y eso para qué me sirve operativamente?''; contesta con honestidad,
+porque el límite es real}
+\begin{decir}
+Para decidir \emph{cuánto} de la pérdida es lavable y cuánto es permanente, sí sirve: eso
+se estima bien. Para decidir \emph{qué módulo} tocar en el taller, en esta flota no sirve,
+porque la sección caliente domina en los cien motores de cien. Es una limitación de mi
+flota sintética, no un resultado sobre motores reales, y está declarada como tal en el
+informe.
+\end{decir}
+\idea{el muro es de la foto, no de la película --- pero solo si en la película pasa algo.}
 
 \section*{Objeciones probables, y qué contestar}
 
