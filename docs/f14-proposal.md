@@ -336,12 +336,105 @@ reported as such.
    cockpit-sensor limits — a legitimate simulation question — and must not be written as
    though it discovered that mechanisms differ.
 
-## 16. Order of execution (Part B)
+## 16. Second target: resolving GPA's ambiguity — as a clock, not as a verdict
+
+### What must not be re-litigated
+
+H2 is refuted and stays refuted: on **instantaneous, single-episode** isolation of confusable
+faults, AI scored 0.3077 against GPA's 0.3077, and halving every sensor $\sigma$ leaves it at
+0.31–0.38 (§sec:noise-sweep). The wall is informational at a point in time. Nothing below
+claims otherwise, and any design that amounts to "run H2 again with a bigger network" is out
+of scope by construction.
+
+### The reframe
+
+GPA does not fail silently when it is ambiguous — it produces an estimate smeared across
+directions the certificate has already tagged `confounded` or `unobservable`
+(`Certificate.certify()` thresholds: identifiable < 0.7 %, confounded < 1.5 %, unobservable
+above). So ambiguity is **detectable at the moment it occurs**, per engine and per direction,
+without ground truth. That trigger is free.
+
+The open question is not *whether* an ambiguity can be resolved from one snapshot — it cannot,
+that is H2 — but **how long the ambiguity lasts**. The confusable mechanisms diverge over
+time even though their instantaneous signatures do not: hot-section creep drags flow capacity
+*up* while efficiency falls, fouling is partially undone at every wash, clearance break-in
+finishes and stops contributing. Each of those is a future event that discriminates.
+
+> **Target: GPA ambiguity is a clock, not a permanent state. Measure how many cycles of
+> further observation it takes to run out, and whether a sequence model reads it sooner than
+> the physics-only rule.**
+
+This is a different estimand from H2, and it is the one that decides a maintenance action.
+
+### Why it is operationally decisive
+
+An ambiguity that resolves 900 cycles before removal is harmless — parts get ordered on time.
+The same ambiguity resolving 80 cycles before removal is an AOG. **The decision-relevant
+quantity is resolution latency measured against procurement lead time**, which is exactly the
+horizon $H$ already swept in K3. The two targets share an axis.
+
+### Definitions
+
+**Ambiguity trigger.** Fires at cycle $t$ when the certificate tags $\ge 2$ directions
+non-identifiable *and* the GPA estimate places mass above threshold on more than one of them.
+Computed from `identifiability.py` + the existing Kalman path; no new machinery, no truth.
+
+**K7 — Ambiguity resolution latency (ARL).** For each triggered engine, the number of
+additional observed cycles until the model names the true dominant mechanism and holds it,
+with calibrated confidence, to removal. Report the full distribution, not a mean; the tail is
+the operational risk. Paired against $H$: the reportable figure is
+$\Pr[\mathrm{ARL} \le H]$ — the fraction of ambiguities that clear in time to act.
+
+**Abstention is mandatory.** The model must be allowed to output "still ambiguous", and be
+calibrated when it does. Forcing a label on an unresolvable case is how the published
+literature manufactures accuracy, and F7 already established the honest alternative in this
+project — calibrated, physics-tracking ambiguity sets (§ch:tomography, learned fusion at 0.65
+vs classical stacking's 0.17, "ambiguity is now a calibrated, physics-explained deliverable").
+K7 extends that from a static set to a **shrinking** set.
+
+### The built-in leakage check
+
+If a model resolves an ambiguity, it did so using either (a) later observations, or (b) a
+fleet prior. Both are legitimate; conflating them is not. The certificate is the referee: it
+proves the *instantaneous* data at the trigger could not have contained the answer, so any
+resolution at latency 0 is leakage, not skill. Pre-registered check: **the measured ARL
+distribution must have essentially no mass at zero.** If it does, the pipeline is broken and
+the result is void — the same fraud-detector role G5 plays in `docs/f12-proposal.md`.
+
+### Hypotheses
+
+- **H15.6 — ambiguity decays, and the clock is readable.** Among triggered engines, the
+  sequence model attains $\Pr[\mathrm{ARL} \le H] \ge 0.5$ at the nominal procurement horizon,
+  against the GPA rule's rate on the same triggered subset.
+  *Refutes:* GPA ambiguity persists to removal on this benchmark, meaning the confusable pair
+  is operationally unresolvable and the correct engineering answer is the station probe
+  (§sec:f8-lh2, 0.15 → 0.92) rather than any model. That negative is worth as much as the
+  positive and should be stated as plainly.
+
+- **H15.7 — resolution is honest.** The abstention channel is calibrated: among cases the
+  model declines to call, the true dominant mechanism is genuinely mixed; among cases it
+  calls, empirical accuracy matches stated confidence within the conformal guarantee. And the
+  ARL distribution has no mass at zero.
+  *This one is a gate on the whole target: an uncalibrated resolver is worthless regardless of
+  its accuracy.*
+
+### Where this could still be a repeat of H2
+
+Stated plainly, because it is the main risk. If the ambiguity that matters is driven by
+**acute episodes** — which ramp over 50–500 cycles and then hold, with no discriminating
+future event — then there is no clock to read and H15.6 fails. The clock argument depends on
+the *chronic* mechanisms, where wash sawtooth and flow-capacity divergence supply the future
+evidence. So the trigger population should be reported split by acute-driven versus
+chronic-driven ambiguity, and the two are likely to give opposite answers. That split is the
+result, whichever way it lands.
+
+## 17. Order of execution (Part B)
 
 1. Wait for F13 gate one (G1b decides whether "sequence model" or "shape features" heads the
    claim).
 2. Freeze Part B as `prereg-v18`, separately from Part A.
 3. Attribution task: Bi-LSTM vs unidirectional vs GPA rule → H15.1, H15.2.
 4. Certificate-gated hybrid → H15.3.
-5. KPI layer K1–K6 with the turnaround sweep → H15.4, H15.5.
-6. Report chapter, figures, A2 entry. Commit and push.
+5. Ambiguity trigger + ARL distribution, split acute vs chronic → H15.6, H15.7.
+6. KPI layer K1–K7 with the turnaround sweep → H15.4, H15.5.
+7. Report chapter, figures, A2 entry. Commit and push.
