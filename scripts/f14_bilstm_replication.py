@@ -248,14 +248,29 @@ def main():
                    'min': float(np.min([m[k] for m in per_seed])),
                    'max': float(np.max([m[k] for m in per_seed]))}
                for k in ('MAE', 'MSE', 'RMSE', 'R2')}
+        # A run whose output ReLU dies predicts 0 everywhere, giving exactly
+        # RMSE = sqrt(mean(y^2)). Pooling those with trained runs makes the mean
+        # a mixture of two modes and reports neither, so both are separated.
+        dead = float(np.sqrt(np.mean(yte ** 2)))
+        ok = [m for m in per_seed if abs(m['RMSE'] - dead) > 1e-2]
+        cond = ({k: {'mean': float(np.mean([m[k] for m in ok])),
+                     'sd': float(np.std([m[k] for m in ok], ddof=1))
+                     if len(ok) > 1 else None}
+                 for k in ('MAE', 'MSE', 'RMSE', 'R2')} if ok else None)
         results[protocol] = {'per_seed': per_seed, 'aggregate': agg,
-                             'n_seeds': len(SEEDS)}
+                             'n_seeds': len(SEEDS),
+                             'collapsed_runs': len(per_seed) - len(ok),
+                             'collapse_rmse': dead,
+                             'aggregate_trained_only': cond}
 
     trad_pred = traditional_at_cap(train, test, RUL_CAP)
     trad = metrics(trad_pred, yte)
 
     r1, r2 = (results[p]['aggregate'] for p in
               ('R1_paper_test_monitored', 'R2_clean_val_split'))
+    r1c, r2c = (results[p]['aggregate_trained_only'] for p in
+                ('R1_paper_test_monitored', 'R2_clean_val_split'))
+    n_col = sum(results[p]['collapsed_runs'] for p in results)
     verdict = {
         'paper': {'citation': ('Mukherjee, Hazra, Das, Datta (2026), Springer, '
                                'doi 10.1007/978-981-96-9650-5_44'),
@@ -272,7 +287,23 @@ def main():
                          'of the paper lists ReLU']},
         'R1_paper_protocol': r1,
         'R2_clean_val_split': r2,
+        'R1_trained_only': r1c,
+        'R2_trained_only': r2c,
+        'per_seed': {p: results[p]['per_seed'] for p in results},
         'traditional_health_index_projection': trad,
+        'H14.5_trains_reliably': {
+            'collapsed_runs': n_col, 'total_runs': 2 * len(SEEDS),
+            'collapse_rmse': results['R2_clean_val_split']['collapse_rmse'],
+            'confirmed': bool(n_col == 0),
+            'mechanism': ('Table 3 puts ReLU on the single-unit output layer; '
+                          'once it dies the gradient is zero, and Table 4 '
+                          'ReduceLROnPlateau(factor=0.01, min_lr=1e-5) floors '
+                          'the learning rate before it can recover'),
+            'framework_caveat': ('collapse probability depends on init: Keras '
+                                 'Dense defaults to glorot_uniform, torch '
+                                 'Linear to kaiming_uniform(a=sqrt(5)). The '
+                                 'mechanism is architecture-specified, the rate '
+                                 'measured here is not transferable as-is')},
         'H14.1_replicates': {
             'paper_rmse': PAPER['RMSE'],
             'replicated_rmse_mean': r1['RMSE']['mean'],
@@ -285,14 +316,36 @@ def main():
             'penalty_cycles': r2['RMSE']['mean'] - r1['RMSE']['mean'],
             'confirmed': bool(r2['RMSE']['mean'] <= r1['RMSE']['mean'] * 1.05),
             'note': ('how much of the headline came from selecting the '
-                     'checkpoint on the reported test set')},
+                     'checkpoint on the reported test set'),
+            'frozen_criterion_invalid_under_collapse': (
+                'the pre-registered comparison is between pooled means, which '
+                'under a bimodal outcome mostly compares how many runs '
+                'collapsed. The substantive figure is the trained-only pair '
+                'below'),
+            'trained_only': {
+                'rmse_test_monitored': r1c['RMSE']['mean'] if r1c else None,
+                'rmse_clean_val': r2c['RMSE']['mean'] if r2c else None,
+                'penalty_cycles': (r2c['RMSE']['mean'] - r1c['RMSE']['mean']
+                                   if r1c and r2c else None)}},
         'H14.3_beats_traditional': {
             'ai_rmse': r2['RMSE']['mean'], 'traditional_rmse': trad['RMSE'],
             'ratio': trad['RMSE'] / r2['RMSE']['mean'],
             'paper_ratio_vs_linreg': 22.914 / PAPER['RMSE'],
             'confirmed': bool(r2['RMSE']['mean'] < trad['RMSE']),
             'note': ('stated against a fielded classical prognostic, not '
-                     'against a linear regression on windowed sensors')},
+                     'against a linear regression on windowed sensors'),
+            'trained_only': {
+                'ai_rmse': r2c['RMSE']['mean'] if r2c else None,
+                'ratio_vs_fielded': (trad['RMSE'] / r2c['RMSE']['mean']
+                                     if r2c else None),
+                'ratio_vs_paper_linreg': (22.914 / r2c['RMSE']['mean']
+                                          if r2c else None)},
+            'baseline_ordering_note': (
+                'the fielded health-index projection scores WORSE on FD001 '
+                'than the linear regression the paper uses as its weakest '
+                'comparator. It is the operationally realistic method, not the '
+                'strongest classical one, so the ratio against the paper\'s own '
+                'linear regression is the more demanding figure')},
         'H14.4_seed_stability': {
             'rmse_sd_cycles': r2['RMSE']['sd'],
             'paper_model_ranking_gaps': {'bi_lstm_vs_lstm': 14.241 - 14.121,
@@ -302,7 +355,11 @@ def main():
             'note': ('the paper ranks 15 architectures on single runs; if the '
                      'seed spread exceeds the gaps, the ranking is noise')},
     }
-    sd = r2['RMSE']['sd']
+    # use the trained-only sd: the pooled sd is inflated by collapsed runs and
+    # would make the ranking look like noise for the wrong reason
+    sd = r2c['RMSE']['sd'] if r2c and r2c['RMSE']['sd'] else r2['RMSE']['sd']
+    verdict['H14.4_seed_stability']['rmse_sd_cycles'] = sd
+    verdict['H14.4_seed_stability']['sd_basis'] = 'trained-only runs'
     verdict['H14.4_seed_stability']['gaps_within_1sd'] = {
         k: bool(abs(v) < sd)
         for k, v in verdict['H14.4_seed_stability']['paper_model_ranking_gaps'].items()}
@@ -316,6 +373,16 @@ def main():
     print(f"  R2 clean val split        RMSE {r2['RMSE']['mean']:6.3f} "
           f"+-{r2['RMSE']['sd']:.3f}   R2 {r2['R2']['mean']:.3f}")
     print(f"  traditional (health idx)  RMSE {trad['RMSE']:6.3f}   R2 {trad['R2']:.3f}")
+    print(f"\n  collapsed runs (output ReLU dead, predicts 0): {n_col}/{2 * len(SEEDS)}"
+          f"  at RMSE {results['R2_clean_val_split']['collapse_rmse']:.3f}")
+    if r1c:
+        print(f"  R1 trained only           RMSE {r1c['RMSE']['mean']:6.3f} "
+              f"+-{r1c['RMSE']['sd'] or 0:.3f}")
+    if r2c:
+        print(f"  R2 trained only           RMSE {r2c['RMSE']['mean']:6.3f} "
+              f"+-{r2c['RMSE']['sd'] or 0:.3f}"
+              f"   -> {trad['RMSE'] / r2c['RMSE']['mean']:.2f}x vs fielded, "
+              f"{22.914 / r2c['RMSE']['mean']:.2f}x vs paper's linreg")
     print()
     for h in ('H14.1_replicates', 'H14.2_survives_clean_selection',
               'H14.3_beats_traditional'):
