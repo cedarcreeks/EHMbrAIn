@@ -428,13 +428,128 @@ evidence. So the trigger population should be reported split by acute-driven ver
 chronic-driven ambiguity, and the two are likely to give opposite answers. That split is the
 result, whichever way it lands.
 
-## 17. Order of execution (Part B)
+## 17. Adopted from the ACTIVE EHM proposal
+
+An external proposal ("ACTIVE EHM: Dynamic Fingerprinting for Active Diagnosis") argued that
+mechanisms indistinguishable to steady-state GPA may separate during repeatable transients.
+The physics is sound — the ICM is a steady-state Jacobian, while transient response is
+governed by rotor inertia, heat soak and volume dynamics, which depend on health parameters
+differently. It is unrunnable here as written: `snapshots.parquet` holds exactly one row per
+(engine, cycle) with two ACARS snapshots as columns, there is no intra-flight time axis, and
+pyCycle is a steady-state deck. Building a transient generator would mean recovering time
+constants this project itself wrote. Three things in it are worth taking anyway, and one
+should be gated rather than dropped.
+
+### A17.1 — Multi-hypothesis diagnosis, and the free experiment it unlocks
+
+The proposal frames diagnosis over competing hypotheses — nominal/context change, gas-path
+degradation, **sensor drift or bias**, actuator or variable geometry — rather than assuming
+every anomaly is gas-path. That framing is better than this document's, which does assume it.
+
+And the experiment is already paid for: **22 of the 100 fleet engines carry a slow additive
+bias ramp on one sensor** (`conf/fault_catalog.yaml:78`), with `drift_channel` and
+`drift_active` ground truth in the snapshots. The labels exist. Nothing needs generating.
+
+The structure is the same one Part B is built on, which is why it belongs here:
+
+- **Instantaneously unidentifiable.** The cockpit ICM has rank 3 and maps $\mathbb{R}^{10}
+  \to \mathbb{R}^{3}$ surjectively, so *every* deviation vector — including a pure single-channel
+  bias — has a health-state preimage. At a snapshot, a lying thermocouple and a real fault are
+  perfectly confusable. This is not a modelling gap; it is the same rank argument as H2.
+- **Temporally identifiable, plausibly.** Real degradation moves along mechanism trajectories
+  (smooth, coordinated across channels, following the five catalogued shapes). A bias ramp
+  moves along a single coordinate axis. Those are different curves in deviation space even
+  where they pass through indistinguishable points.
+- **Partially attempted already.** L7 found an augmented Kalman "tracks the drift, cannot
+  un-corrupt the cockpit diagnosis" (§sec:f8-l7) — drift *estimation* works, *classification*
+  was never tested.
+
+This is the second independent instance of Part B's claim, on a different fault family, with
+ground truth already on disk. It also sharpens the operational story: the question a line
+engineer actually asks is not "which module" but **"is this an engine problem at all, or is my
+instrument lying?"** — and a removal triggered by a drifting sensor is precisely a wasteful
+removal, KPI K6.
+
+> **H15.8 — instrument versus engine.** A sequence model over the deviation trajectory
+> separates sensor drift from gas-path degradation by ≥ 20 points of balanced accuracy over
+> the classical augmented-Kalman rule, on engines held out by ID.
+> *Refutes:* drift and degradation are confusable over histories too, which would mean the
+> project's entire diagnostic output is conditional on instrument health it cannot verify —
+> a stronger and more uncomfortable finding than the confirmation.
+
+Report the drift-channel breakdown: a bias on EGT should be far harder than one on N2, because
+EGT carries most of the degradation signal. If the model only succeeds on the easy channels,
+say so.
+
+### A17.2 — The safety boundary, adopted verbatim in spirit
+
+The proposal's safety section is better written than anything currently in this document, and
+this project needs it the moment it discusses observation recommendation — which it already
+does, in F7's report-schedule design and F10's sensor-acquisition instrument. Add
+`docs/safety-case-boundaries.md` stating what this work is and is not: offline engineering
+support; no FADEC interface; no actuation commands; no new operational manoeuvres; no
+modification of certified limits or protections; and **no presentation of a statistical
+prediction as a certified conclusion**. Any "recommended observation" output is limited to
+naming which already-authorised data would be most informative.
+
+### A17.3 — The conceptual test, promoted to a pytest
+
+The proposal's best engineering idea is a unit test of the *idea* rather than of a metric:
+construct a case where two hypotheses are steady-state identical but temporally distinct,
+verify GPA cannot separate them, verify the dynamic feature can, and verify the
+information-gain module picks the discriminating observation. Adapted to this project's
+timescale — chronic mechanisms rather than transients — that is exactly gate one's premise,
+and it should live in `tests/` as a permanent regression, not only in a script. If a future
+refactor silently destroys the temporal signal, a test should fail.
+
+### A17.4 — Transients: gated, not dropped
+
+Before any transient machinery is built, one cheap physics question decides whether it is
+worth building at all, and the proposal never asks it: **does transient response actually open
+the angle for the pair the wall is made of?** $\eta_{\mathrm{HPC}}$ and $\eta_{\mathrm{HPT}}$
+are both hot-section-adjacent; their *dynamic* signatures may be as close as their steady ones.
+
+**Gate T.** Bolt a low-order dynamic layer onto the existing steady model — one time constant
+per spool from rotor inertia and torque imbalance, plus a heat-soak lag on EGT — and compute
+the Fisher information of a step response through it, exactly as `identifiability.py` already
+does for the steady case. Then measure the angle between the two signatures in the combined
+(steady ⊕ dynamic) space.
+
+- Angle opens materially → transients are a route through the wall, and the engineering
+  investment is justified. Revisit the full proposal then.
+- Angle stays near $1.3^{\circ}$ → the wall is dynamic too, the proposal is dead for the pair
+  that matters, and that is a strong negative this project would own.
+
+Days of work, no ML, and the same measure-before-building discipline that stopped the
+nonlinear-curvature route in F10 before it consumed a milestone.
+
+### Explicitly not adopted
+
+| Proposed | Why not |
+|---|---|
+| Parallel `active_ehm/` package, 40 files, 7-command CLI | Fragments the codebase. Integrate into `src/ehmbrain/`; the convention here is Hydra configs + `scripts/*.py` + verdict JSONs, and it works |
+| Learned expected-information-gain module | **F7** already designs observations by information gain (+79 % separability from a report-schedule change) and **F10** does it for sensors (HPC efficiency 45×) — both physics-derived and validated against truth, which a learned surrogate would not be |
+| New uncertainty / abstention stack | Conformal RUL intervals (C4), the CRB certificate with split-conformal scale (F10), and F7's calibrated ambiguity sets already exist |
+| MLflow, pydantic, new schema layer | Three dataset audits that were allowed to fail and did, plus the decision register and prereg tags, already provide stronger provenance than a tracking server |
+| "Reduce ambiguous cases by ≥ 50 %" | An arbitrary target with no physics behind it. Thresholds here are tied to measured exploratory values and disclosed (H2 at +10 pp, H10.1 at $\rho \ge 0.6$) |
+| Building the transient generator now | Blocked behind Gate T |
+
+## 18. Order of execution (Part B)
+
+Ordered by cost-to-information, cheapest decisive experiment first.
 
 1. Wait for F13 gate one (G1b decides whether "sequence model" or "shape features" heads the
    claim).
 2. Freeze Part B as `prereg-v18`, separately from Part A.
-3. Attribution task: Bi-LSTM vs unidirectional vs GPA rule → H15.1, H15.2.
-4. Certificate-gated hybrid → H15.3.
-5. Ambiguity trigger + ARL distribution, split acute vs chronic → H15.6, H15.7.
-6. KPI layer K1–K7 with the turnaround sweep → H15.4, H15.5.
-7. Report chapter, figures, A2 entry. Commit and push.
+3. **H15.8 — instrument vs engine.** First, because the labels already exist (22 drifted
+   engines), it needs no new generation, and it is a second independent test of Part B's whole
+   premise on a different fault family. If it fails, the rest is in doubt and that is worth
+   knowing before building anything.
+4. Attribution task: Bi-LSTM vs unidirectional vs GPA rule → H15.1, H15.2.
+5. Certificate-gated hybrid → H15.3.
+6. Ambiguity trigger + ARL distribution, split acute vs chronic → H15.6, H15.7.
+7. KPI layer K1–K7 with the turnaround sweep → H15.4, H15.5.
+8. `docs/safety-case-boundaries.md` (A17.2); conceptual test into `tests/` (A17.3).
+9. **Gate T** (A17.4) — the transient angle question, physics only, no ML. Decides whether the
+   external proposal's route is reopened or closed with a stated negative.
+10. Report chapter, figures, A2 entry. Commit and push.
