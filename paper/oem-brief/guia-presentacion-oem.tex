@@ -125,9 +125,12 @@ diagnóstico \textbf{acertó}?
 
 \escena{si pregunta ``¿y eso es realista?''}
 \begin{decir}
-El modelo está anclado a medidas de certificación reales que nunca usé para ajustarlo.
-Los números absolutos no los defiendo. Lo que se transfiere son los órdenes de magnitud y
-quién gana a quién, que es de lo que va todo esto.
+El modelo está calibrado contra la hoja de certificación del motor y contra el banco de
+datos de emisiones de OACI, y predice el consumo de combustible dentro de un \cifra{3\,\%}
+de las medidas de banco certificadas. Los números absolutos no los defiendo. Lo que se
+transfiere es la \textbf{geometría} --- cuántas incógnitas hay contra cuántas medidas, y
+cómo de parecidas son las huellas de dos averías --- porque eso depende de cómo está
+instrumentado el motor, no de si mi modelo acierta el consumo al medio por ciento.
 \end{decir}
 
 \diapo{4}{A peer-reviewed deep-learning result, replicated exactly}
@@ -137,14 +140,16 @@ Cogí un paper de 2026, publicado en Springer, revisado por pares. Dice que una 
 neuronal concreta es la mejor de quince arquitecturas para predecir vida remanente. Lo
 reimplementé exactamente como está escrito.
 
-Primero, lo justo: \textbf{replica}. Me sale \cifra{14,56} donde ellos publican
-\cifra{14,12}. No estoy montando un hombre de paja.
+Primero, lo justo: \textbf{replica}. La métrica es el error medio al predecir cuántos
+ciclos le quedan al motor antes de salir de ala. Ellos publican \cifra{14,12 ciclos} de
+error; a mí me sale \cifra{14,56 ciclos}. No estoy montando un hombre de paja.
 
 Ahora el problema. Ellos ordenan quince arquitecturas con diferencias de entre
-\cifra{0,12 y 0,60}. Pero si entrenas \textbf{el mismo modelo dos veces}, cambiando solo
-el número aleatorio de arranque, el resultado se mueve \cifra{2,94}. La diferencia entre
-modelos es cinco veces más pequeña que el ruido de repetir el mismo modelo. Ese ranking
-no mide nada. Y ellos publican una sola corrida por modelo.
+\cifra{0,12 y 0,60 ciclos} entre una y la siguiente. Pero si entrenas \textbf{el mismo
+modelo dos veces}, cambiando solo el número aleatorio con el que arranca el entrenamiento,
+el resultado se mueve \cifra{2,94 ciclos}. Es decir: la distancia entre modelos distintos
+es cinco veces más pequeña que la dispersión de repetir el mismo modelo. Ese ranking no
+mide la arquitectura, mide el azar. Y ellos publican una sola corrida por modelo.
 
 Y hay algo peor \escena{señala los puntos rojos}: en \cifra{cinco de diez} corridas el
 modelo no llega a entrenar. Se queda prediciendo cero. Y la causa está en sus propias
@@ -153,8 +158,9 @@ tablas: una configuración que, si el modelo se atasca al principio, no puede re
 
 \escena{analogía, si hace falta}
 \begin{decir}
-Es como cronometrar quince motores en banco, con diferencias de una décima entre ellos,
-cuando repetir el ensayo del mismo motor te da tres décimas de dispersión.
+Es como ordenar quince motores en banco por consumo específico, con una décima de
+diferencia entre uno y el siguiente, cuando repetir el ensayo del mismo motor te da tres
+décimas de dispersión. El orden que publicas es el del ruido del banco.
 \end{decir}
 
 \diapo{5}{The evaluation question to ask anyone}
@@ -187,19 +193,32 @@ setenta.
 
 \diapo{7}{Where AI lost outright}
 \begin{decir}
-Aquí la IA no gana: pierde el empate. Distinguir entre averías parecidas de gas path:
-\cifra{31\,\%} el método clásico, \cifra{31\,\%} la IA. Idéntico.
+La tarea es: ha aparecido una degradación, y hay que decir \textbf{en qué componente}
+está. Sobre los casos difíciles --- los pares de componentes que dejan una señal parecida
+--- el método clásico acierta el \cifra{31\,\%} de las veces. La IA acierta el
+\cifra{31\,\%}. Idéntico.
 
 Y esto no es que el algoritmo sea malo. Es que \textbf{la información no está en el
-dato}. Tienes tres medidas de cabina útiles y diez parámetros de salud que estimar. Es
-como pedirme tres números que sumen diez: hay infinitas respuestas y ninguna manera de
-elegir. Encima, dos averías distintas dejan huellas separadas \cifra{1,3 grados}: casi la
-misma firma.
+dato}. En un informe de cabina tienes tres medidas que sirven --- \textbf{N2, caudal de
+combustible y EGT} --- y diez parámetros de salud que estimar, rendimiento y capacidad de
+cada módulo. Es como pedirme tres números que sumen diez: hay infinitas combinaciones y
+ninguna manera de elegir entre ellas.
+
+\escena{esto es el corazón del argumento; explícalo despacio} Y hay algo más fino. Cada
+avería deja una huella con forma propia: cuánto sube la EGT, cuánto sube el combustible,
+cuánto cambia N2. Si dos averías mueven los tres sensores en proporciones distintas, las
+distingues. Si los mueven casi igual, no. Esa diferencia de forma se puede medir como un
+ángulo: \cifra{90 grados} sería perfectamente distinguibles, \cifra{0 grados} sería
+idénticas. Entre el rendimiento del compresor de alta y el de la turbina de alta hay
+\cifra{1,3 grados}. Prácticamente la misma huella.
 
 Lo comprobé por cuatro caminos independientes. Reduje a la mitad el ruido de todos los
-sensores: no cambia. Metí un ``sensor virtual'', que es lo que venden algunos
-proveedores: \textbf{cero, exactamente cero}. Barrí todo el envolvente de operación:
-sigue en \cifra{1,38 grados}. Y ningún método aprendido lo movió.
+sensores: el acierto se queda en \cifra{31--38\,\%}, no se mueve. Metí un ``sensor
+virtual'' calculado a partir de los que ya hay, que es lo que venden algunos proveedores:
+\cifra{cero mejora}, exactamente cero, porque no añade información nueva. Barrí los seis
+puntos de operación calibrados --- despegue, subida, tres cruceros --- por si el ángulo se
+abría en alguno: el mejor da \cifra{1,55 grados} y juntándolos todos sale
+\cifra{1,38}. Y ningún método aprendido lo movió.
 \end{decir}
 
 \escena{remate, pausa antes}
@@ -209,15 +228,16 @@ Ningún algoritmo arregla que falte información.
 
 \diapo{8}{And most prognostic error is not a method gap}
 \begin{decir}
-Y una última mala noticia, que en realidad es dinero. El \cifra{87\,\%} de la
-incertidumbre en vida remanente a mitad de vida es \textbf{irreducible}. Dos motores que
-miden exactamente igual fallan de verdad con cientos de ciclos de diferencia. No es que
-no sepamos medirlo: es que el futuro no está escrito en la medida de hoy.
+Y una última mala noticia, que en realidad es una decisión de presupuesto. Cogí motores
+que están en el \emph{mismo estado real de degradación} --- eso lo sé porque en mi flota
+conozco la verdad --- y miré cuánto difiere su vida restante de verdad. Resultado: a mitad
+de vida, el \cifra{87\,\%} de la dispersión en vida remanente es \textbf{irreducible}.
+Dos motores idénticos en condición fallan con cientos de ciclos de diferencia por cosas que
+ninguna medida de hoy contiene.
 
-Esto lo puedo afirmar porque conozco la verdad de cada motor. Y lo que significa para
-presupuesto es directo: si financias un algoritmo mejor para predecir a mitad de vida,
-estás persiguiendo ruido. Al final de la vida sí se abre un margen de \cifra{cuatro
-veces}: ahí sí paga.
+Traducido: a mitad de vida, el error del mejor método está a \cifra{1,6 veces} de ese
+suelo físico. Queda muy poco que ganar. Al final de la vida está a \cifra{4 veces} del
+suelo: ahí sí hay margen real, y ahí sí paga financiar un algoritmo mejor.
 \end{decir}
 
 \diapo{9--10}{An instrumentation design tool / Why this one is ours to act on}
@@ -230,10 +250,13 @@ La idea: para un motor y sus condiciones reales de vuelo, puedo calcular cuánta
 información sobre cada componente llega de verdad a los sensores. Y de ahí sale un
 límite: esto lo puedes saber, esto no lo puede saber \emph{nadie} con esos sensores.
 
-Mira la tabla. Si añades sondas de estación, la eficiencia del compresor de alta pasa a
-estimarse \cifra{45 veces} mejor, y distinguir las averías confusas pasa de \cifra{0,15 a
-0,92}. Si en cambio reduces el ruido de las sondas que ya tienes: no cambia nada. Si
-compras software con ``sensores virtuales'': no cambia nada.
+Mira la tabla. Si añades sondas de estación --- presión y temperatura a la salida del
+fan, a la salida del compresor de alta --- la incertidumbre sobre el rendimiento del
+compresor de alta se reduce \cifra{45 veces}: pasa de un valor que no te deja concluir
+nada a uno con el que decides. Y el acierto en aquellos casos difíciles, el mismo 31\,\%
+de antes, pasa de \cifra{15\,\% al 92\,\%}. Si en cambio reduces el ruido de las
+sondas que ya tienes: no cambia nada. Si compras software con ``sensores virtuales'': no
+cambia nada.
 
 Y aquí está la consecuencia para nosotros: cualquier servicio de EHM montado \textbf{solo
 sobre datos de cabina} tiene un techo que ningún roadmap de software levanta. La salida es
@@ -248,8 +271,9 @@ contar.
 
 Meter física dentro del modelo --- darle al aprendiz la estimación del estado del motor
 --- \textbf{empeora} la predicción de vida remanente. Lo comprobé dos veces y las dos
-falló. Pero esa misma inyección \textbf{mejora mucho} decir qué mecanismo se está
-comiendo el motor.
+falló. Pero esa misma inyección \textbf{mejora claramente} decir qué mecanismo se está
+comiendo el motor: la varianza explicada sube \cifra{0,14} sobre un máximo de 1, con una
+probabilidad de que sea casualidad de \cifra{4 entre diez mil}.
 
 Y lo monté con un brazo de control, para que no me pudiera engañar a mí mismo: si el
 control también hubiera ganado, entonces la mejora sería solo ``más datos de entrada''.
@@ -307,15 +331,21 @@ modelos, donde es más fuerte que aquí.
 
 \textbf{``La IA es humo.''}
 \begin{decir}
-En tres de las cuatro tareas que medí, te doy la razón con números. En la cuarta hay un
-30\,\% de mejora, que es real y es pequeño. Lo que te propongo no depende de que la IA
-funcione.
+En tres de las cuatro tareas que medí, te doy la razón con números: aislamiento de
+averías es empate exacto, la incertidumbre calibrada baja de seis veces a
+\cifra{1,34}, y la física metida en el modelo empeoró la predicción de vida dos veces
+seguidas. En la cuarta, predicción de vida, hay un \cifra{34\,\%} de mejora contra un
+método clásico bueno, y solo en el último tramo de vida. Es real y es pequeño. Y lo que te
+propongo no depende de que la IA funcione.
 \end{decir}
 
 \textbf{``¿Cuánto ha costado esto?''}
 \begin{decir}
-Corre entero en un portátil en minutos. Y todo viene de datos públicos de certificación,
-así que no hay problema de propiedad intelectual para circularlo internamente.
+El estudio principal completo --- generar la flota, correr los dos métodos, sacar los
+veredictos --- son \cifra{25 minutos} en un portátil. Los estudios de extensión más
+pesados, entre media hora y hora y media cada uno usando la GPU del portátil. Sin
+infraestructura. Y todo viene de datos públicos de certificación, así que no hay problema
+de propiedad intelectual para circularlo internamente.
 \end{decir}
 
 \textbf{``¿Por qué no lo ha hecho ya un proveedor?''}
@@ -330,6 +360,39 @@ incertidumbre es honesta. Nosotros sí.
 Primera pregunta: ¿contra qué línea base, y estaba ajustada igual? Segunda: ¿cuál es la
 dispersión entre repeticiones? Con esas dos preguntas se cae la mayoría.
 \end{decir}
+
+\section*{Cifras clave, con unidades}
+
+Si te preguntan por una cifra y dudas, está aquí. Ninguna va sin su unidad y sin contra
+qué se compara.
+
+\begin{center}\small
+\begin{tabular}{@{}p{0.40\textwidth}p{0.26\textwidth}p{0.28\textwidth}@{}}
+  \toprule
+  Cifra & Unidad / qué mide & Contra qué \\
+  \midrule
+  $14{,}56$ frente a $14{,}12$ & ciclos de error medio al predecir vida remanente & el paper publicado, misma métrica \\
+  $0{,}12$--$0{,}60$ & ciclos entre una arquitectura y la siguiente & --- \\
+  $2{,}94$ & ciclos de dispersión al repetir \emph{el mismo} modelo & el ruido que invalida el ranking \\
+  $5$ de $10$ & corridas que no llegan a entrenar & --- \\
+  31\,\% vs 31\,\% & acierto identificando el componente degradado, casos difíciles & clásico vs IA \\
+  $1{,}3^{\circ}$ & separación entre dos huellas de avería, sobre $90^{\circ}$ posibles & $90^{\circ}$ sería distinguirlas perfectamente \\
+  $1{,}38^{\circ}$ & lo mismo, usando los seis puntos de operación juntos & frente a $1{,}55^{\circ}$ solo en crucero \\
+  $45\times$ & reducción de la incertidumbre sobre el rendimiento del compresor de alta & sondas de estación vs solo cabina \\
+  15\,\% $\to$ 92\,\% & el mismo acierto de antes, con sondas de estación & vs el 31\,\% de cabina \\
+  87\,\% & parte de la dispersión en vida remanente que es irreducible, a mitad de vida & medido contra la verdad de la flota \\
+  $1{,}6\times$ / $4\times$ & distancia del mejor método al suelo físico, a media y a final de vida & el suelo es lo irreducible \\
+  $6\times \to 1{,}34\times$ & estrechez del intervalo de incertidumbre & antes y después de calibrar los dos lados igual \\
+  $1{,}34\times$ & error en vida remanente & IA vs método clásico bueno, al 90\,\% de vida \\
+  empate & lo mismo, al 70\,\% de vida & --- \\
+  $+0{,}14$ & varianza explicada al atribuir mecanismo, sobre un máximo de $1$ & con física inyectada vs sin ella \\
+  $25$ min & estudio principal completo & en un portátil, sin infraestructura \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Si no te sabes una cifra, no la inventes.} Di ``eso lo tengo medido, te lo paso'',
+y sigue. Con este interlocutor, una cifra dudosa cuesta más que no darla.
 
 \section*{Si solo tienes cinco minutos}
 
