@@ -521,6 +521,46 @@ removal, KPI K6.
 > project's entire diagnostic output is conditional on instrument health it cannot verify —
 > a stronger and more uncomfortable finding than the confirmation.
 
+### H15.8 — RUN, AND REFUTED (`data/processed/f15/h158_verdict.json`)
+
+Grouped 5-fold CV over engine IDs, pooled out-of-fold scores, 14 cockpit-visible drift
+positives against 78 clean engines, bootstrap intervals grouped by engine.
+
+| family | AUC | 95 % CI | fraud check (invisible drift) |
+|---|---|---|---|
+| classical augmented Kalman | 0.614 | [0.430, 0.789] | 0.433 |
+| sequence model (Bi-GRU) | 0.524 | [0.317, 0.731] | 0.377 |
+
+**Neither family separates a drifting sensor from a real fault.** Both intervals contain 0.5;
+the learned family is at chance.
+
+**The fraud check is what makes the null credible.** The eight engines drifting on T25 or PS3
+carry no information in the cockpit input by construction, and both families score them like
+clean engines. A leaking pipeline would have scored those high too, so this is a null and not
+a bug.
+
+**Why.** L7 already showed the augmented Kalman *tracks* an EGT bias at Spearman 0.83. This
+shows tracking is not attributing: because the cockpit ICM maps $\mathbb{R}^{10}$ onto
+$\mathbb{R}^{3}$ surjectively, a genuine degradation also produces a nonzero apparent bias, so
+bias magnitude carries no evidence about which of the two is happening. The surjectivity
+argument, previously stated for a single snapshot, now holds empirically over whole histories.
+
+> **The rule this sharpens into.** *Trajectory shape separates what has shape.* Gate one's
+> sequence model won on `clearance` (bilinear break-in knee) and `fouling` (wash sawtooth), and
+> lost on `erosion` and `lpt_wear` (featureless linear ramps). The fleet's sensor drift is a
+> slow additive ramp with no discriminating event, so it lands with the ramps. Same rule, four
+> instances, two families, two fault populations.
+
+**Consequences, recorded not softened.** Part B is *not* a general structure — it is specific
+to mechanisms whose temporal signature has features. The ambiguity-clock target (H15.6) loses
+expected value for exactly the population §16 already flagged as its main risk: acute episodes
+that ramp and then hold with no future event to read. K3 (workscope hit rate) stands, since
+`hot_section`, `clearance` and `fouling` are the recoverable ones.
+
+**Power caveat.** 14 positives. The classical interval [0.430, 0.789] does not exclude a
+moderate effect, so the honest claim is *no detectable signal at this sample size*, not proof
+of none. Point estimates are near chance and the learned family has none at all.
+
 Report the drift-channel breakdown: a bias on EGT should be far harder than one on N2, because
 EGT carries most of the degradation signal. If the model only succeeds on the easy channels,
 say so.
