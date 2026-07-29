@@ -457,6 +457,231 @@ cheapest upgrade is a conformal wrapper around \emph{it} --- perhaps $50$ lines 
 model change --- which captures most of the interval improvement before any learning is
 purchased.
 
+\section{L-MECH: the wall is instantaneous --- mechanism attribution over a history}
+\label{sec:f13-mech}
+
+\paragraph{Why the wall might not be the last word.} Everything this document has established
+about the isolation limit follows from one structural fact: classical gas-path analysis is a
+\emph{per-snapshot inverse solver}. The cockpit influence matrix has rank 3 against 10
+unknowns, the confusable pair sits $1.3^{\circ}$ apart, halving every sensor $\sigma$ does not
+separate it (\cref{sec:noise-sweep}), and the certificate stamps three efficiencies
+unobservable even after accumulating Fisher information over an engine's whole flown history
+(\cref{ch:breakthrough}). None of that is a statement about \emph{time}. It is a statement
+about an \textbf{instantaneous estimand}.
+
+The generator's chronic degradation is not instantaneous. It is five mechanisms with sharply
+different temporal signatures (\cref{sec:degradation-models}): fouling saturating with a wash
+sawtooth, erosion linear, clearance bilinear with a break-in knee, hot-section accelerating
+with efficiency down \emph{and flow capacity up}, LPT wear linear. Per engine the true latent
+is \textbf{five scalars}, not a free ten-vector per cycle --- a far smaller object than the one
+the certificate declares unrecoverable.
+
+\paragraph{The test.} Predict each mechanism's share of the lost EGT margin from the cockpit
+deviation trajectory alone, at random cuts on engines held out by ID, with ground truth
+replayed deterministically from each engine's seed. Two families under a \textbf{symmetric
+25-trial Optuna budget}, selected on validation and reported on test
+(\code{scripts/f13\_gate1\_mechanism.py}, \code{prereg-v16}): physics-designed shape
+descriptors with gradient boosting, and a sequence model over the resampled history.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrl@{}}
+  \toprule
+  Mechanism & truth mean/sd & $R^2$ hand & $R^2$ sequence & temporal signature \\
+  \midrule
+  \code{hot\_section} & $0.47/0.13$ & $\mathbf{0.780}$ & $0.648$ & accelerating power law \\
+  \code{clearance}    & $0.22/0.09$ & $0.286$ & $\mathbf{0.735}$ & bilinear break-in knee \\
+  \code{fouling}      & $0.08/0.04$ & $0.451$ & $\mathbf{0.512}$ & wash sawtooth \\
+  \code{lpt\_wear}    & $0.04/0.01$ & $0.217$ & $0.190$ & plain linear \\
+  \code{erosion}      & $0.09/0.03$ & $0.130$ & $-0.018$ & plain linear \\
+  \midrule
+  \emph{mean}         &             & \emph{0.373} & \emph{0.414} & \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.72\textwidth]{f13_mechanism}
+  \caption{Per-mechanism attribution from the deviation trajectory, on held-out engines, under
+  a symmetric tuning budget. The dotted line is the $R^2 = 0.30$ recoverability mark.
+  Auto-generated (\protect\code{prereg-v16}).}
+  \label{fig:f13-mechanism}
+\end{figure}
+
+\keyidea{Three of five mechanisms are recoverable from trajectory shape --- including \code{hot\_section}, the mechanism that loads the confusable pair H2 could not break, at $R^2 = 0.78$. The identifiability wall is a property of the \emph{instantaneous} estimand, not of the history.}
+
+\textbf{Gate 1a confirmed.} The question every operator actually asks at a shop visit is not
+``what is the ten-dimensional health state now'' but ``which mechanism is consuming this
+engine'' --- and that question has an answer where the first does not.
+
+\textbf{Gate 1b refuted as specified}, and the way it fails is the more useful half. The
+criterion was that the sequence model beat hand features on at least three of five mechanisms;
+it manages two, at a mean gain of $+0.041$. This is neither ``hand features suffice'' nor
+``learning wins''. It is a split that tracks \emph{how parameterizable each signature is}: the
+learner wins by $0.449$ on the bilinear knee, which resists closed form, and loses by $0.132$
+on the accelerating power law, which the hand set encodes directly as a quadratic term plus
+cross-channel slope ratios. The two plain-linear mechanisms defeat both families.
+
+\paragraph{Two caveats, both against the learner.} The hand descriptors were written by someone
+who had read the fault catalogue --- one feature per catalogued mechanism --- so that baseline
+is stronger than a practitioner without the generator source would build. And selection was
+thin: validation is 245 cuts from ten engines, and the val/test gap is large (val $0.166$ hand
+against $0.507$ sequence; test $0.373$ against $0.414$). The test column is quoted; the
+validation ranking is not. Disclosed: the gate thresholds were written before any run, but the
+symmetric budget was added after an untuned first pass whose architecture verdict was discarded
+for exactly the asymmetry \cref{sec:f-uq} corrects elsewhere.
+
+\section{L-INST: instrument or engine?}
+\label{sec:f15-instrument}
+
+\paragraph{The question behind every wasteful removal.} A line engineer's first question is not
+``which module'' but \emph{``is this an engine problem at all, or is my instrument lying?''} A
+removal triggered by a drifting thermocouple is a wasteful removal, the false-alarm analog of
+\cref{sec:ops-conversion}. The fleet already carries the experiment: 22 of the 100 engines have
+a slow additive bias ramp on one sensor, with the channel and onset in ground truth.
+
+At a snapshot the two are \textbf{perfectly confusable, provably}. The cockpit influence matrix
+maps $\mathbb{R}^{10} \to \mathbb{R}^{3}$ \emph{surjectively}, so every deviation vector ---
+including a pure single-channel bias --- has a health-state preimage. This is the same rank
+argument that makes H2 unbreakable. \Cref{sec:f13-mech} having just shown that a history can
+break an instantaneous confusion, the obvious question is whether it does so here.
+
+\paragraph{Design, and what the data forces.} Only cockpit-\emph{visible} drift can count: the
+fleet drifts four channels but the cockpit set is $\{N_2, W_f, \mathrm{EGT}\}$, so T25 and PS3
+biases carry no information in the input at all. The 14 EGT and $W_f$ engines are the
+positives; the 8 invisible-drift engines are held out as a \textbf{fraud check}. The frozen
+splits put only three drifted engines in test --- which is precisely why L7's confirmatory pass
+was under-powered and said so (\cref{sec:f8-l7}) --- so this line uses grouped five-fold
+cross-validation over engine IDs with pooled out-of-fold scores, a disclosed deviation from the
+frozen-split convention. Classical family: the largest augmented-Kalman bias magnitude swept
+across candidate channels, reusing L7's estimator. Learned family: a bidirectional GRU over the
+trajectory, three seeds per fold.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrr@{}}
+  \toprule
+  Family & AUC & 95\,\% CI & fraud check \\
+  \midrule
+  augmented Kalman (classical) & $0.614$ & $[0.430,\ 0.789]$ & $0.433$ \\
+  Bi-GRU (sequence)            & $0.524$ & $[0.317,\ 0.731]$ & $0.377$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.70\textwidth]{f15_instrument}
+  \caption{Separating a drifting sensor from a real fault, 14 visible-drift engines against 78
+  clean, bootstrap intervals grouped by engine. Crosses mark the fraud check: engines whose
+  drift is on a channel the cockpit set cannot see. Auto-generated (\protect\code{prereg-v18}).}
+  \label{fig:f15-instrument}
+\end{figure}
+
+\textbf{H15.8 refuted.} Neither family separates the two. Both intervals contain $0.5$ and the
+learned family is at chance.
+
+\paragraph{The fraud check is what makes the null credible.} The eight engines drifting on a
+channel the cockpit cannot observe carry no signal by construction, and both families score
+them like clean engines. A pipeline leaking labels would have scored those high too. The null
+is a null, not a bug --- and this is the same self-check the certificate enables throughout
+this document: physics says where information cannot be, and a method claiming to find it there
+is caught.
+
+\keyidea{L7 showed the augmented Kalman \emph{tracks} an EGT bias at $\rho = 0.83$. This shows tracking is not attributing: because the ICM is surjective, a genuine degradation also produces a nonzero apparent bias, so bias magnitude carries no evidence about which of the two is happening. The surjectivity argument, previously a statement about one snapshot, holds empirically over whole histories.}
+
+\paragraph{The rule these two lines sharpen into.} \Cref{sec:f13-mech} and this section are the
+same experiment on different fault families, and together they give one statement:
+\textbf{trajectory shape separates what has shape}. The sequence model won on the break-in knee
+and the wash sawtooth, lost on the two plain-linear mechanisms, and here loses again on a slow
+additive ramp with no discriminating event. Four instances, two families, two fault
+populations. A history breaks an instantaneous confusion only when something happens in it.
+
+\paragraph{Power, stated.} Fourteen positives. The classical interval does not exclude a
+moderate effect, so the honest claim is \emph{no detectable signal at this sample size}, not
+proof of none. The point estimates are near chance and the learned family has none at all. The
+uncomfortable consequence stands either way: this project's diagnostic output, like any
+cockpit-only gas-path diagnosis, is conditional on instrument health it cannot itself verify.
+
+\section{L-EXT: an external replication, and what single-run rankings hide}
+\label{sec:f14-ext}
+
+\paragraph{Why replicate someone else's paper.} Every correction in this document so far has
+been this project auditing itself. An external check asks whether the pattern generalizes:
+take a recent, peer-reviewed, well-written deep-learning PHM result and put it through the same
+standards. The subject is \textcite{mukherjee2026bilstm}, which reports a bidirectional LSTM on
+C-MAPSS FD001 at RMSE $14.121$ and $R^2 = 0.885$, best of fifteen models, against a weakest
+comparator --- linear regression --- at $22.914$.
+
+The protocol is reproduced exactly (\code{scripts/f14\_bilstm\_replication.py},
+\code{prereg-v17}): 12 sensors selected by $|r| \ge 0.5$ with the cycle column dropped as
+leakage, min-max scaling, a 30-cycle window, piecewise-linear RUL capped at 125, two stacked
+Bi-LSTM layers, Adam at $10^{-3}$, 25 epochs, ModelCheckpoint and
+\code{ReduceLROnPlateau(factor=0.01)}. Two deviations are disclosed because PyTorch cannot
+express them: Keras applies recurrent dropout inside the recurrence, and Table 3's ReLU cell
+activation is unavailable in the fused LSTM.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrr@{}}
+  \toprule
+  Protocol & \multicolumn{5}{c}{FD001 test RMSE, five seeds} \\
+  \midrule
+  paper protocol (checkpoint on test) & $12.501$ & $84.550$ & $84.550$ & $84.550$ & $16.624$ \\
+  clean validation split              & $84.550$ & $84.550$ & $13.328$ & $14.349$ & $18.853$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.70\textwidth]{f14_bilstm}
+  \caption{Five seeds per protocol on FD001. Red points are runs whose output layer died and
+  which predict zero for every unit. Auto-generated (\protect\code{prereg-v17}).}
+  \label{fig:f14-bilstm}
+\end{figure}
+
+\textbf{$84.550$ is not a bad run.} It is exactly $\sqrt{\overline{y^2}}$ on the capped test
+truth: those runs predict \emph{zero} for every engine. Five of ten collapse that way, and the
+mechanism is specified by the paper itself --- Table 3 puts ReLU on the single-unit output
+layer, so once it dies the gradient is zero, and Table 4's
+\code{ReduceLROnPlateau(factor=0.01, min\_lr=10^{-5})} floors the learning rate before it can
+recover. Recorded caveat: collapse probability depends on initialization, which differs between
+Keras and PyTorch, so the \emph{mechanism} transfers but this \emph{rate} does not.
+
+\textbf{H14.1 confirmed --- the result replicates.} Conditional on training at all, the paper
+protocol gives $14.562 \pm 2.916$ against a reported $14.121$, and the best seed reaches
+$12.501$. This is a reproducible paper.
+
+\textbf{H14.2 confirmed, and mildly.} Moving the checkpoint from the reported test set to
+twenty validation units carved out of train costs $14.562 \to 15.510$: a $0.95$-cycle,
+$\sim$6\,\% penalty. Smaller than expected --- test-set model selection was not doing much
+work here. (The pre-registered criterion compared pooled means, which under a bimodal outcome
+mostly compares collapse counts; the trained-only pair is the substantive figure and the frozen
+verdict is kept beside it.)
+
+\textbf{H14.3 --- and the baselines invert.} Against this project's fielded health-index
+projection ($39.284$ on FD001) the learner is $2.53\times$ better. But that projection scores
+\emph{worse} than the paper's own linear regression at $22.914$: it is the operationally
+realistic method, not the strongest classical one. The demanding figure is therefore
+$\mathbf{1.48\times}$ against the paper's weakest comparator --- squarely in the $1.3$--$1.5$
+band this document keeps arriving at once a baseline is competent
+(\cref{sec:f8-lrul-sweep,sec:f-uq}).
+
+\textbf{H14.4 refuted --- the clean finding.} The seed standard deviation among trained runs is
+$2.94$ cycles. The paper ranks fifteen architectures on single runs with gaps of $0.120$ against
+LSTM, $0.480$ against TCN and $0.603$ against GRU. \textbf{Every gap is inside a fifth of one
+seed standard deviation.} The ranking is noise, and that conclusion is independent of the
+collapse issue.
+
+\keyidea{An external, peer-reviewed result reproduces --- and its headline conclusion, that one architecture is best of fifteen, does not survive running the same code five times. The margin against a competent baseline lands at $1.48\times$, the same place this project's own re-audits landed.}
+
+\paragraph{Run-to-run disclosure.} As in \cref{sec:f8-lrul-sweep}, recurrent training on the
+Metal backend is not bit-reproducible: a repeat of this study moved the best R1 seed from
+$12.996$ to $12.501$ and the R1 trained-only mean from $14.810$ to $14.562$, while the R2
+column was unchanged. The figures quoted are from the run that generated
+\cref{fig:f14-bilstm}. Nothing here turns on differences of that size --- least of all H14.4,
+whose conclusion needs only that the seed spread exceed $0.603$ cycles, which it does by a
+factor of five.
+
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
 
@@ -691,6 +916,9 @@ are allowed to fail.
     L-RUL & Does an advanced classical prognostic narrow H3? & \textbf{Yes, but} --- it halves the traditional error (1981$\to$1118); the AI still wins 858 (\cref{sec:f8-lrul}) \\
     L-RUL/sweep & Does the AI beat it at \emph{every} life fraction? & \textbf{No} --- only at 90\,\% ($1.34\times$, $p=0.006$); a tie at 70\,\% ($1.01\times$). The learning advantage is late-life (\cref{sec:f8-lrul-sweep}) \\
     L-UQ & Is the 5.9$\times$ interval advantage the model or the calibration? & \textbf{Mostly calibration} --- at equal coverage the AI leads $1.34\times$ over advanced classical, $2.3\times$ over practice (\cref{sec:f-uq}) \\
+    L-MECH & Is the wall instantaneous? Can a history attribute mechanism? & \textbf{Yes} --- 3 of 5 mechanisms recover from trajectory shape, \code{hot\_section} at $R^2\,0.78$; but learning beats hand features on only 2 of 5 (\cref{sec:f13-mech}) \\
+    L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.52$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
+    L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\
     \bottomrule

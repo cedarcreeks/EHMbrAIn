@@ -42,6 +42,13 @@ visible as wins.
     $+79$\,\%; learned fusion triples classical & \cref{ch:tomography} (H7) \\
   Can we certify what a diagnosis honestly knows? & \textbf{Yes}, validated against truth
     ($\rho=0.70$) & \cref{ch:breakthrough} (H10) \\
+  Is the isolation wall instantaneous, or does it hold over a history? & \textbf{Instantaneous}:
+    3 of 5 degradation mechanisms are attributable from trajectory shape, \code{hot\_section}
+    at $R^2\,0.78$ & \cref{sec:f13-mech} \\
+  Does that make learning the right tool? & \textbf{Only sometimes}: it wins on shapes that
+    resist parameters, loses on those that do not (2 of 5) & \cref{sec:f13-mech} \\
+  Can we tell a lying sensor from a failing engine? & \textbf{No} --- both families at chance;
+    the ICM is surjective, so a real fault also fakes a bias & \cref{sec:f15-instrument} \\
   \bottomrule
 \end{tabular}
 \end{center}
@@ -97,6 +104,11 @@ visible as wins.
     $\rightarrow$ calibrated twin & \cref{ch:model}, \cref{ch:data} \\
   How to prove an uncertainty statement is honest? & Validate it against ground truth ---
     only a synthetic-truth benchmark can & \cref{sec:bt-honesty} \\
+  How to know a null result is not a broken pipeline? & Give the method a case where physics
+    says the information cannot exist, and check it finds nothing & \cref{sec:f15-instrument} \\
+  Does a published deep-learning PHM result survive this bar? & It replicates, but its
+    architecture ranking is inside seed noise and it fails to train half the time &
+    \cref{sec:f14-ext} \\
   \bottomrule
 \end{tabular}
 \end{center}
@@ -138,6 +150,14 @@ Three confirmations, two refutations (\cref{tab:verdicts}), and the split is the
     (H4) made it worse. Physics' real contribution was \emph{diagnosis of the limits}: the
     influence-matrix geometry predicted, before any learning ran, exactly where every method
     would fail.
+  \item \textbf{The wall is a wall in \emph{time}, not only in geometry --- and that bounds
+    it}: the confusable pair is unrecoverable at a snapshot, yet three of five degradation
+    \emph{mechanisms} are attributable from the trajectory, \code{hot\_section} --- which loads
+    that very pair --- at $R^2 = 0.78$ (\cref{sec:f13-mech}). The rule that emerges from four
+    independent tests is \emph{trajectory shape separates what has shape}: a break-in knee and
+    a wash sawtooth are readable, two plain-linear mechanisms and a slow sensor-bias ramp are
+    not (\cref{sec:f15-instrument}). So the operationally useful question --- which module is
+    consuming this engine --- has an answer the instantaneous inverse problem does not.
   \item \textbf{Sensors bound everyone}: the confusable wall (H2) is informational, not
     algorithmic. The extended gas-path set quintuples the worst signature angle; no model
     recovers what probes never measured --- and halving the noise of the \emph{existing}

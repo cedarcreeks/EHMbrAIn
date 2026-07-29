@@ -143,6 +143,19 @@ where in the body the full account lives.
       at $70\,\%$ ($1.01\times$, $p=0.41$) --- the learning advantage in prognosis is
       late-life, not a level shift (\cref{sec:f8-lrul-sweep}). Both frozen verdicts left
       untouched; both re-attributions disclosed as post-hoc. \\
+    \textbf{Time axis} & 2026-07-29 & Three lines asking whether a \emph{history} breaks the
+      instantaneous identifiability wall. \emph{L-MECH} (tag prereg-v16): mechanism attribution
+      from the deviation trajectory recovers 3 of 5 mechanisms on held-out engines, including
+      \code{hot\_section} --- which loads the confusable pair --- at $R^2 = 0.78$; but under a
+      symmetric 25-trial budget the sequence model beats physics hand features on only 2 of 5
+      (\cref{sec:f13-mech}). \emph{L-INST} (prereg-v18): neither family separates a drifting
+      sensor from a real fault (AUC $0.61$ and $0.52$, intervals spanning chance), and a
+      built-in fraud check on drift the cockpit cannot see confirms the null is a null
+      (\cref{sec:f15-instrument}). \emph{L-EXT} (prereg-v17): an external replication of a
+      published Bi-LSTM FD001 result --- it reproduces at $14.56$ against a reported $14.12$,
+      collapses to a zero-predictor on 5 of 10 runs, and its fifteen-way architecture ranking
+      sits inside a fifth of one seed standard deviation (\cref{sec:f14-ext}). Together:
+      trajectory shape separates what has shape. \\
     \bottomrule
   \end{tabular}
 \end{table}

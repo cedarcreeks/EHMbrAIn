@@ -974,6 +974,116 @@ def fig_lrul_sweep():
     print('  lrul sweep figure done')
 
 
+def fig_f13_mechanism():
+    """F13 gate one: per-mechanism attribution R2, hand features vs sequence."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f13' / 'gate1_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())
+    mechs = v['setup']['mechanisms']
+    hand = [v['r2_hand_features'][m] for m in mechs]
+    seq = [v['r2_sequence_model'][m] for m in mechs]
+    INK, BLUE, TEAL = '#212529', '#4263EB', '#1098AD'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.8, 3.0))
+    x = np.arange(len(mechs)); w = 0.36
+    ax.bar(x - w / 2, hand, w, color=TEAL, label='physics hand features')
+    ax.bar(x + w / 2, seq, w, color=BLUE, label='sequence model')
+    ax.axhline(0.30, color=INK, lw=0.8, ls=':')
+    ax.annotate('recoverable', (len(mechs) - 0.5, 0.31), fontsize=7, color=INK,
+                ha='right')
+    ax.axhline(0.0, color=INK, lw=0.6)
+    ax.set_xticks(x)
+    ax.set_xticklabels([m.replace('_', '\\_') for m in mechs], fontsize=7.5)
+    ax.set_ylabel('test $R^2$ vs train-mean predictor')
+    ax.set_title('mechanism attribution: shape wins where the signature has shape',
+                 fontsize=8)
+    ax.legend(frameon=False, fontsize=7.5, loc='upper right')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'f13_mechanism.pdf'); plt.close(fig)
+    print('  f13 mechanism figure done')
+
+
+def fig_f14_bilstm():
+    """F14: per-seed FD001 RMSE against the paper's single reported number."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f14' / 'bilstm_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())
+    if 'per_seed' not in v:
+        return
+    INK, BLUE, GRAY, RED = '#212529', '#4263EB', '#868E96', '#E03131'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.6, 3.1))
+    labels = {'R1_paper_test_monitored': "paper protocol\n(checkpoint on test)",
+              'R2_clean_val_split': 'clean val split'}
+    dead = v['H14.5_trains_reliably']['collapse_rmse']
+    for i, (k, lab) in enumerate(labels.items()):
+        r = [s['RMSE'] for s in v['per_seed'][k]]
+        col = [RED if abs(x - dead) < 1e-2 else BLUE for x in r]
+        ax.scatter([i] * len(r), r, c=col, s=42, zorder=3)
+    ax.axhline(v['paper']['reported']['RMSE'], color=INK, lw=1.0, ls='--')
+    ax.annotate(f"paper: {v['paper']['reported']['RMSE']:.2f}",
+                (1.42, v['paper']['reported']['RMSE']), fontsize=7.5, color=INK,
+                va='bottom', ha='right')
+    t = v['traditional_health_index_projection']['RMSE']
+    ax.axhline(t, color=GRAY, lw=1.0, ls=':')
+    ax.annotate(f'fielded classical: {t:.1f}', (1.42, t), fontsize=7.5,
+                color=GRAY, va='bottom', ha='right')
+    ax.annotate(f'collapsed (predicts 0): {dead:.1f}', (0.02, dead), fontsize=7.5,
+                color=RED, va='top')
+    ax.set_xticks([0, 1]); ax.set_xticklabels(list(labels.values()), fontsize=8)
+    ax.set_xlim(-0.4, 1.5)
+    ax.set_ylabel('FD001 test RMSE [cycles]')
+    ax.set_title('five seeds per protocol: the architecture fails to train half the time',
+                 fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'f14_bilstm.pdf'); plt.close(fig)
+    print('  f14 bilstm figure done')
+
+
+def fig_f15_instrument():
+    """H15.8: AUC with bootstrap CI, both families, plus the fraud check."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f15' / 'h158_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())['per_family']
+    INK, BLUE, TEAL, GRAY = '#212529', '#4263EB', '#1098AD', '#868E96'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'x',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.6, 2.5))
+    names = {'classical_augmented_kalman': 'augmented Kalman\n(classical)',
+             'sequence_model': 'Bi-GRU\n(sequence)'}
+    for i, (k, lab) in enumerate(names.items()):
+        a = v[k]['auc_visible_drift']; lo, hi = v[k]['auc_ci95']
+        col = TEAL if 'classical' in k else BLUE
+        ax.plot([lo, hi], [i, i], color=col, lw=2.4, solid_capstyle='round')
+        ax.scatter([a], [i], color=col, s=60, zorder=3)
+        ax.annotate(f'{a:.3f}', (a, i + 0.16), fontsize=8, ha='center', color=INK)
+        f = v[k]['fraud_check_invisible_drift']['auc_vs_clean']
+        ax.scatter([f], [i], marker='x', color=GRAY, s=45, zorder=3)
+    ax.axvline(0.5, color=INK, lw=0.9, ls='--')
+    ax.annotate('chance', (0.5, 1.62), fontsize=7.5, color=INK, ha='center')
+    ax.scatter([], [], marker='x', color=GRAY, s=45,
+               label='fraud check: drift the cockpit cannot see')
+    ax.set_yticks([0, 1]); ax.set_yticklabels(list(names.values()), fontsize=8)
+    ax.set_ylim(-0.5, 1.8); ax.set_xlim(0.25, 0.85)
+    ax.set_xlabel('AUC, 14 visible-drift engines vs 78 clean (95\\% bootstrap CI)')
+    ax.set_title('instrument or engine: neither family beats chance', fontsize=8)
+    ax.legend(frameon=False, fontsize=7, loc='lower right')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'f15_instrument.pdf'); plt.close(fig)
+    print('  f15 instrument figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -1908,6 +2018,9 @@ def artifact_assets():
     fig_lrul()
     fig_lrul_sweep()
     fig_uq_reattribution()
+    fig_f13_mechanism()
+    fig_f14_bilstm()
+    fig_f15_instrument()
     fig_confusable_angles()
     gpa_assets()
     noise_sweep_assets()
