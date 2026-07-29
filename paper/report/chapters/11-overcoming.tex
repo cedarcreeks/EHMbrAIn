@@ -334,6 +334,129 @@ not --- but it is a $30\,\%$ edge over a good classical method, not an order of 
   \label{fig:lrul}
 \end{figure}
 
+\subsection{The fraction sweep the first pass owed}
+\label{sec:f8-lrul-sweep}
+
+\paragraph{Why this correction was needed.} The paragraph above adjudicated AI against the
+advanced classical at \emph{one} life fraction, $90\,\%$, while the headline H3 factor
+($2.3$--$4.4\times$) is quoted against the operational Theil--Sen at \emph{three}. Comparing a
+strong baseline at one point and a weak one everywhere is an asymmetry that flatters the AI,
+so this pass (\code{prereg-v15}) runs the paired comparison at every evaluated fraction, one
+Wilcoxon each, Holm-corrected across the three. The result changes the story materially, and
+in the direction that costs the project a claim.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrrl@{}}
+  \toprule
+  Life fraction & Similarity & AI & AI margin & Holm $p$ & Verdict \\
+  \midrule
+  $50\,\%$ & $1\,998$ & $1\,689$ & $1.18\times$ & $0.41$ & no significant difference \\
+  $70\,\%$ & $1\,064$ & $1\,059$ & $1.01\times$ & $0.41$ & statistical tie \\
+  $90\,\%$ & $1\,118$ & $834$  & $1.34\times$ & $0.006$ & \textbf{AI wins} \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\keyidea{Against the best classical prognostic, the AI's advantage is not a level shift across
+life --- it is confined to late life. At mid-life the two methods are indistinguishable
+($1.01\times$, $p = 0.41$); only in the last tenth of life does learning pull clear
+($1.34\times$, $p = 0.006$). The $2.3$--$4.4\times$ headline is a statement about the
+\emph{operational} baseline, and only that.}
+
+\textbf{H-RUL.3 refuted} as a uniform claim: the AI beats the advanced classical at one of
+three fractions, not three of three. Two readings follow, and both matter. Scientifically,
+the learning advantage in prognosis is a \emph{late-life} phenomenon --- consistent with the
+mechanism already identified, that the GRU captures the accelerating curvature and
+cross-channel structure that appear once degradation dominates, and with F11's finding that
+mid-life RUL spread is $87\,\%$ irreducible anyway (\cref{sec:bt-prognostic-floor}): where
+there is nothing to win, nobody wins. Commercially, an operator whose classical prognostic is
+already similarity-based should expect the AI to buy them the shop-visit horizon, not the
+mid-life trend --- and should discount any vendor factor quoted against linear extrapolation.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{lrul_sweep}
+  \caption{AI against the \emph{advanced} classical prognostic at all three evaluated life
+  fractions, with the Holm-corrected paired $p$ above each pair. The two methods are
+  indistinguishable until the last tenth of life. Auto-generated (\protect\code{prereg-v15}).}
+  \label{fig:lrul-sweep}
+\end{figure}
+
+\paragraph{Run-to-run disclosure.} The AI figures here ($1\,689/1\,059/834$) come from a
+re-execution of the frozen configuration and differ from the confirmatory pass
+($1\,694/1\,042/858$) by $0.3$--$3\,\%$; GRU training on the Metal backend is not
+bit-reproducible across runs. The re-run numbers are used throughout this subsection so that
+the pairing is internally consistent; the frozen H3 verdict is untouched. No conclusion here
+turns on a difference that small --- the $70\,\%$ tie is a tie under either set.
+
+\section{L-UQ: how much of the H5 interval advantage is the model, and how much is calibration?}
+\label{sec:f-uq}
+
+\paragraph{The confound.} H5 reported the AI's conformal $90\,\%$ interval at
+$\pm1\,957$ cycles against the traditional slope band's $\pm11\,509$ --- a
+$5.9\times$ narrower maintenance window (\cref{sec:res-h3h5}). But the two intervals were not
+built the same way. The AI's was \emph{calibrated} by split conformal to hit $90\,\%$; the
+traditional one was the raw Theil--Sen slope-percentile band, calibrated to nothing, and it
+empirically covered $98.3\,\%$. An interval that over-covers is wide by construction. So the
+$5.9\times$ mixes a genuine question --- is the AI's point prediction more accurate? --- with
+one that has nothing to do with AI: was the interval calibrated at all. Conformal prediction
+is model-agnostic; this project proved so itself by wrapping it around the classical
+Kalman/CRB ellipsoid to repair H10.2 (\cref{sec:bt-honesty}). Whatever conformal contributes,
+the traditional side can take for free.
+
+\paragraph{The fix.} Wrap the identical split-conformal procedure around all three point
+predictors --- AI GRU, similarity-based classical, Theil--Sen --- calibrating each on the
+validation engines and evaluating each on the test engines
+(\code{scripts/f\_uq\_reattribution.py}, \code{prereg-v15}). Every method then stands at the
+same nominal $90\,\%$, and the width that remains is the width the \emph{predictor} earns.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrr@{}}
+  \toprule
+  Method (all conformalized at $90\,\%$) & Coverage & Half-width & vs AI & RMSE \\
+  \midrule
+  AI GRU                             & $0.883$ & $2\,028$ & $1.00\times$ & $1\,261$ \\
+  Similarity (advanced classical)    & $0.917$ & $2\,717$ & $1.34\times$ & $1\,458$ \\
+  Theil--Sen (operational)           & $0.767$ & $4\,627$ & $2.28\times$ & $3\,612$ \\
+  \midrule
+  \emph{frozen H5 traditional band (uncalibrated)} & $0.983$ & $11\,509$ & $5.88\times$ & --- \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\keyidea{Held at equal coverage, the AI's maintenance window is $1.34\times$ narrower than the
+best classical method's and $2.3\times$ narrower than fielded practice --- not $5.9\times$.
+Roughly three quarters of the headline interval advantage was conformal calibration, which any
+method can adopt, and one quarter was the model. The $1.34\times$ is the honest AI figure, and
+it agrees with the late-life accuracy margin of \cref{sec:f8-lrul-sweep}.}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{uq_reattribution}
+  \caption{$90\,\%$ RUL interval half-widths with the empirical coverage each achieves. The
+  three left bars give every predictor the same split-conformal calibration; the right bar is
+  the frozen H5 traditional band, which is wide because it over-covers, not because the
+  predictor is that much worse. Auto-generated (\protect\code{prereg-v15}).}
+  \label{fig:uq-reattribution}
+\end{figure}
+
+\textbf{H-UQ.1 confirmed, narrowly}: the AI interval is still the tightest at honest coverage,
+and the ordering of the three methods is unchanged. What does not survive is the magnitude.
+Two caveats are owed. First, the Theil--Sen row under-covers ($0.767$ against nominal $0.90$):
+its residuals are not exchangeable between validation and test --- the failure mode of a
+predictor whose error distribution changes shape with life fraction --- so $2.28\times$ is a
+\emph{lower bound} on the width it would need for honest coverage, and the operational
+comparison is the more favourable one for the AI, not the less. Second, the AI's own coverage
+sits at $0.883$, marginally below nominal; with $20$ calibration engines the realised coverage
+of a split-conformal band still moves by a few points either way.
+
+\paragraph{What an organization should take.} Ask a vendor for coverage before asking for
+width. A narrow interval at unstated coverage is not a claim; a wide interval that over-covers
+is not a failure. And if the incumbent classical prognostic is uncalibrated, the first and
+cheapest upgrade is a conformal wrapper around \emph{it} --- perhaps $50$ lines of code, no
+model change --- which captures most of the interval improvement before any learning is
+purchased.
+
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
 
@@ -566,6 +689,8 @@ are allowed to fail.
     L9 & Can the PCS metric be validated? & \textbf{Partly} --- tracks correctness weakly; no strongly-physical classifier to test against (\cref{sec:f8-l9}) \\
     L-H2 & Does breaking the wall need a \emph{real} sensor? & \textbf{Yes} --- real station sensors lift confusable isolation 0.15$\to$0.92; a virtual one adds nothing (\cref{sec:f8-lh2}) \\
     L-RUL & Does an advanced classical prognostic narrow H3? & \textbf{Yes, but} --- it halves the traditional error (1981$\to$1118); the AI still wins 858 (\cref{sec:f8-lrul}) \\
+    L-RUL/sweep & Does the AI beat it at \emph{every} life fraction? & \textbf{No} --- only at 90\,\% ($1.34\times$, $p=0.006$); a tie at 70\,\% ($1.01\times$). The learning advantage is late-life (\cref{sec:f8-lrul-sweep}) \\
+    L-UQ & Is the 5.9$\times$ interval advantage the model or the calibration? & \textbf{Mostly calibration} --- at equal coverage the AI leads $1.34\times$ over advanced classical, $2.3\times$ over practice (\cref{sec:f-uq}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\
     \bottomrule

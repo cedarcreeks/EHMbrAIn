@@ -106,6 +106,25 @@ half-width, versus the slope-band's over-covering 98.3\,\% at $\pm11\,509$. In o
 terms: \textbf{a maintenance window six times narrower, with honest stated confidence} ---
 the difference between a plannable shop-visit forecast and a shrug.
 
+\paragraph{Read the six with the correction of \cref{sec:f-uq}.} The two intervals compared
+above were not built alike: the AI's was conformal-calibrated to $90\,\%$, the traditional
+one was not calibrated at all, and it over-covers. Since conformal prediction is
+model-agnostic --- the traditional side can adopt it for free, and this project does exactly
+that to repair H10.2 --- part of the $6\times$ belongs to the calibration method rather than
+to the AI. Conformalizing all three predictors alike (\cref{sec:f-uq}) puts the honest figure
+at $\mathbf{1.34\times}$ against the best classical prognostic and $2.3\times$ against fielded
+practice. H5's ordering survives; its magnitude does not. The pre-registered verdict is
+recorded unchanged, as pre-registration requires, and the re-attribution is disclosed as
+post-hoc.
+
+Two further honest qualifications on H3's magnitude, both established in
+\cref{sec:f8-lrul,sec:f8-lrul-sweep}: the $2.3$--$4.4\times$ factor is stated against the
+linear extrapolation an operator fields today, and against the best \emph{advanced} classical
+prognostic the AI's advantage is confined to late life --- $1.34\times$ at $90\,\%$ of life
+($p = 0.006$), a statistical tie at $70\,\%$. The correct one-line summary of the prognosis
+result is therefore: \emph{large against practice, real but late-life-only against the
+research-grade classical baseline.}
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.74\textwidth]{rul_distribution}
@@ -139,8 +158,11 @@ act on. In order of how much money each moves:
     $2.3$--$4.4\times$ depending on life fraction, with calibrated intervals --- is the clear
     business case (maintenance slotting, lease planning). State it against the right baseline:
     that factor is against the linear extrapolation an operator fields \emph{today}; against
-    the best \emph{advanced} classical prognostic the margin narrows to $\sim$1.3$\times$
-    (\cref{sec:f8-lrul}), which is still a win but a different sales pitch.
+    the best \emph{advanced} classical prognostic the margin narrows to $1.34\times$ and holds
+    only in the last tenth of life --- at mid-life the two are indistinguishable
+    (\cref{sec:f8-lrul-sweep}). Same for the interval: $1.34\times$, not $6\times$, once both
+    sides are calibrated alike (\cref{sec:f-uq}). Still a win, but a different sales pitch:
+    \emph{buy the shop-visit horizon, not the mid-life trend}.
   \item \textbf{Detection: modern change-detection with tuned windows} --- the AI's win came
     from window search, a cheap, auditable mechanism, not from depth.
   \item \textbf{Isolation: buy sensors, not models.} The confusable wall is informational.

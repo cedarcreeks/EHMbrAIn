@@ -930,6 +930,85 @@ def fig_lrul():
     print('  lrul figure done')
 
 
+def fig_lrul_sweep():
+    """L-RUL/sweep (prereg-v15): AI vs the ADVANCED classical at every life
+    fraction -- the comparison the first pass ran only at 90 %."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f8' / 'lrul_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text()).get('H-RUL.3_fraction_sweep')
+    if not v:
+        return
+    pf = v['per_fraction']
+    fracs = sorted(pf, key=float)
+    INK, BLUE, TEAL = '#212529', '#4263EB', '#1098AD'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y', 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.4, 3.0))
+    x = np.arange(len(fracs))
+    w = 0.36
+    sim = [pf[f]['rmse_similarity'] for f in fracs]
+    ai = [pf[f]['rmse_ai'] for f in fracs]
+    ax.bar(x - w / 2, sim, w, color=TEAL, label='similarity (advanced classical)')
+    ax.bar(x + w / 2, ai, w, color=BLUE, label='AI GRU')
+    for i, f in enumerate(fracs):
+        d = pf[f]
+        top = max(sim[i], ai[i])
+        tag = (f"{d['ratio_sim_over_ai']:.2f}$\\times$\n"
+               + ('$p$=%.3f' % d['p_holm'] if d['p_holm'] < 0.1
+                  else '$p$=%.2f' % d['p_holm']))
+        ax.annotate(tag, (i, top), ha='center', va='bottom', fontsize=7.5,
+                    color=INK if d['ai_wins'] else '#868E96',
+                    fontweight='bold' if d['ai_wins'] else 'normal')
+    ax.set_xticks(x)
+    ax.set_xticklabels([f'{float(f):.0%} of life' for f in fracs])
+    ax.set_ylabel('RUL RMSE [cycles]')
+    ax.set_ylim(0, max(sim + ai) * 1.32)
+    ax.set_title('the learning advantage over a strong classical baseline is late-life only',
+                 fontsize=8)
+    ax.legend(frameon=False, fontsize=7.5, loc='upper right')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'lrul_sweep.pdf'); plt.close(fig)
+    print('  lrul sweep figure done')
+
+
+def fig_uq_reattribution():
+    """L-UQ (prereg-v15): interval half-widths once every predictor gets the
+    same conformal calibration, against the frozen uncalibrated band."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f8' / 'uq_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())
+    pm, fr = v['per_method'], v['frozen_H5']
+    INK, BLUE, GRAY, TEAL, RED = '#212529', '#4263EB', '#868E96', '#1098AD', '#E03131'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y', 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.4, 3.1))
+    names = ['AI GRU\n(conformal)', 'similarity\n(conformal)',
+             'Theil--Sen\n(conformal)', 'Theil--Sen\n(frozen H5, raw)']
+    vals = [pm['ai']['halfwidth_cycles'], pm['similarity']['halfwidth_cycles'],
+            pm['theilsen']['halfwidth_cycles'], fr['trad']['halfwidth_cycles']]
+    covs = [pm['ai']['coverage'], pm['similarity']['coverage'],
+            pm['theilsen']['coverage'], fr['trad']['coverage']]
+    for i, (val, cov, col) in enumerate(zip(vals, covs, [BLUE, TEAL, GRAY, RED])):
+        ax.bar(i, val, color=col)
+        ax.annotate(f'{val:.0f}\ncov {cov:.2f}', (i, val), ha='center', va='bottom',
+                    fontsize=7.5, color=INK)
+    ax.axhline(vals[0], color=BLUE, lw=0.8, ls=':')
+    ax.set_xticks(range(4)); ax.set_xticklabels(names, fontsize=7.5)
+    ax.set_ylabel('90\\% RUL interval half-width [cycles]')
+    ax.set_ylim(0, max(vals) * 1.22)
+    ax.set_title('most of the frozen 5.9$\\times$ was calibration, not the model: '
+                 '1.34$\\times$ at equal coverage', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'uq_reattribution.pdf'); plt.close(fig)
+    print('  uq reattribution figure done')
+
+
 def fig_ops_conversion():
     """F-OPS: net unscheduled->scheduled conversion vs horizon, per method + floor ceiling."""
     import matplotlib.pyplot as plt
@@ -1827,6 +1906,8 @@ def artifact_assets():
     fig_ops_conversion()
     fig_wall()
     fig_lrul()
+    fig_lrul_sweep()
+    fig_uq_reattribution()
     fig_confusable_angles()
     gpa_assets()
     noise_sweep_assets()

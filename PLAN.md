@@ -1230,3 +1230,88 @@ Estado por anexo:
 
 Aplicar en toda pasada de corrección futura; norma N9. Ningún anexo nuevo entra como tabla
 pelada.
+
+## F-FIX15 — Re-auditoría de los titulares de IA ✅ HECHO (2026-07-29, prereg-v15)
+
+Origen: crítica del usuario («¿realmente la IA ha aportado?»). Dos titulares no resistían
+inspección; los dos arreglados y propagados a report, one-pager, slides y ambos guiones.
+
+**Fix 1 — L-UQ (`scripts/f_uq_reattribution.py` → `data/processed/f8/uq_verdict.json`)**:
+el 6× de H5 comparaba un intervalo conformal (IA, calibrado al 90 %) contra la banda de
+pendientes Theil-Sen SIN calibrar, que sobre-cubre al 98,3 %. Envolviendo el MISMO conformal
+split alrededor de los tres predictores (calibración en val, evaluación en test):
+
+| método (todos conformal 90 %) | cobertura | semiancho | vs IA | RMSE |
+|---|---|---|---|---|
+| IA GRU | 0,883 | 2028 | 1,00× | 1261 |
+| similitud (clásico avanzado) | 0,917 | 2717 | **1,34×** | 1458 |
+| Theil-Sen (operacional) | 0,767 | 4627 | 2,28× | 3612 |
+| *H5 congelado, banda sin calibrar* | 0,983 | 11509 | 5,88× | — |
+
+→ ~3/4 del titular era la calibración (agnóstica al modelo, gratis para el lado clásico),
+1/4 el modelo. Veredicto H5 congelado NO se reescribe; re-atribución declarada post-hoc.
+Caveat: Theil-Sen infra-cubre (0,767) → no intercambiable val/test; 2,28× es cota inferior.
+
+**Fix 2 — L-RUL barrido de fracciones (`scripts/f8_lrul_advanced.py`, H-RUL.3)**: el clásico
+AVANZADO solo se había adjudicado al 90 % de vida mientras el titular 2,3–4,4× se cita contra
+el Theil-Sen en las tres. Emparejado en todas, Wilcoxon por fracción + Holm:
+
+| fracción | similitud | IA | margen | p Holm | veredicto |
+|---|---|---|---|---|---|
+| 50 % | 1998 | 1689 | 1,18× | 0,41 | sin diferencia |
+| 70 % | 1064 | 1059 | 1,01× | 0,41 | **empate** |
+| 90 % | 1118 | 834 | 1,34× | 0,006 | **gana IA** |
+
+→ **H-RUL.3 refutada como afirmación uniforme**: la ventaja del aprendizaje es de VIDA TARDÍA,
+no un desplazamiento de nivel. Coherente con F11 (87 % irreducible a media vida: donde no hay
+nada que ganar, no gana nadie). Disclosure: re-ejecución da 1689/1059/834 vs 1694/1042/858
+congelados (0,3–3 %); GRU en Metal no es bit-reproducible. H3 congelada intacta.
+
+Report: §sec:f8-lrul-sweep + fig `lrul_sweep`, §sec:f-uq + fig `uq_reattribution`, ch08 con
+ambas correcciones, ch12 tablas F-QA + «What the evidence says». 124 pp, 38 tests verdes.
+Renombrada §«Why this is the breakthrough» → «Why this result is different in kind».
+
+## F12 — HITO OBLIGATORIO: el dividendo del prior de flota (propuesto, `docs/f12-proposal.md`)
+
+Pendiente de congelar como **prereg-v16**. Responde la pregunta que queda tras F-FIX15: ¿hay
+algo que la IA pueda hacer en EHM que un método clásico competente NO pueda estructuralmente?
+
+**Afirmación**: la GPA clásica cierra las 7 dimensiones no restringidas del problema inverso
+con un regularizador FIJO (gaussiano, casi diagonal, igual para todo motor, constante en la
+vida) — que es un prior. El prior real de flota es correlacionado entre componentes, no
+gaussiano, no estacionario y específico del motor. **Lo único que un aprendiz puede hacer
+estructuralmente es llevar ese prior al espacio nulo de la medida.** No es mejor inversión:
+es acceso a información que la medida no contiene y que el regularizador clásico no expresa.
+Explica H2 (falló porque se le dio el mismo encuadre por-snapshot que a la GPA: no hay prior
+que explotar) y por qué prognosis gana TARDE (la forma de trayectoria, estadístico de flota,
+solo informa cuando la degradación domina).
+
+**Por qué es breakthrough y lo anterior no**: se mide contra referencia ABSOLUTA (CRB del
+certificado F10 = suelo de precisión de cualquier estimador insesgado con los datos de UN
+motor), no contra una línea base. El CRB no se puede infra-ajustar ni acusar de hombre de
+paja — la objeción que se comió H3 y H5. Batir el CRB en una dirección certificada como
+inobservable **demuestra** uso de información externa a la medida; el tamaño de la violación
+es el tamaño de lo importado. Escalar por motor:
+`D_prior = ½ log₂(det Σ_CRB / det Σ_logrado)` **bits que la flota aporta y los sensores no**.
+n = 20 motores × 10 direcciones = 200 puntos emparejados (no 10).
+
+**Gates congelables (cada uno puede fallar; Holm sobre 10 direcciones, ajuste solo en train)**:
+- **G1 existencia**: bate el CRB en ≥3 direcciones `unobservable` (flota v2 no lineal).
+  Falla → claim muerta barata; resultado negativo fuerte.
+- **G2 atribución** (medición, no pass/fail): fracción de la ganancia que recupera el clásico
+  con el MISMO prior empírico de flota (covarianza a priori WLS/Kalman, ~20 líneas).
+  ≥70 % → titular «la ventaja es el prior, no la red». <70 % → residuo = estructura que un
+  gaussiano no expresa; cuantificar cuál (mezcla de gaussianas, bajo rango).
+- **G3 transferencia (anti-auto-simulación)**: prior entrenado en flota A, evaluado en flota B
+  con mezcla de modos/correlación/tasas desajustadas a 3 magnitudes. Falla → degradar a
+  «depende de homogeneidad de flota» + curva de break-even (cuántos motores de historia
+  propia hacen falta y cuán rápido decae con deriva de flota).
+- **G4 el muro**: re-test H2 con el estimador que lleva prior. Exploratorio→confirmatorio.
+- **G5 predicción estructural (detector de fraude incorporado)**: la ganancia debe aparecer
+  DONDE el certificado dice, ρ ≥ 0,5 entre CRB por dirección y violación del CRB. Ganancias
+  uniformes = fuga, no prior → anula G1.
+
+**No hay forma de perder**: las cinco ramas (G1 falla / G2≥70 % / G2<70 %+G3 pasa / G3 falla /
+G5 falla) terminan en resultado real y publicable. Maquinaria ya existe: verdad por vuelo en
+`snapshots.parquet` (`x_*`), CRB en `trad/identifiability.py`, `kalman_gpa`, flota v2, patrón
+de flotas variantes del barrido C6. Semanas, no proyecto nuevo. Ver §sec:future-f12 en ch12.

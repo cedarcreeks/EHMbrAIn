@@ -28,13 +28,16 @@ visible as wins.
     earlier at equal false alarms (recall 0.48 vs 0.13) & \cref{sec:res-h1} (H1) \\
   Does AI isolate confusable faults better? & \textbf{No}: 31\,\%=31\,\%; the wall is
     informational, not algorithmic & \cref{sec:res-h2} (H2) \\
-  Does AI predict remaining life better? & \textbf{Yes}: $2.3$--$4.4\times$ lower error vs
-    fielded practice, $\sim$1.3$\times$ vs the best classical method; robust across
-    architectures & \cref{sec:res-h3h5}, \cref{sec:f8-l5,sec:f8-lrul} (H3) \\
+  Does AI predict remaining life better? & \textbf{Yes vs practice} ($2.3$--$4.4\times$);
+    \textbf{vs the best classical method, late life only}: $1.34\times$ at $90\,\%$
+    ($p=0.006$), a tie at $70\,\%$. Robust across architectures &
+    \cref{sec:res-h3h5}, \cref{sec:f8-l5,sec:f8-lrul,sec:f8-lrul-sweep} (H3) \\
   Does injecting physics into the learner help? & \textbf{No}, twice: estimate-stacking and
     twin-residual both hurt & \cref{sec:res-h4}, \cref{sec:f8-l6} (H4) \\
-  Is the AI's uncertainty better calibrated? & \textbf{Yes}: 6$\times$ tighter interval at
-    honest coverage & \cref{sec:res-h3h5} (H5) \\
+  Is the AI's uncertainty better calibrated? & \textbf{Yes, but mostly thanks to conformal,
+    not to AI}: at equal coverage $1.34\times$ tighter than advanced classical, $2.3\times$
+    than practice --- not the frozen $6\times$ & \cref{sec:res-h3h5} (H5),
+    \cref{sec:f-uq} \\
   Can observability be bought without new hardware? & \textbf{Partly}: report-schedule design
     $+79$\,\%; learned fusion triples classical & \cref{ch:tomography} (H7) \\
   Can we certify what a diagnosis honestly knows? & \textbf{Yes}, validated against truth
@@ -120,12 +123,16 @@ Three confirmations, two refutations (\cref{tab:verdicts}), and the split is the
 
 \begin{itemize}
   \item \textbf{Learning wins where patterns accumulate}: prognosis ($2.3$--$4.4\times$
-    lower confirmatory RUL error against fielded practice, calibrated $6\times$-narrower
-    intervals, ranking replicated on C-MAPSS) and --- after honest tuning --- detection timing
-    ($12\times$ earlier at equal false alarms). The prognosis margin is honest at two scales:
-    $\sim$2.3$\times$ over the linear extrapolation operators field today, $\sim$1.3$\times$
-    over the best advanced classical prognostic (\cref{sec:f8-lrul}). Both are true; quoting
-    only the first would be the straw-man comparison this project exists to criticize.
+    lower confirmatory RUL error against fielded practice, ranking replicated on C-MAPSS) and
+    --- after honest tuning --- detection timing ($12\times$ earlier at equal false alarms).
+    But the margin must be quoted at the right scale, and the right scale is unflattering:
+    against the best \emph{advanced} classical prognostic the AI leads $1.34\times$ at
+    $90\,\%$ of life and \emph{ties} at $70\,\%$ (\cref{sec:f8-lrul-sweep}), and its
+    interval advantage falls from $6\times$ to $1.34\times$ once both sides are conformalized
+    alike (\cref{sec:f-uq}) --- most of that $6\times$ was the calibration method, which is
+    model-agnostic and free to the traditional side. The defensible claim is narrow:
+    \emph{learning buys the late-life shop-visit horizon}. Quoting the against-practice factor
+    alone would be the straw-man comparison this project exists to criticize.
   \item \textbf{Physics wins where information is scarce}: the ICM rule matched or beat the
     learner on confusable isolation, and bolting physics-derived features onto a learner
     (H4) made it worse. Physics' real contribution was \emph{diagnosis of the limits}: the
@@ -227,6 +234,59 @@ N-CMAPSS DS02, map-shape calibration) are characterized with hypotheses and gate
 plan.
 
 \section{Future work}
+
+\subsection{The one line that must be run}
+\label{sec:future-f12}
+
+The re-audits of \cref{sec:f8-lrul-sweep,sec:f-uq} left the AI case honest and small: a
+$1.34\times$ late-life prognostic edge over a competent classical method, a tie at mid-life, a
+detection win traceable to window search, a refuted isolation claim and a twice-refuted
+hybrid. That is a defensible result. It is not a mechanism, and this document should not
+pretend otherwise.
+
+The open question worth the project's remaining effort is therefore not \emph{how much better
+is AI}, which is now measured, but \emph{is there anything a learner can do here that a
+competent classical method structurally cannot}. There is a candidate, and it follows from
+this document's own findings. Classical gas-path analysis closes the seven unconstrained
+dimensions of an underdetermined inverse problem with a fixed regularizer --- a Gaussian,
+near-diagonal, engine-independent, life-invariant prior. The real fleet prior is correlated
+across components, non-Gaussian, non-stationary and engine-specific. \textbf{The one thing a
+learner can structurally do is carry that prior into the measurement's null space.} Under this
+reading, H2 failed because the learner was handed the same per-snapshot framing as GPA, in
+which there is no prior to exploit, and prognosis wins late because trajectory shape --- a
+fleet-level statistic --- only becomes informative once degradation dominates. Both are
+predictions of the claim, not post-hoc stories.
+
+What makes it testable \emph{here}, and effectively nowhere else, is that the certificate of
+\cref{ch:breakthrough} supplies an \emph{absolute} reference rather than a baseline: the
+Cram\'er--Rao bound is the precision floor for any unbiased estimator using one engine's data
+alone. It cannot be under-tuned or strawmanned --- the objection that shrank H3 and H5. A
+biased or Bayesian estimator is entitled to beat it; what is normally impossible is
+\emph{verifying} that it did, because verification needs the true component state. So an
+estimator that beats the CRB in a certified-unidentifiable direction is provably importing
+information from outside that engine's measurement, and the size of the violation is the size
+of the import --- per engine, per direction, in physical units. Summed as
+$\frac{1}{2}\log_2(\det\Sigma_{\text{CRB}} / \det\Sigma_{\text{achieved}})$ it is a single
+number in bits: \emph{how much of this diagnosis came from the sensors, and how much from the
+fleet}.
+
+The proposal (\code{docs/f12-proposal.md}) freezes five gates, each allowed to fail, and the
+two that matter most are the ones that can cost the project its claim. A classical steelman
+receives the \emph{same} empirical fleet prior as its a-priori covariance; if it recovers most
+of the gain, the honest headline becomes ``the advantage is the prior, and it costs twenty
+lines of linear algebra, not a neural network'' --- the most useful anti-hype result available
+here. And a transfer gate trains the prior on one fleet and tests it on another whose
+degradation-mode mixture is deliberately mismatched, which turns this document's deepest
+unexamined assumption --- that a certificate validated against its own generator's truth means
+something outside that generator --- into an explicit experimental variable. A fifth gate is a
+built-in fraud detector: the gain must appear \emph{where the certificate says it should},
+large in unobservable directions and negligible in identifiable ones. Leakage and overfitting
+produce gains everywhere; only a genuine prior produces gains shaped like the null space, and
+that shape is predicted in advance by an object computed without ever looking at the
+estimator. Every branch, including outright failure at the first gate, terminates in a result
+worth stating.
+
+\subsection{The remaining programme}
 
 (1) The physics-constrained-loss mechanism (M3), now deferred behind two H4 refutations and
 requiring its own pre-registration against that record; (2) the PCS evaluated on the

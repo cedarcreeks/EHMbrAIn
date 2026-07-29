@@ -407,9 +407,16 @@ the quantitative floor for everything after. Do not skip 19.]_
 > _[state both scales — do not quote only the big one]_ And be honest about which
 > baseline that is against. The 2.3-fold figure is against the linear
 > extrapolation an operator fields today. Against the best advanced classical
-> prognostic — similarity-based, which can follow the curve — it narrows to about
-> 1.3 times. Both are true. Quoting only the first would be exactly the straw man
-> this whole project criticizes.
+> prognostic — similarity-based, which can follow the curve — it narrows to 1.34
+> times. And it narrows further than that, because we went back and ran the
+> comparison at every life fraction instead of only at ninety percent. At
+> seventy percent of life the two methods are a **statistical tie** —
+> 1059 cycles against 1064, p equals 0.41. The learning advantage in prognosis is
+> not a level shift across the whole life. It is a **late-life** effect. Which
+> makes sense: our own prognostic floor says mid-life spread is eighty-seven
+> percent irreducible. Where there is nothing to win, nobody wins.
+>
+> So the honest sentence is: buy the shop-visit horizon, not the mid-life trend.
 >
 > But look at the shape rather than the number. _[point]_ The classical errors
 > are wide and skewed **optimistic** — it predicts more life remaining than there
@@ -424,6 +431,21 @@ the quantitative floor for everything after. Do not skip 19.]_
 > over-covers at ninety-eight percent but is plus-minus eleven and a half
 > thousand. That is the difference between a plannable shop visit slot and a
 > shrug.
+>
+> _[the correction — say it, do not let someone else find it]_ But that six-fold
+> is not an AI result, and I want to say so before anyone asks. Our side was
+> conformal-calibrated to ninety percent. Their side was calibrated to nothing,
+> and it over-covers, and an interval that over-covers is wide by construction.
+> Conformal prediction is model-agnostic — the classical side can just take it.
+> So we went back and wrapped the identical conformal procedure around all three
+> predictors. At equal coverage the AI interval is **1.34 times** narrower than
+> the advanced classical one, and 2.3 times narrower than fielded practice. Not
+> six. About three quarters of that headline was the calibration method, not the
+> model.
+>
+> The practical version of that, for anyone here who owns a prognostic: before you
+> buy a model, put a conformal wrapper on the one you already have. Fifty lines of
+> code, no model change, and it captures most of the interval improvement.
 
 **Slide 27 (H4 refuted).**
 
@@ -605,9 +627,13 @@ the quantitative floor for everything after. Do not skip 19.]_
 > So, the answer to the question the talk started with.
 >
 > Learning wins where the task is statistical aggregation over time. Prognosis —
-> 2.3 times better than fielded practice, 1.3 times better than the best classical
-> method, and robust across three architectures and across sensor quality.
-> Detection timing. Calibrated uncertainty.
+> 2.3 times better than fielded practice, and robust across three architectures
+> and across sensor quality. Against the best classical method the win is 1.34
+> times and only late in life. Detection timing. Calibrated uncertainty, at 1.34
+> times once both sides are calibrated the same way.
+>
+> That is a narrower claim than the one I would have made two weeks ago, and it is
+> narrower because we went looking for the weakness in our own headline numbers.
 >
 > Nobody wins where the task is bounded by what the sensors observed. Confusable
 > isolation is a tie, and the fix is seventy-seven percentage points from real
