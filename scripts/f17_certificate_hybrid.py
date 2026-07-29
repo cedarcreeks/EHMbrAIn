@@ -154,6 +154,7 @@ def main():
     ymean = Ytr.mean(axis=0)
 
     res = {}
+    per_seed = {a: {} for a in ARMS}
     for arm in ARMS:
         preds = []
         for s in SEEDS:
@@ -161,16 +162,33 @@ def main():
                                       layers=par['layers']),
                               Xtr[arm], Ytr, epochs=par['epochs'], lr=par['lr'],
                               bs=par['bs'], seed=s)
-            preds.append(predict_torch(net, Xte[arm]))
+            p = predict_torch(net, Xte[arm])
+            preds.append(p)
+            # per-seed score, so the seed spread is MEASURED and the arm
+            # comparison can be paired on the seed rather than eyeballed
+            per_seed[arm][s] = float(np.nanmean(r2_per_col(Yte, p, ymean)))
+            print(f'    {arm:16s} seed {s}  R2 {per_seed[arm][s]:+.3f}', flush=True)
         P = np.mean(preds, axis=0)
         r2 = r2_per_col(Yte, P, ymean)
+        vals = list(per_seed[arm].values())
         res[arm] = {'r2_per_mechanism': dict(zip(MECHANISMS, r2)),
-                    'r2_mean': float(np.nanmean(r2)),
+                    'r2_mean_ensembled': float(np.nanmean(r2)),
+                    'r2_mean_per_seed': float(np.mean(vals)),
+                    'r2_sd_per_seed': float(np.std(vals, ddof=1)),
+                    'per_seed': per_seed[arm],
                     'n_channels': int(Xtr[arm].shape[2])}
         print(f'  {arm:16s} channels {res[arm]["n_channels"]:3d}  '
-              f'mean R2 {res[arm]["r2_mean"]:+.3f}', flush=True)
+              f'seed-mean R2 {res[arm]["r2_mean_per_seed"]:+.3f} '
+              f'+-{res[arm]["r2_sd_per_seed"]:.3f}  '
+              f'ensembled {res[arm]["r2_mean_ensembled"]:+.3f}', flush=True)
 
-    a, b, cc = (res[x]['r2_mean'] for x in ARMS)
+    a, b, cc = (res[x]['r2_mean_per_seed'] for x in ARMS)
+    # paired on the seed: seed effects are shared across arms, so the paired
+    # difference is far better powered than comparing two noisy means
+    dCA = [per_seed['C_certificate'][s] - per_seed['A_pure'][s] for s in SEEDS]
+    dBA = [per_seed['B_h4_style'][s] - per_seed['A_pure'][s] for s in SEEDS]
+    spread = max(res[x]['r2_sd_per_seed'] for x in ARMS)
+    resolvable = float(np.mean(dCA)) > max(0.02, spread)
     verdict = {
         'design': {
             'task': 'mechanism-share attribution (F13 gate one task)',
@@ -187,18 +205,36 @@ def main():
         'per_arm': res,
         'H15.3_certificate_channel_helps': {
             'delta_C_minus_A': cc - a, 'delta_B_minus_A': b - a,
-            'confirmed': bool(cc > a + 0.02 and b <= a + 0.02),
-            'criterion': ('C beats A by >0.02 mean R2 AND B does not -- '
-                          'otherwise the gain is "more features", not the '
-                          'certificate'),
+            'paired_deltas_C_minus_A': dCA,
+            'paired_deltas_B_minus_A': dBA,
+            'C_wins_on_all_seeds': bool(all(d > 0 for d in dCA)),
+            'max_seed_sd': spread,
+            'resolvable_against_seed_noise': bool(resolvable),
+            'confirmed': bool(resolvable and all(d > 0 for d in dCA)
+                              and np.mean(dBA) <= max(0.02, spread)),
+            'criterion': ('paired on seed: C must beat A on every seed, by a '
+                          'mean margin exceeding both 0.02 and the largest '
+                          'per-arm seed sd, AND B must not -- otherwise the '
+                          'gain is "more features", not the certificate'),
+            'inconclusive_note': ('if the C-A margin sits inside the seed '
+                                  'spread the honest verdict is inconclusive, '
+                                  'not a signal: an earlier run of arm A scored '
+                                  '0.450 against F13\'s 0.414 on the identical '
+                                  'configuration, so Metal run-to-run spread is '
+                                  'about 0.04'),
             'note': ('H4 and L6 both refuted physics injection by feeding '
                      'smeared estimates; the certificate is information the '
                      'trajectory cannot contain, which is the distinction '
                      'being tested')},
     }
     (OUT / 'hybrid_verdict.json').write_text(json.dumps(verdict, indent=2))
-    print(f"\n  C-A {cc - a:+.3f}   B-A {b - a:+.3f}   "
-          f"H15.3 confirmed: {verdict['H15.3_certificate_channel_helps']['confirmed']}")
+    h = verdict['H15.3_certificate_channel_helps']
+    print(f"\n  C-A {cc - a:+.3f} (per seed {['%+.3f' % d for d in dCA]})")
+    print(f"  B-A {b - a:+.3f} (per seed {['%+.3f' % d for d in dBA]})")
+    print(f"  max seed sd {spread:.3f}  -> resolvable: {h['resolvable_against_seed_noise']}")
+    print(f"  H15.3 confirmed: {h['confirmed']}")
+    if not h['resolvable_against_seed_noise'] and abs(cc - a) < spread:
+        print('  VERDICT: inconclusive -- margin inside seed noise, not a signal')
 
 
 if __name__ == '__main__':
