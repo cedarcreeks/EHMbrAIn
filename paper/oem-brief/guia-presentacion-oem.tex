@@ -1,0 +1,342 @@
+% Guía para presentar el deck OEM (castellano).
+% Build:  latexmk -pdf -outdir=build guia-presentacion-oem.tex   (desde paper/oem-brief/)
+%
+% Acompaña a oem-slides.pdf. Las diapositivas están en inglés: los títulos se
+% citan aquí en inglés para localizarlas; la narración va en castellano.
+%
+% Audiencia: responsable de performance en un OEM de motores, con conocimiento
+% de alto nivel y muy crítico con la IA.
+
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.6cm,right=2.6cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+% es-noshorthands: los shorthands de babel-spanish rompen tikz/siunitx.
+\usepackage[spanish,es-noshorthands,es-noquoting]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{inkc}{HTML}{212529}
+\definecolor{bluec}{HTML}{4263EB}
+\definecolor{redc}{HTML}{A61E4D}
+\definecolor{grayc}{HTML}{868E96}
+\color{inkc}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\linespread{1.06}
+\setlist[itemize]{leftmargin=1.2em,itemsep=2pt,topsep=3pt}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\footnotesize\color{grayc} Guía de presentación --- deck OEM}
+\fancyhead[R]{\footnotesize\color{grayc}\thepage}
+\renewcommand{\headrulewidth}{0.2pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{grayc}\leaders\hrule height \headrulewidth\hfill}}
+
+% \diapo{nº}{título en pantalla}
+\newcommand{\diapo}[2]{%
+  \vspace{0.9em}%
+  \noindent{\color{bluec}\rule{\linewidth}{0.6pt}}\par\vspace{-0.35em}%
+  \noindent{\bfseries\color{bluec} Diapositiva #1}\quad{\bfseries #2}\par
+  \vspace{-0.15em}}
+
+% narración: lo que se dice en voz alta
+\newenvironment{decir}%
+  {\begin{list}{}{\leftmargin=1.1em \rightmargin=0em \listparindent=0pt
+       \itemindent=0pt \parsep=0.5em \topsep=0.4em}\item[]\ignorespaces}%
+  {\end{list}}
+
+% acotación escénica: no se dice
+\newcommand{\escena}[1]{{\itshape\color{grayc}[#1]}}
+\newcommand{\cifra}[1]{\textbf{#1}}
+\newcommand{\idea}[1]{\par\smallskip{\color{grayc}\itshape Idea en una frase: #1}\par}
+
+\title{\vspace{-1.5cm}\textbf{Deck OEM}\\[2mm]
+  \large Guía de presentación}
+\author{}
+\date{\small Acompaña a \texttt{oem-slides.pdf} (17 diapositivas, 2 de reserva)}
+
+\begin{document}
+\maketitle
+\thispagestyle{fancy}
+\vspace{-1.2cm}
+
+\section*{Antes de empezar: la postura}
+
+Tu ventaja es que \textbf{no vienes a vender IA}. Vienes a contar que la mediste y que
+casi todo se cayó. Eso desarma al escéptico en el primer minuto, y a partir de ahí te
+escucha.
+
+\textbf{Regla de oro:} cada vez que digas algo bueno de la IA, di antes el número que lo
+limita. Nunca al revés.
+
+\textbf{Tres cosas que NO debes decir:}
+\begin{itemize}
+  \item ``La IA revoluciona el mantenimiento'' --- pierdes la sala.
+  \item ``Nuestro modelo aprende patrones complejos'' --- suena a folleto.
+  \item Cualquier cifra sin decir contra qué se compara.
+\end{itemize}
+
+\textbf{Arranque sugerido:}
+\begin{decir}
+Monté un banco de pruebas para medir si lo que se publica sobre IA en performance se
+sostiene. Te adelanto el resultado: la mayoría no. Incluido lo mío. Lo que sí queda es
+pequeño y, curiosamente, no es software.
+\end{decir}
+
+El texto sangrado es lo que se dice en voz alta; lo que aparece \escena{así} son
+acotaciones, no se pronuncian.
+
+\diapo{1}{Portada}
+Léela y pasa. No te detengas.
+
+\diapo{2}{Start from the skeptical position}
+\begin{decir}
+La pregunta era simple: ¿la IA gana al método clásico de análisis de gas path, o no? La
+trampa habitual es comparar una IA bien ajustada contra un método clásico mal ajustado.
+Aquí les di a los dos el mismo dato, la misma métrica y el mismo presupuesto de ajuste. Y
+escribí las hipótesis \textbf{antes} de correr nada, para no poder cambiarlas después.
+
+\escena{señala la columna derecha} Ahí tienes lo que salió. Un paper publicado cuyo
+titular resulta ser ruido. Dos titulares míos que se caen a la tercera parte. Y la tarea
+donde más se vende la IA acaba en empate.
+\end{decir}
+\idea{no vengo a convencerte, vengo a enseñarte una auditoría.}
+
+\diapo{3}{The rig, in one slide}
+\begin{decir}
+Construí un motor virtual del CFM56-7B calibrado contra datos de certificación públicos,
+y con él una flota de cien motores que viven hasta que salen de ala. La clave es esta:
+\textbf{de cada motor sé la verdad}. Sé exactamente cuánto se ha degradado cada
+componente en cada vuelo.
+
+Eso con datos reales no lo puedes hacer. Con datos reales solo puedes comparar una
+estimación contra otra estimación. Aquí puedo preguntar lo que de verdad importa: ¿el
+diagnóstico \textbf{acertó}?
+\end{decir}
+
+\escena{si pregunta ``¿y eso es realista?''}
+\begin{decir}
+El modelo está anclado a medidas de certificación reales que nunca usé para ajustarlo.
+Los números absolutos no los defiendo. Lo que se transfiere son los órdenes de magnitud y
+quién gana a quién, que es de lo que va todo esto.
+\end{decir}
+
+\diapo{4}{A peer-reviewed deep-learning result, replicated exactly}
+\escena{esta es la diapositiva importante; tómate tiempo}
+\begin{decir}
+Cogí un paper de 2026, publicado en Springer, revisado por pares. Dice que una red
+neuronal concreta es la mejor de quince arquitecturas para predecir vida remanente. Lo
+reimplementé exactamente como está escrito.
+
+Primero, lo justo: \textbf{replica}. Me sale \cifra{14,56} donde ellos publican
+\cifra{14,12}. No estoy montando un hombre de paja.
+
+Ahora el problema. Ellos ordenan quince arquitecturas con diferencias de entre
+\cifra{0,12 y 0,60}. Pero si entrenas \textbf{el mismo modelo dos veces}, cambiando solo
+el número aleatorio de arranque, el resultado se mueve \cifra{2,94}. La diferencia entre
+modelos es cinco veces más pequeña que el ruido de repetir el mismo modelo. Ese ranking
+no mide nada. Y ellos publican una sola corrida por modelo.
+
+Y hay algo peor \escena{señala los puntos rojos}: en \cifra{cinco de diez} corridas el
+modelo no llega a entrenar. Se queda prediciendo cero. Y la causa está en sus propias
+tablas: una configuración que, si el modelo se atasca al principio, no puede recuperarse.
+\end{decir}
+
+\escena{analogía, si hace falta}
+\begin{decir}
+Es como cronometrar quince motores en banco, con diferencias de una décima entre ellos,
+cuando repetir el ensayo del mismo motor te da tres décimas de dispersión.
+\end{decir}
+
+\diapo{5}{The evaluation question to ask anyone}
+\begin{decir}
+De todo esto, si te llevas una sola cosa, que sea esta pregunta: \textbf{¿cuál es la
+dispersión entre repeticiones?} Antes de mirar el titular.
+
+Sirve para un proveedor que te enseña un piloto. Sirve para un equipo interno. Y sirve
+para mí --- de hecho me la apliqué, y es la siguiente diapositiva.
+\end{decir}
+\idea{un ranking dentro del ruido no es un resultado.}
+
+\diapo{6}{We applied it to our own claims, and both shrank}
+\begin{decir}
+Me apliqué el mismo criterio y perdí dos titulares.
+
+El primero: yo decía que la IA daba intervalos de incertidumbre \cifra{seis veces} más
+estrechos. Falso tal como estaba dicho. Mi intervalo estaba \emph{calibrado} --- ajustado
+para que cuando digo noventa por ciento, sea de verdad noventa. El del método clásico no
+lo estaba, y por eso salía anchísimo. Calibras los dos igual y la ventaja se queda en
+\cifra{1,34}. Tres cuartas partes de aquel seis era la calibración, no el modelo. Y la
+calibración es una técnica que el lado clásico puede coger gratis.
+
+El segundo: ``la IA predice la vida remanente entre 2,3 y 4,4 veces mejor''. Cierto, pero
+solo contra la extrapolación lineal que se usa hoy en operación. Contra un método clásico
+bueno es \cifra{1,34} veces al noventa por ciento de la vida, y \textbf{empate} al
+setenta.
+\end{decir}
+\idea{cuando la línea base es competente, la ventaja es del 30\,\%, no de varias veces.}
+
+\diapo{7}{Where AI lost outright}
+\begin{decir}
+Aquí la IA no gana: pierde el empate. Distinguir entre averías parecidas de gas path:
+\cifra{31\,\%} el método clásico, \cifra{31\,\%} la IA. Idéntico.
+
+Y esto no es que el algoritmo sea malo. Es que \textbf{la información no está en el
+dato}. Tienes tres medidas de cabina útiles y diez parámetros de salud que estimar. Es
+como pedirme tres números que sumen diez: hay infinitas respuestas y ninguna manera de
+elegir. Encima, dos averías distintas dejan huellas separadas \cifra{1,3 grados}: casi la
+misma firma.
+
+Lo comprobé por cuatro caminos independientes. Reduje a la mitad el ruido de todos los
+sensores: no cambia. Metí un ``sensor virtual'', que es lo que venden algunos
+proveedores: \textbf{cero, exactamente cero}. Barrí todo el envolvente de operación:
+sigue en \cifra{1,38 grados}. Y ningún método aprendido lo movió.
+\end{decir}
+
+\escena{remate, pausa antes}
+\begin{decir}
+Ningún algoritmo arregla que falte información.
+\end{decir}
+
+\diapo{8}{And most prognostic error is not a method gap}
+\begin{decir}
+Y una última mala noticia, que en realidad es dinero. El \cifra{87\,\%} de la
+incertidumbre en vida remanente a mitad de vida es \textbf{irreducible}. Dos motores que
+miden exactamente igual fallan de verdad con cientos de ciclos de diferencia. No es que
+no sepamos medirlo: es que el futuro no está escrito en la medida de hoy.
+
+Esto lo puedo afirmar porque conozco la verdad de cada motor. Y lo que significa para
+presupuesto es directo: si financias un algoritmo mejor para predecir a mitad de vida,
+estás persiguiendo ruido. Al final de la vida sí se abre un margen de \cifra{cuatro
+veces}: ahí sí paga.
+\end{decir}
+
+\diapo{9--10}{An instrumentation design tool / Why this one is ours to act on}
+\escena{cambio de tono: llevas media presentación diciendo que no; ahora el sí}
+\begin{decir}
+Lo más sólido que salió de todo esto \textbf{no es IA}. Es teoría de estimación clásica
+aplicada a través del modelo del motor.
+
+La idea: para un motor y sus condiciones reales de vuelo, puedo calcular cuánta
+información sobre cada componente llega de verdad a los sensores. Y de ahí sale un
+límite: esto lo puedes saber, esto no lo puede saber \emph{nadie} con esos sensores.
+
+Mira la tabla. Si añades sondas de estación, la eficiencia del compresor de alta pasa a
+estimarse \cifra{45 veces} mejor, y distinguir las averías confusas pasa de \cifra{0,15 a
+0,92}. Si en cambio reduces el ruido de las sondas que ya tienes: no cambia nada. Si
+compras software con ``sensores virtuales'': no cambia nada.
+
+Y aquí está la consecuencia para nosotros: cualquier servicio de EHM montado \textbf{solo
+sobre datos de cabina} tiene un techo que ningún roadmap de software levanta. La salida es
+instrumentación. Y la instrumentación la decidimos nosotros, no el cliente.
+\end{decir}
+\idea{esto pone precio a una decisión de hardware antes de comprometer el hardware.}
+
+\diapo{11}{The one AI result that held up}
+\begin{decir}
+Y ahora sí, lo único de IA que aguantó, y es más estrecho y más útil que lo que se suele
+contar.
+
+Meter física dentro del modelo --- darle al aprendiz la estimación del estado del motor
+--- \textbf{empeora} la predicción de vida remanente. Lo comprobé dos veces y las dos
+falló. Pero esa misma inyección \textbf{mejora mucho} decir qué mecanismo se está
+comiendo el motor.
+
+Y lo monté con un brazo de control, para que no me pudiera engañar a mí mismo: si el
+control también hubiera ganado, entonces la mejora sería solo ``más datos de entrada''.
+
+La explicación es mecánica y tiene sentido: la vida remanente ya va en el margen de EGT
+que el modelo está viendo, así que el estado físico no le añade nada. Pero \emph{qué
+módulo} se está degradando es justo lo que ese estado codifica.
+
+Conclusión: ``physics-informed'' no es ni magia ni humo. \textbf{Depende de la tarea.} Y
+ahora sé de cuál.
+\end{decir}
+
+\diapo{12}{What this is, and what it is not}
+\escena{dila entera, sin acelerar: es la que te da credibilidad}
+\begin{decir}
+Qué \textbf{no} es esto. No es un producto. No es una herramienta validada para uso
+operativo. Y los números absolutos no los defiendo: la flota es sintética y el modelo está
+calibrado contra datos públicos, no contra nuestro banco.
+
+Qué \textbf{sí} es: un método reutilizable para decidir qué afirmaciones sobre IA en
+performance financiamos y cuáles rechazamos. Con la disciplina que hace que las respuestas
+valgan algo --- hipótesis congeladas antes de correr, mismo presupuesto de ajuste para los
+dos lados, los resultados negativos con el mismo peso que los positivos, y ninguna cifra
+escrita a mano: todas salen del código.
+\end{decir}
+
+\diapo{13}{Proposed next step}
+\begin{decir}
+La propuesta es una sola: repetir el análisis de instrumentación sobre \textbf{nuestros}
+modelos de motor y sobre las configuraciones de sensores que estemos considerando.
+
+No necesita IA. No necesita recoger datos nuevos. Y responde a una pregunta que ya estamos
+pagando por responder de otra manera.
+\end{decir}
+\escena{y cállate: deja que hable él}
+
+\diapo{14--15}{Reserva}
+No las pases salvo que pregunte. Están para:
+\begin{itemize}
+  \item \textbf{Disciplina de método} --- si pregunta ``¿y cómo sé que no te has
+        engañado?''
+  \item \textbf{El muro es instantáneo} --- si pregunta ``¿entonces no se puede
+        diagnosticar nada?''
+\end{itemize}
+
+\section*{Objeciones probables, y qué contestar}
+
+\textbf{``Esto es todo simulado, no me sirve.''}
+\begin{decir}
+Correcto, y por eso no defiendo ningún número absoluto. Lo que se transfiere es la
+geometría: cuántas incógnitas hay contra cuántas medidas. Eso es igual en nuestro motor
+real, y es lo que manda. Además, el análisis de instrumentación corre sobre nuestros
+modelos, donde es más fuerte que aquí.
+\end{decir}
+
+\textbf{``La IA es humo.''}
+\begin{decir}
+En tres de las cuatro tareas que medí, te doy la razón con números. En la cuarta hay un
+30\,\% de mejora, que es real y es pequeño. Lo que te propongo no depende de que la IA
+funcione.
+\end{decir}
+
+\textbf{``¿Cuánto ha costado esto?''}
+\begin{decir}
+Corre entero en un portátil en minutos. Y todo viene de datos públicos de certificación,
+así que no hay problema de propiedad intelectual para circularlo internamente.
+\end{decir}
+
+\textbf{``¿Por qué no lo ha hecho ya un proveedor?''}
+\begin{decir}
+Porque hace falta conocer la verdad del motor para validarlo, y eso solo lo tienes en
+simulación. Un estudio con datos reales no puede comprobar si su propia estimación de
+incertidumbre es honesta. Nosotros sí.
+\end{decir}
+
+\textbf{``¿Y si el proveedor X dice que su modelo da un 95\,\%?''}
+\begin{decir}
+Primera pregunta: ¿contra qué línea base, y estaba ajustada igual? Segunda: ¿cuál es la
+dispersión entre repeticiones? Con esas dos preguntas se cae la mayoría.
+\end{decir}
+
+\section*{Si solo tienes cinco minutos}
+
+Diapositivas \textbf{4, 6, 7, 9 y 13}, en ese orden.
+
+Un paper publicado que no se sostiene $\rightarrow$ mis propios números corregidos
+$\rightarrow$ dónde la IA pierde y por qué $\rightarrow$ lo que sí sirve, que es
+instrumentación $\rightarrow$ la propuesta.
+
+\end{document}
