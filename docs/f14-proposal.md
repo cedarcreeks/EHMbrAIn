@@ -1,7 +1,14 @@
-# F14 — Replicating a published Bi-LSTM PHM result, and auditing it
+# F14 — A Bi-LSTM line: replicate the published result, then take it where GPA cannot go
 
-**Status:** planned, NOT run. Implementation drafted at `scripts/f14_bilstm_replication.py`
-(written, never executed). To freeze as `prereg-v17` before the first confirmatory run.
+**Status:** planned, NOT run. Implementation of Part A drafted at
+`scripts/f14_bilstm_replication.py` (written, never executed). To freeze as `prereg-v17`
+before the first confirmatory run.
+
+**Two parts.** **Part A** replicates a published Bi-LSTM FD001 result and audits it against
+this project's standards — a bounded, cheap, external check. **Part B** is the research line:
+put the same architecture where classical gas-path analysis is *provably* blind, and measure
+the consequence in fleet operating KPIs rather than in RMSE. Part A is the calibration; Part B
+is the claim.
 
 **Source:** Mukherjee, Hazra, Das, Datta — *"Development of Bidirectional-LSTM Model for
 Prognostic Health Monitoring (PHM) of NASA Turbofan Engine"*, Springer Proceedings in
@@ -143,7 +150,7 @@ of 25 epochs on a bidirectional 2-layer LSTM. Estimated 45–90 min total on the
 depending on contention. Run **after** the F13 gate-one job finishes, so the two do not
 compete for the GPU.
 
-## 9. Order of execution
+## 9. Order of execution (Part A)
 
 1. Freeze this document as `prereg-v17`, tag before running.
 2. R1 (paper protocol, 5 seeds) → H14.1.
@@ -151,3 +158,190 @@ compete for the GPU.
 4. Traditional at cap 125 → H14.3.
 5. Verdict JSON, figure, report section, A2 entry, bib entry.
 6. Commit and push.
+
+---
+
+# Part B — Where GPA cannot go, and what it is worth to a fleet
+
+## 10. The argument
+
+Classical gas-path analysis is a **per-snapshot inverse solver**. It maps a deviation vector
+to a health state through a regularized inverse of the influence matrix, one report at a time.
+Everything this project measured about its limits follows from that one structural fact:
+
+- rank 3 against 10 unknowns → 7 unconstrained directions (\cref{sec:icm});
+- $\eta_{\mathrm{HPC}}$ and $\eta_{\mathrm{HPT}}$ 1.3° apart → confusable at any precision
+  (H2, and halving the noise does not help, §sec:noise-sweep);
+- the F10 certificate stamps three efficiencies **unobservable** at 1.6–1.8 % CRB even after
+  accumulating Fisher information over the engine's whole flown history.
+
+None of that is a statement about *history*. It is a statement about an **instantaneous
+estimand**. And the generator's chronic degradation is not instantaneous: it is five
+mechanisms with sharply distinct time signatures (`conf/fault_catalog.yaml`) — fouling
+saturating with a wash sawtooth, erosion linear, clearance bilinear with a break-in knee,
+hot-section accelerating with efficiency down *and flow capacity up*, LPT wear linear. Per
+engine the true latent is **five scalars**, not a free 10-vector per cycle.
+
+F13 gate one measured the consequence directly, on held-out engines with truth replayed from
+seeds: **four of five mechanisms recover at R² > 0.30 from the deviation trajectory alone, and
+`hot_section` — the mechanism that loads the confusable pair — is the best recovered at
+R² 0.786.** Instantaneously unidentifiable; over a history, readable.
+
+> **Part B's claim.** The place a sequence model earns its keep in EHM is not RUL, where the
+> margin over a competent classical prognostic is 1.34× and only late in life. It is
+> **mechanism and module attribution over a full history** — the question GPA cannot pose,
+> let alone answer — and the operational payoff is not a smaller RMSE but a **shorter, better
+> planned shop visit**.
+
+## 11. Why bidirectional, specifically — and a falsifiable prediction
+
+A bidirectional layer runs the sequence forward and backward and concatenates the states. What
+that buys depends entirely on the task:
+
+- **Retrospective attribution** (the shop-visit decision): at removal you hold the engine's
+  *entire* history. The backward pass is then legitimate and genuinely informative — a wash
+  sawtooth observed late tells you fouling was present early; a flow-capacity rise at end of
+  life re-labels an ambiguous mid-life efficiency drop as hot-section creep. Context flows
+  from the end of the record to its middle. This is smoothing, not forecasting, and no future
+  is being peeked at.
+- **Online prognosis** (RUL): the backward pass runs over the *input window*, which is
+  entirely past. Not leakage — but there is no future context inside the window to exploit, so
+  it should buy little.
+
+This yields a sharp, pre-registrable prediction that the source paper's own numbers already
+hint at (`bi_lstm` 14.121 vs `lstm` 14.241 — a 0.12 RMSE gap, almost certainly seed noise):
+
+> **Bidirectionality should help attribution materially and RUL barely.** If the measured
+> pattern is the reverse, Part B's reading of the mechanism is wrong.
+
+## 12. The hybrid — and what it must NOT be
+
+This project has refuted physics-into-learner injection **twice**: H4 (stacking GPA estimates
+as features) and L6 (twin-residual features on the nonlinear fleet). Part B does not re-run
+either. The refutation's own diagnosis (§sec:res-h4) is the design constraint:
+
+> *"smeared state estimates are noise-bearing, mutually correlated features whose information
+> the learner already had. Physics injection needs an information channel the raw data
+> lacks."*
+
+The F10 certificate **is** such a channel. Per engine and per direction it is computed from
+the influence-matrix geometry and the engine's actual flown N1 history — from the *experiment
+design*, not from the measured values. A learner reading the deviation trajectory cannot
+derive it, because it is not in the trajectory.
+
+**Proposed architecture — certificate-gated division of labour:**
+
+| Component | Owns | Rationale |
+|---|---|---|
+| GPA / Kalman | the certified-**identifiable** subspace, per snapshot | it is optimal there and the certificate proves the estimate is trustworthy ($\rho=0.70$, H10.1) |
+| Bi-LSTM over full history | the certified-**unobservable** directions, via mechanism attribution | trajectory shape is the only remaining evidence, and gate one says it carries signal |
+| The certificate | the referee: per-direction CRB weights routed to the learner as input | tells the model *which* GPA outputs deserve weight — information absent from the raw data |
+
+Concretely: project the GPA state estimate onto the identifiable subspace, feed that projection
+**plus the per-direction CRB vector** alongside the raw deviation sequence, and let the
+sequence model own what physics has certified it cannot recover instantaneously.
+
+This is a third hybrid attempt after two failures. It is *motivated by* those failures rather
+than in spite of them, but it may fail identically, and the pre-registration must say so.
+
+## 13. Operational KPIs
+
+RMSE is not a fleet decision. These are, each computable from artefacts this project already
+produces. $N$ engines over $T$ days; removal event $i$ has downtime $d_i$ days.
+
+**K1 — Net unscheduled→scheduled conversion $C_{\mathrm{net}}$.** Already defined and measured
+(§sec:ops-conversion, `prereg-v12`): a removal converts iff the RUL error satisfies
+$-W \le e \le L$, with logistics horizon $L=400$ and wasteful-pull guard $W=800$ cycles.
+Current: AI 35–50 %, traditional 0–25 %. *Baseline KPI, unchanged.*
+
+**K2 — Unscheduled removal rate.**
+$$\mathrm{URR} = \frac{n_{\text{unscheduled}}}{\text{engine-cycles}} \times 1000$$
+Directly the operator's pain metric, and the one AOG cost is proportional to.
+
+**K3 — Workscope hit rate at horizon $H$ (new, and the load-bearing one).**
+$$\mathrm{WHR}(H) = \frac{\#\{\text{removals where the dominant mechanism was correctly called} \ge H \text{ cycles early}\}}{\#\text{removals}}$$
+The dominant mechanism is the argmax of the true share vector (ground truth from the seed
+replay); the call is the model's argmax at cut $= t_{\text{removal}} - H$. $H$ is the parts
+procurement lead time, swept, not chosen (nominal 300–800 cycles ≈ one to three months).
+**GPA's structural score here is the confusable-pair accuracy, i.e. near chance on exactly the
+modules that matter.** This is the KPI that only exists because of the identifiability wall.
+
+**K4 — Fleet availability.**
+$$A = 1 - \frac{\sum_i d_i}{N \cdot T}, \qquad
+d_i = \underbrace{t_{\mathrm{AOG}} \cdot \mathbb{1}[\text{unscheduled}]}_{\text{no slot, no spare staged}} + t_{\mathrm{transport}} + t_{\mathrm{shop}}(\text{workscope known?})$$
+Two levers, and Part B moves both: fewer unscheduled events (K1/K2, the RUL channel) and
+shorter shop turnaround when the workscope was pre-positioned (K3, the attribution channel).
+The second lever is unavailable to any RUL-only method — it is the operational expression of
+"where GPA cannot go".
+
+**K5 — Spare-engine ratio.**
+$$S = \frac{\text{spares required}}{N} \approx \frac{\mathrm{removal\ rate} \times \overline{\mathrm{TAT}}}{365}\;+\;\text{safety stock}$$
+Capital-intensive (a spare CFM56-class engine is an eight-figure asset), and it falls with both
+removal rate and turnaround time. The most credible way to state Part B's value to a CFO.
+
+**K6 — Wasteful removal rate $W_r$.** Engines pulled early that had life left — the
+false-alarm analog, already netted out in K1. Reported alongside every other KPI so no gain is
+quoted gross.
+
+### Where the numbers come from, and the honesty rule
+
+K1, K2, K3, K6 are **measured** in the testbed against ground truth. K4 and K5 additionally
+require turnaround and AOG day-counts, which the testbed cannot produce — they are an
+**assumption layer**, exactly like the cost anchors in \cref{ch:economics}. They inherit that
+chapter's discipline verbatim: anchor to public MRO commentary, state the range, **sweep the
+softest assumptions rather than choosing them**, and report the interval with its honest
+downside. A KPI improvement that survives only at the optimistic end of the sweep gets
+reported as such.
+
+## 14. Pre-registered hypotheses (Part B)
+
+- **H15.1 — attribution beats GPA where GPA is blind.** At the nominal horizon $H$, the
+  sequence model's WHR on engines whose dominant mechanism loads the confusable pair exceeds
+  the GPA/Kalman rule's by ≥ 20 percentage points, Holm-corrected.
+  *This is the direct operational cash-out of the identifiability wall.*
+
+- **H15.2 — bidirectionality helps attribution, not RUL.** Bi-LSTM minus unidirectional LSTM
+  is ≥ 5 points of WHR, and < 1 seed-sd of RUL RMSE. *Refutes Part B's mechanism if reversed.*
+
+- **H15.3 — the certificate-gated hybrid beats both pure families.** On mechanism attribution,
+  the hybrid of §12 beats both standalone GPA and the standalone sequence model.
+  *Two prior hybrids failed; this one is allowed to fail the same way, and the negative would
+  be the strongest possible statement about physics-informed EHM on this benchmark.*
+
+- **H15.4 — availability moves, and by how much.** Report $\Delta A$ and $\Delta S$ across the
+  full sweep of turnaround assumptions, with the fraction of the sweep in which the gain
+  survives. *Not a pass/fail: a measurement with an interval. A confirmed-sounding
+  availability number quoted without its sweep would be the exact failure mode this project
+  spent `prereg-v15` correcting.*
+
+- **H15.5 — the attribution channel is worth more than the RUL channel.** Decompose $\Delta A$
+  into the K1/K2 contribution and the K3 contribution. If the attribution channel dominates,
+  the project's headline claim changes from "AI predicts life better" to **"AI answers the
+  question GPA cannot, and that is where the availability is"**.
+
+## 15. Honest risks
+
+1. **F13 gate one G1b is still open.** If physics-designed shape features match the sequence
+   model, the mechanism finding stands but stops being an *AI* finding, and Part B's KPIs
+   should then be attributed to trajectory analysis, not to learning. The plan does not
+   presume the answer.
+2. **Third hybrid attempt.** H4 and L6 both refuted. The certificate channel is better
+   motivated than either, and may still fail.
+3. **K4/K5 are modelled, not measured.** Stated above; the sweep is mandatory, not optional.
+4. **Bi-LSTM is probably not special.** H14.4 is likely to show the paper's 15-way ranking is
+   seed noise. Part B must therefore claim *sequence models over full history*, and treat
+   bidirectionality as a mechanism to be tested (H15.2), never as a brand.
+5. **Circularity, stated once more.** The five mechanisms are literature-motivated but
+   implemented by this project. Part B measures how much mechanism information survives
+   cockpit-sensor limits — a legitimate simulation question — and must not be written as
+   though it discovered that mechanisms differ.
+
+## 16. Order of execution (Part B)
+
+1. Wait for F13 gate one (G1b decides whether "sequence model" or "shape features" heads the
+   claim).
+2. Freeze Part B as `prereg-v18`, separately from Part A.
+3. Attribution task: Bi-LSTM vs unidirectional vs GPA rule → H15.1, H15.2.
+4. Certificate-gated hybrid → H15.3.
+5. KPI layer K1–K6 with the turnaround sweep → H15.4, H15.5.
+6. Report chapter, figures, A2 entry. Commit and push.
