@@ -1207,6 +1207,50 @@ def fig_bidir():
     print('  bidirectionality figure done')
 
 
+def fig_cert_isolated():
+    """H15.11: the certificate contrast with channel count held fixed."""
+    import matplotlib.pyplot as plt
+    path = (REPO_ROOT / 'data' / 'processed' / 'f19' /
+            'cert_isolated_verdict.json')
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())
+    pa = v['per_arm']
+    arms = ['B_raw', 'C1_masked', 'C2_raw_plus_crb', 'C_masked_plus_crb']
+    labels = ['B\nraw\n(15 ch)', 'C1\nmasked\n(15 ch)',
+              'C2\nraw+CRB\n(25 ch)', 'C\nmasked+CRB\n(25 ch)']
+    INK, BLUE, RED, GRAY = '#212529', '#4263EB', '#E03131', '#CED4DA'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.8, 3.2))
+    seeds = sorted(pa['B_raw']['per_seed'], key=int)
+    for s in seeds:                                  # paired lines
+        ax.plot(range(4), [pa[a]['per_seed'][s] for a in arms],
+                color=GRAY, lw=0.6, zorder=1)
+    for i, a in enumerate(arms):
+        y = [pa[a]['per_seed'][s] for s in seeds]
+        ax.scatter([i] * len(y), y, s=18, zorder=3,
+                   color=RED if a == 'C1_masked' else BLUE)
+        m = pa[a]['mean']
+        ax.plot([i - 0.24, i + 0.24], [m, m], color=INK, lw=2.0, zorder=4)
+        ax.annotate(f'{m:+.3f}', (i, m), xytext=(0, 9),
+                    textcoords='offset points', ha='center', fontsize=7.5)
+    pr = v['primary_C1_masked_vs_B_raw']
+    ax.annotate(f"primary, count-matched: {pr['delta']:+.3f}  "
+                f"$t$={pr['paired_t']:.2f}",
+                (0.5, ax.get_ylim()[0]), xytext=(0, 6),
+                textcoords='offset points', ha='center', fontsize=7.5, color=RED)
+    ax.set_xticks(range(4)); ax.set_xticklabels(labels, fontsize=7.5)
+    ax.set_xlim(-0.5, 3.5)
+    ax.set_ylabel('mechanism-attribution $R^2$ (per seed)')
+    ax.set_title('masking the estimate with the certificate HURTS, at equal '
+                 'channel count', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'cert_isolated.pdf'); plt.close(fig)
+    print('  certificate isolation figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2146,6 +2190,7 @@ def artifact_assets():
     fig_f15_instrument()
     fig_gate_t()
     fig_bidir()
+    fig_cert_isolated()
     fig_hybrid_arms()
     fig_confusable_angles()
     gpa_assets()

@@ -773,6 +773,78 @@ numbers cannot be read without it. Hyperparameters were selected by F13 for arm 
 channels and inherited by B and C, so arms with more channels were never separately tuned ---
 a limitation that cuts against C, not for it.
 
+\section{L-CERT: the certificate contrast, with channel count held fixed}
+\label{sec:f19-cert}
+
+\paragraph{Chasing this project's own loose end.} \Cref{sec:f17-hybrid} reported a post-hoc
+$C - B$ of $+0.053$ ($t = 2.24$, $p = 0.026$) --- whether gating the GPA estimate with the
+certificate adds anything on top of the raw estimate --- and declined to claim it. Revisiting
+it, that post-hoc \textbf{carried the same defect that had just killed the primary
+hypothesis}: arm $C$ had 25 channels and arm $B$ had 15, so $C - B$ was capacity-confounded one
+level down from $C - A$. Reporting it as evidence for the certificate would have repeated
+exactly the error the control arm existed to catch.
+
+Arm $C$ also varied two things at once: it \emph{masked} the estimate to the
+certified-identifiable subspace \emph{and} appended the per-direction CRB as static channels.
+Those are separate claims --- one about the certificate's tags, one about its magnitudes. Four
+arms separate them, and two pairs are matched on channel count by construction
+(\code{scripts/f19\_certificate\_isolated.py}, \code{prereg-v22}, fifteen seeds, paired):
+
+\begin{center}\small
+\begin{tabular}{@{}llrr@{}}
+  \toprule
+  Arm & Input on top of the four deviation channels & ch & mean $\pm$ sd \\
+  \midrule
+  $B$   & raw 10-dim Kalman GPA estimate & 15 & $+0.385 \pm 0.073$ \\
+  $C_1$ & the estimate \emph{masked} to the identifiable subspace & 15 & $+0.267 \pm 0.121$ \\
+  $C_2$ & raw estimate $+$ per-direction CRB channels & 25 & $+0.399 \pm 0.081$ \\
+  $C$   & masked estimate $+$ CRB channels & 25 & $+0.406 \pm 0.066$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{center}\small
+\begin{tabular}{@{}llrrl@{}}
+  \toprule
+  Role & Contrast & $\Delta$ & paired $t$ & $p$ (one-sided) \\
+  \midrule
+  \textbf{primary} (count-matched) & $C_1 - B$ & $\mathbf{-0.119}$ & $-3.72$ & $0.999$ \\
+  secondary (count-matched) & $C - C_2$ & $+0.007$ & $0.24$ & $0.407$ \\
+  \emph{reported, not a test} & $C_2 - B$ & $+0.014$ & --- & count-confounded \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.66\textwidth]{cert_isolated}
+  \caption{The certificate contrast at fixed channel count; grey lines join the same seed across
+  arms. Masking the estimate with the certificate is the red arm. Auto-generated
+  (\protect\code{prereg-v22}).}
+  \label{fig:cert-isolated}
+\end{figure}
+
+\textbf{H15.11 refuted, and in the opposite direction.} Masking with the certificate does not
+help; it \emph{hurts}, by $0.119$ at $t = -3.72$, with channel count equal by construction so
+no capacity explanation remains. And the CRB as an input channel contributes nothing:
+$C - C_2 = +0.007$ ($p = 0.41$), also count-matched.
+
+\keyidea{The L-HYB post-hoc was the channel count. Tested with the counts equalised, its sign \emph{inverts}. That is the second post-hoc in this chapter to dissolve once its confound is removed --- and it is why the control arm, not the headline, is the part of an experiment worth designing carefully.}
+
+\paragraph{Why masking hurts, which should have been foreseen.} The certificate tags a direction
+\code{unobservable} when its CRB is \emph{large} --- that is, where the estimate is
+\emph{imprecise}, not where it is empty. Zeroing those components discards information that is
+noisy but not absent: a smeared estimate of $\eta_{\mathrm{HPC}}$ still says \emph{hot-section-ish
+rather than fan-ish}, and \cref{sec:f17-hybrid} is precisely the finding that a learner exploits
+that. Masking destroys it, and the seed spread widens accordingly ($\pm0.121$ against $B$'s
+$\pm0.073$).
+
+So the certificate is right about what it certifies and wrong as a filter. \textbf{A precision
+bound is not an absence of information} --- and using one to discard data is a misreading of the
+instrument this project built. That is a genuine correction to how \cref{ch:breakthrough}'s
+certificate should be used downstream, and it was only available because the contrast was run
+with the confound removed.
+
 \section{L-BIDIR: is the published architecture's advantage direction or capacity?}
 \label{sec:f18-bidir}
 
@@ -1183,6 +1255,7 @@ are allowed to fail.
     L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.46$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
     L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
     L-HYB & Does the certificate work as a physics-injection channel? & \textbf{Refuted by its control} --- both physics arms beat pure ($p<0.001$), so the gain is channels. But injection \emph{works} on attribution where H4/L6 refuted it on prognosis (\cref{sec:f17-hybrid}) \\
+    L-CERT & Does gating the GPA estimate with the certificate help? & \textbf{No --- it hurts} ($-0.119$, $t=-3.72$) at equal channel count; the CRB as input adds nothing ($+0.007$). L-HYB's post-hoc was the channel count (\cref{sec:f19-cert}) \\
     L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity} --- at equal parameters bidirectionality buys nothing ($p=0.19$/$0.42$); at doubled parameters it buys 94\,cy of RUL error ($p=0.016$) and still nothing on attribution (\cref{sec:f18-bidir}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
