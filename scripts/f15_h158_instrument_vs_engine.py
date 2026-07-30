@@ -142,20 +142,32 @@ def sequences(c, ids, labels, cuts=12, rng=None):
     return np.array(X, np.float32), np.array(y, np.float32), np.array(e)
 
 
-def net(ch):
+def net(ch, hidden=64):
+    """Bidirectional GRU with the CORRECT read of a bidirectional output.
+
+    The first version of this script took h[:, -1]. For the forward pass that is
+    right -- the state at the last step has seen everything. For the backward
+    pass it is wrong: a backward pass starts at the end, so at position -1 it has
+    seen exactly one sample, and half the representation handed to the head was
+    close to the raw last observation. Corrected here to forward-at-last
+    concatenated with backward-at-first (same bug and fix as F18/H15.2).
+    """
+    import torch
     import torch.nn as nn
 
     class Net(nn.Module):
         def __init__(self):
             super().__init__()
-            self.gru = nn.GRU(ch, 64, 2, batch_first=True, dropout=0.1,
+            self.h = hidden
+            self.gru = nn.GRU(ch, hidden, 2, batch_first=True, dropout=0.1,
                               bidirectional=True)
-            self.head = nn.Sequential(nn.Linear(128, 32), nn.GELU(),
+            self.head = nn.Sequential(nn.Linear(2 * hidden, 32), nn.GELU(),
                                       nn.Linear(32, 1))
 
         def forward(self, x):
-            h, _ = self.gru(x)
-            return self.head(h[:, -1]).squeeze(-1)
+            o, _ = self.gru(x)
+            z = torch.cat([o[:, -1, :self.h], o[:, 0, self.h:]], dim=-1)
+            return self.head(z).squeeze(-1)
 
     return Net()
 
@@ -249,6 +261,14 @@ def main():
             'inputs': '4 cockpit deviation channels + age, identical both families',
             'seeds': list(SEEDS)},
         'per_family': res,
+        'superseded_first_run': {
+            'classical_auc': 0.614, 'sequence_auc': 0.524,
+            'fraud_check': {'classical': 0.433, 'sequence': 0.377},
+            'note': ('the first pass read h[:, -1] from a bidirectional GRU, so '
+                     'the backward half of the representation had seen one '
+                     'sample. The classical arm shares none of that code and its '
+                     'number is unchanged; the sequence arm is re-run here with '
+                     'the pooling corrected')},
         'H15.8_instrument_vs_engine': {
             'auc_sequence': res['sequence_model']['auc_visible_drift'],
             'auc_classical': res['classical_augmented_kalman']['auc_visible_drift'],
