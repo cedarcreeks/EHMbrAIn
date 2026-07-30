@@ -319,7 +319,14 @@ repository\footnote{\url{https://github.com/cedarcreeks/EHMbrAIn}} with a reprod
 environment: Python~3.11 managed with \code{uv} and a fully pinned dependency lockfile;
 pyCycle~4.4 on OpenMDAO~\cite{Gray2019}; declarative YAML configuration; and automated tests
 (pytest) executed by continuous integration ---a service that re-runs the whole test suite on
-every change, so a regression cannot land silently. Data and experiments of later phases will
+every change, so a regression cannot land silently. One group of those tests deserves a
+mention here because it guards a \emph{finding} rather than a function:
+\code{tests/test\_time\_axis.py} encodes the time-axis rule of
+\cref{sec:f13-mech,sec:f15-instrument} --- two mechanisms matched at end of life must be
+separable by a shape descriptor when one has a wash sawtooth, and must \emph{not} be separable
+when both are smooth ramps. The studies behind that rule live in scripts the suite does not
+run, so without those tests a refactor could destroy the temporal signal silently.
+\Cref{sec:boundaries} states, separately, what this work is and is not authorised to do. Data and experiments of later phases will
 be versioned with DVC and MLflow respectively.
 
 Three concrete decisions illustrate the intended standard of rigor:
@@ -500,7 +507,7 @@ end to end (\cref{tab:compute}; per-stage breakdown measured by
     \code{uv} (the Python package manager).
   \item \code{uv sync} --- reproduces the exact pinned environment (Python 3.11,
     pyCycle 4.4, torch with MPS).
-  \item \code{uv run pytest} --- 38 tests must pass before anything else; they gate every
+  \item \code{uv run pytest} --- 44 tests must pass before anything else; they gate every
     claim in this document.
 \end{enumerate}
 

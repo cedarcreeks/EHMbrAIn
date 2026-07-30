@@ -286,6 +286,41 @@ that reinforce the observability wall. The three heaviest remaining lines (real-
 N-CMAPSS DS02, map-shape calibration) are characterized with hypotheses and gates in the
 plan.
 
+\section{Boundaries of use}
+\label{sec:boundaries}
+
+This work produces diagnostic and prognostic estimates, and one of its lines recommends
+\emph{which data to collect next} (\cref{ch:tomography,sec:bt-honesty}). Both sit near
+regulated activity, so the boundary is stated explicitly rather than left to be inferred; the
+full statement is \code{docs/safety-case-boundaries.md}.
+
+\textbf{What this is:} an offline engineering study, a benchmark and measurement method, and a
+decision-support instrument for engineering judgement --- which health directions a sensor set
+can resolve, how much of a remaining-life error is irreducible, which added measurement resolves
+the most.
+
+\textbf{What it is not, and must not become without a case of its own:} it does not control the
+engine, does not interface with the FADEC or any certified function, does not design new
+operational manoeuvres (a recommended \emph{observation} selects among conditions that are
+already authorised and already flown), does not modify limits or protections, and does not issue
+airworthiness determinations.
+
+\textbf{The rule that matters most:} \emph{a statistical prediction is never presented as a
+certified conclusion.} Three of this document's own findings exist to bound what may be claimed
+--- $87\,\%$ of mid-life remaining-life spread is irreducible, so a point estimate is not a
+failure date (\cref{sec:bt-prognostic-floor}); the confusable pair is unresolvable from cockpit
+sensors, so naming one component is not evidence the other is healthy (\cref{sec:res-h2});
+and a drifting sensor cannot be told from real degradation, so every diagnosis here is
+conditional on instrument health the method cannot verify (\cref{sec:f15-instrument}).
+
+Every output is advisory to a qualified engineer, traceable to the script, pre-registration tag,
+data version and seeds that produced it. Before any operational use, four prerequisites are
+listed in the boundaries document, and none has been done --- validation on real engine data,
+a verification case covering the silent-collapse and seed-instability failure modes this project
+itself documented (\cref{sec:f14-ext,sec:f18-bidir}), an assessment against the applicable
+regulatory framework, and human-factors work on presenting an interval so it is not read as a
+certainty.
+
 \section{Future work}
 
 \subsection{The one line that must be run}

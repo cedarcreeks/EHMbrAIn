@@ -57,7 +57,7 @@ TeXstudio users: set the bibliography tool to Biber (Options → Configure → B
 
 ```bash
 make all        # full pipeline -> verdicts -> case studies -> report PDF
-make test       # 37 gate tests
+make test       # 44 gate tests
 uv run streamlit run dashboard/app.py   # interactive fleet/engine/verdicts views
 ```
 
