@@ -1162,6 +1162,51 @@ def fig_hybrid_arms():
     print('  hybrid arms figure done')
 
 
+def fig_bidir():
+    """H15.2: direction versus capacity, both tasks, paired per seed."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f18' / 'bidir_verdict.json'
+    if not path.exists():
+        return
+    v = json.loads(path.read_text())
+    arms = ['uni', 'bi_equal', 'bi_double']
+    labels = ['uni\n(128)', 'bi equal\n(64/dir)', 'bi double\n(128/dir)']
+    INK, BLUE, TEAL, GRAY = '#212529', '#4263EB', '#1098AD', '#CED4DA'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, axes = plt.subplots(1, 2, figsize=(6.6, 3.0))
+    for ax, task, ylab in zip(
+            axes, ('attribution', 'prognosis'),
+            ('attribution $R^2$ (per seed)', 'RUL RMSE [cycles] (per seed)')):
+        pt = v['per_task'][task]
+        seeds = sorted(pt['uni']['per_seed'], key=int)
+        for s in seeds:
+            ax.plot([0, 1, 2], [pt[a]['per_seed'][s] for a in arms],
+                    color=GRAY, lw=0.7, zorder=1)
+        for i, a in enumerate(arms):
+            y = [pt[a]['per_seed'][s] for s in seeds]
+            sig = (a != 'uni'
+                   and v[f'H15.2_{task}'][a]['significant'])
+            ax.scatter([i] * len(y), y, s=20, zorder=3,
+                       color=TEAL if sig else BLUE)
+            m = pt[a]['mean']
+            ax.plot([i - 0.22, i + 0.22], [m, m], color=INK, lw=2.0, zorder=4)
+            if sig:
+                ax.annotate('$p$=%.3f' % v[f'H15.2_{task}'][a]['p_one_sided'],
+                            (i, m), xytext=(0, -14), textcoords='offset points',
+                            ha='center', fontsize=7.5, color=TEAL)
+        ax.set_xticks([0, 1, 2]); ax.set_xticklabels(labels, fontsize=7.5)
+        ax.set_xlim(-0.45, 2.45)
+        ax.set_ylabel(ylab, fontsize=8)
+        ax.set_title(task, fontsize=8.5)
+    fig.suptitle('bidirectionality buys nothing; the doubled parameter budget does '
+                 '--- and only on prognosis', fontsize=8.5)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'bidir.pdf'); plt.close(fig)
+    print('  bidirectionality figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2100,6 +2145,7 @@ def artifact_assets():
     fig_f14_bilstm()
     fig_f15_instrument()
     fig_gate_t()
+    fig_bidir()
     fig_hybrid_arms()
     fig_confusable_angles()
     gpa_assets()

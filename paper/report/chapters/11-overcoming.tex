@@ -764,6 +764,87 @@ numbers cannot be read without it. Hyperparameters were selected by F13 for arm 
 channels and inherited by B and C, so arms with more channels were never separately tuned ---
 a limitation that cuts against C, not for it.
 
+\section{L-BIDIR: is the published architecture's advantage direction or capacity?}
+\label{sec:f18-bidir}
+
+\paragraph{The one architectural claim with an argument behind it.}
+\Cref{sec:f14-ext} showed the source paper's fifteen-way ranking sits inside seed noise, but
+that is a statistical objection, not an engineering one. The paper's actual subject ---
+\emph{bi}directional recurrence --- does have a physical argument, and it predicts where it
+should and should not pay:
+
+\begin{itemize}
+  \item \textbf{Attribution} is decided at removal, with the whole history in hand. A backward
+    pass is then legitimate smoothing rather than forecasting, and should be informative: a
+    late wash sawtooth re-labels ambiguous early fouling; an end-of-life flow-capacity rise
+    re-labels a mid-life efficiency drop as hot-section creep.
+  \item \textbf{Prognosis} runs the backward pass over an input window that is entirely past.
+    No leakage, but no future context inside the window to exploit either.
+\end{itemize}
+
+Pre-registered as \code{prereg-v21}: bidirectionality should help attribution and barely help
+prognosis. \textbf{The measurement inverted both halves.}
+
+\paragraph{Separating the two things a Bi-LSTM changes.} A Keras bidirectional layer of
+nominal width $w$ carries \emph{twice} the parameters of a unidirectional layer of width $w$,
+so any bi-versus-uni comparison at equal nominal width confounds \emph{direction} with
+\emph{capacity}. Three arms separate them, sharing everything else --- data, sequences, ten
+seeds, paired on seed (\code{scripts/f18\_bidirectionality.py}):
+
+\begin{center}\small
+\begin{tabular}{@{}llrrl@{}}
+  \toprule
+  Task & Arm & mean $\pm$ sd & $\Delta$ vs uni & paired $p$ \\
+  \midrule
+  \multirow{3}{*}{attribution ($R^2$)}
+    & \code{uni} (128)          & $+0.181 \pm 0.114$ & --- & --- \\
+    & \code{bi\_equal} (64/dir) & $+0.230 \pm 0.097$ & $+0.049$ & $0.189$ \\
+    & \code{bi\_double} (128/dir) & $+0.167 \pm 0.103$ & $-0.013$ & $0.601$ \\
+  \midrule
+  \multirow{3}{*}{prognosis (cy RMSE)}
+    & \code{uni} (128)          & $1\,490.9 \pm 120.8$ & --- & --- \\
+    & \code{bi\_equal} (64/dir) & $1\,475.6 \pm 172.9$ & $-15.3$ & $0.419$ \\
+    & \code{bi\_double} (128/dir) & $\mathbf{1\,396.7 \pm 85.1}$ & $\mathbf{-94.2}$ & $\mathbf{0.016}$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.82\textwidth]{bidir}
+  \caption{Direction against capacity on both tasks; grey lines join the same seed across arms,
+  which is the pairing the statistics use. Auto-generated (\protect\code{prereg-v21}).}
+  \label{fig:bidir}
+\end{figure}
+
+\keyidea{At \emph{equal} parameter budget, bidirectionality buys nothing on either task ($p = 0.19$ and $p = 0.42$). At \emph{doubled} budget it buys $94$ cycles of RUL error ($p = 0.016$) and still nothing on attribution. So the published Bi-LSTM's edge over an LSTM is \textbf{capacity, not direction} --- a second confound in that paper, independent of its seed-noise ranking.}
+
+\textbf{H15.2 refuted, in both halves.} Bidirectionality did not help attribution, and it did
+help prognosis. The stated mechanism was therefore wrong, and the likely reason is visible in
+the design: the trajectory is resampled to a fixed 256 steps, so the \emph{forward} pass
+already sees the global shape of the whole history. The backward pass adds little because the
+discriminating structure is not localized at the start of the record. What the extra capacity
+buys, it buys on prognosis --- the task that has to compress a whole degradation curve into one
+number.
+
+\paragraph{A cross-run instability worth stating.} The \code{uni} attribution arm scores
+$+0.181$ here, $+0.248$ as arm A of \cref{sec:f17-hybrid}, and $+0.414$ in
+\cref{sec:f13-mech} --- three runs of a nominally identical configuration. With a per-seed sd
+of $0.114$ that is consistent, but the consequence is a rule for reading this chapter:
+\textbf{only paired comparisons within a single run are reliable}, and numbers must not be
+subtracted across studies. Every verdict above is a within-run paired test for exactly that
+reason.
+
+\paragraph{Disclosed: the first run of this line was void.} It read \code{o[:, -1]} from the
+bidirectional layer. That position is correct for a forward pass but not for a backward one,
+which starts at the end and has therefore seen a single sample there --- so half the
+representation reaching the head was close to the raw last observation, and the bidirectional
+arms were crippled by construction. It reported attribution collapsing from $+0.241$ to
+$-0.008$, which would have looked like a dramatic refutation and was an implementation error.
+The corrected read is forward-at-last concatenated with backward-at-first. The void numbers are
+retained in the verdict JSON. The same defect was found and fixed in
+\cref{sec:f15-instrument}'s learned arm.
+
 \section{Gate T: would transients open the confusable angle?}
 \label{sec:gate-t}
 
@@ -1093,6 +1174,7 @@ are allowed to fail.
     L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.52$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
     L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
     L-HYB & Does the certificate work as a physics-injection channel? & \textbf{Refuted by its control} --- both physics arms beat pure ($p<0.001$), so the gain is channels. But injection \emph{works} on attribution where H4/L6 refuted it on prognosis (\cref{sec:f17-hybrid}) \\
+    L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity} --- at equal parameters bidirectionality buys nothing ($p=0.19$/$0.42$); at doubled parameters it buys 94\,cy of RUL error ($p=0.016$) and still nothing on attribution (\cref{sec:f18-bidir}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\

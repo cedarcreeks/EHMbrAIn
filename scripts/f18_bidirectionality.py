@@ -38,8 +38,8 @@ Usage: uv run python scripts/f18_bidirectionality.py
 """
 
 import json
-import multiprocessing as mp
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -57,6 +57,7 @@ from ehmbrain.datagen.fleet import load_icm                       # noqa: E402
 REPO_ROOT = Path(__file__).resolve().parents[1]
 OUT = REPO_ROOT / 'data' / 'processed' / 'f18'
 SEEDS = tuple(range(10))
+ARMS = ('uni', 'bi_equal', 'bi_double')
 ALPHA = 0.05
 RUL_CAP = 12000.0
 
@@ -105,34 +106,45 @@ def net(ch, n_out, arm, hidden=128, layers=2):
 
 
 # --------------------------------------------------------------------------
-# One training = one independent job. Sixty of them run sequentially in about
-# three hours; MPS buys only 1.26x over a single CPU thread here because the
-# model is tiny (12 batches per epoch), so the GPU idles waiting for Python.
-# Eight single-threaded CPU workers finish in about 25 minutes instead, and the
-# seeds stay reproducible because each job carries its own explicit seed.
+# PARALLELISM. Sixty independent trainings run in about three hours in series;
+# MPS buys only 1.26x over a single CPU thread here because the model is tiny
+# (twelve batches per epoch), so the GPU idles waiting for Python. Eight
+# single-threaded CPU processes finish in roughly twenty-five minutes.
+#
+# Not multiprocessing: spawn hung re-importing this module (and with it torch,
+# sklearn and optuna) in every child, and fork deadlocked because the parent
+# already holds BLAS/torch worker threads that fork does not copy -- the classic
+# macOS Accelerate-plus-fork hazard. Clean subprocesses avoid both, and as a
+# bonus each shard is separately observable and restartable.
+#
+# Parent: build once, cache to npz, launch N shards, collect. Shard: load the
+# cache, train its slice, write predictions. Seeds are explicit per job, so the
+# result does not depend on how the work was divided.
 # --------------------------------------------------------------------------
 
-_JOB = {}
 
-
-def _init(Xtr, Ytr_m, Ytr_r, Xte):
+def _shard_main(shard, n_shards):
     import torch
     torch.set_num_threads(1)
-    _JOB.update(Xtr=Xtr, m=Ytr_m, r=Ytr_r, Xte=Xte)
-
-
-def _run_job(job):
-    """(task, arm, seed) -> score. Runs in a worker process, CPU, one thread."""
-    import numpy as np
-    import torch
     from ehmbrain.ai.models import predict_torch, train_torch
-    task, arm, seed = job
-    Ytr = _JOB['m'] if task == 'attribution' else _JOB['r']
-    n_out = Ytr.shape[1]
+    z = np.load(OUT / 'cache.npz')
+    Xtr, Mtr, Rtr, Xte = z['Xtr'], z['Mtr'], z['Rtr'], z['Xte']
     cpu = torch.device('cpu')
-    m = train_torch(net(_JOB['Xtr'].shape[2], n_out, arm), _JOB['Xtr'], Ytr,
-                    epochs=122, lr=0.0057, bs=128, seed=seed, dev=cpu)
-    return task, arm, seed, predict_torch(m, _JOB['Xte'], dev=cpu)
+    jobs = [j for i, j in enumerate(_all_jobs()) if i % n_shards == shard]
+    out = {}
+    for k, (task, arm, seed) in enumerate(jobs, 1):
+        Ytr = Mtr if task == 'attribution' else Rtr
+        m = train_torch(net(Xtr.shape[2], Ytr.shape[1], arm), Xtr, Ytr,
+                        epochs=122, lr=0.0057, bs=128, seed=seed, dev=cpu)
+        out[f'{task}|{arm}|{seed}'] = predict_torch(m, Xte, dev=cpu)
+        print(f'  shard {shard}: {k}/{len(jobs)}  {task} {arm} seed {seed}',
+              flush=True)
+    np.savez_compressed(OUT / f'preds_{shard}.npz', **out)
+
+
+def _all_jobs():
+    return [(t, a, s) for t in ('attribution', 'prognosis')
+            for a in ARMS for s in SEEDS]
 
 
 def build(catalog, H, ch, base, c, ids, rng):
@@ -177,20 +189,28 @@ def main():
 
     tasks = {'attribution': (Mtr, Mte, len(MECHANISMS)),
              'prognosis': (Rtr, Rte, 1)}
-    ARMS = ('uni', 'bi_equal', 'bi_double')
 
-    jobs = [(t, a, s_) for t in tasks for a in ARMS for s_ in SEEDS]
-    n_proc = min(8, max(1, (os.cpu_count() or 4) - 2))
-    print(f'== {len(jobs)} trainings over {n_proc} worker processes ==', flush=True)
+    np.savez_compressed(OUT / 'cache.npz', Xtr=Xtr, Mtr=Mtr, Rtr=Rtr, Xte=Xte)
+    jobs = _all_jobs()
+    n_shards = min(8, max(1, (os.cpu_count() or 4) - 2))
+    print(f'== {len(jobs)} trainings over {n_shards} shard processes ==', flush=True)
     t0 = time.time()
+    procs = [subprocess.Popen(
+        [sys.executable, '-u', str(Path(__file__).resolve()),
+         '--shard', str(i), str(n_shards)]) for i in range(n_shards)]
+    for pr in procs:
+        pr.wait()
+    bad = [i for i, pr in enumerate(procs) if pr.returncode != 0]
+    if bad:
+        raise SystemExit(f'shards failed: {bad}')
+    print(f'   all shards done [{(time.time() - t0) / 60:.1f} min]', flush=True)
+
     preds = {}
-    with mp.get_context('spawn').Pool(
-            n_proc, initializer=_init, initargs=(Xtr, Mtr, Rtr, Xte)) as pool:
-        for k, (task, arm, seed, p) in enumerate(
-                pool.imap_unordered(_run_job, jobs), 1):
-            preds[(task, arm, seed)] = p
-            print(f'    [{k:2d}/{len(jobs)}] {task:12s} {arm:10s} seed {seed} '
-                  f'[{(time.time() - t0) / 60:.1f} min]', flush=True)
+    for i in range(n_shards):
+        z = np.load(OUT / f'preds_{i}.npz')
+        for k in z.files:
+            t, a, sd = k.split('|')
+            preds[(t, a, int(sd))] = z[k]
 
     res, per_seed = {}, {}
     for task, (Ytr, Yte, n_out) in tasks.items():
@@ -202,7 +222,7 @@ def main():
                 p = preds[(task, arm, s_)]
                 if task == 'attribution':
                     sc = float(np.nanmean(r2_per_col(Yte, p, ymean)))
-                else:                       # RUL: RMSE in cycles
+                else:
                     sc = float(np.sqrt(np.mean((p - Yte) ** 2)) * 1000.0)
                 per_seed[task][arm][s_] = sc
             vals = list(per_seed[task][arm].values())
@@ -281,4 +301,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--shard':
+        OUT.mkdir(parents=True, exist_ok=True)
+        _shard_main(int(sys.argv[2]), int(sys.argv[3]))
+    else:
+        main()
