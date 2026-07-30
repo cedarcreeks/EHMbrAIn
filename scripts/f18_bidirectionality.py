@@ -38,7 +38,10 @@ Usage: uv run python scripts/f18_bidirectionality.py
 """
 
 import json
+import multiprocessing as mp
+import os
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -101,6 +104,37 @@ def net(ch, n_out, arm, hidden=128, layers=2):
     return Net()
 
 
+# --------------------------------------------------------------------------
+# One training = one independent job. Sixty of them run sequentially in about
+# three hours; MPS buys only 1.26x over a single CPU thread here because the
+# model is tiny (12 batches per epoch), so the GPU idles waiting for Python.
+# Eight single-threaded CPU workers finish in about 25 minutes instead, and the
+# seeds stay reproducible because each job carries its own explicit seed.
+# --------------------------------------------------------------------------
+
+_JOB = {}
+
+
+def _init(Xtr, Ytr_m, Ytr_r, Xte):
+    import torch
+    torch.set_num_threads(1)
+    _JOB.update(Xtr=Xtr, m=Ytr_m, r=Ytr_r, Xte=Xte)
+
+
+def _run_job(job):
+    """(task, arm, seed) -> score. Runs in a worker process, CPU, one thread."""
+    import numpy as np
+    import torch
+    from ehmbrain.ai.models import predict_torch, train_torch
+    task, arm, seed = job
+    Ytr = _JOB['m'] if task == 'attribution' else _JOB['r']
+    n_out = Ytr.shape[1]
+    cpu = torch.device('cpu')
+    m = train_torch(net(_JOB['Xtr'].shape[2], n_out, arm), _JOB['Xtr'], Ytr,
+                    epochs=122, lr=0.0057, bs=128, seed=seed, dev=cpu)
+    return task, arm, seed, predict_torch(m, _JOB['Xte'], dev=cpu)
+
+
 def build(catalog, H, ch, base, c, ids, rng):
     """Shared sequences; two targets so the tasks differ only in what is asked."""
     X, Ymech, Yrul = [], [], []
@@ -140,32 +174,42 @@ def main():
     print(f'   train {len(Xtr)} / test {len(Xte)} cuts', flush=True)
 
     from scipy import stats
-    from ehmbrain.ai.models import predict_torch, train_torch
 
     tasks = {'attribution': (Mtr, Mte, len(MECHANISMS)),
              'prognosis': (Rtr, Rte, 1)}
     ARMS = ('uni', 'bi_equal', 'bi_double')
+
+    jobs = [(t, a, s_) for t in tasks for a in ARMS for s_ in SEEDS]
+    n_proc = min(8, max(1, (os.cpu_count() or 4) - 2))
+    print(f'== {len(jobs)} trainings over {n_proc} worker processes ==', flush=True)
+    t0 = time.time()
+    preds = {}
+    with mp.get_context('spawn').Pool(
+            n_proc, initializer=_init, initargs=(Xtr, Mtr, Rtr, Xte)) as pool:
+        for k, (task, arm, seed, p) in enumerate(
+                pool.imap_unordered(_run_job, jobs), 1):
+            preds[(task, arm, seed)] = p
+            print(f'    [{k:2d}/{len(jobs)}] {task:12s} {arm:10s} seed {seed} '
+                  f'[{(time.time() - t0) / 60:.1f} min]', flush=True)
+
     res, per_seed = {}, {}
     for task, (Ytr, Yte, n_out) in tasks.items():
         ymean = Ytr.mean(axis=0)
         per_seed[task] = {}
-        for key in ARMS:
-            per_seed[task][key] = {}
-            for s in SEEDS:
-                m = train_torch(net(Xtr.shape[2], n_out, key), Xtr, Ytr,
-                                epochs=122, lr=0.0057, bs=128, seed=s)
-                p = predict_torch(m, Xte)
+        for arm in ARMS:
+            per_seed[task][arm] = {}
+            for s_ in SEEDS:
+                p = preds[(task, arm, s_)]
                 if task == 'attribution':
                     sc = float(np.nanmean(r2_per_col(Yte, p, ymean)))
-                else:                       # RUL: report RMSE in cycles
+                else:                       # RUL: RMSE in cycles
                     sc = float(np.sqrt(np.mean((p - Yte) ** 2)) * 1000.0)
-                per_seed[task][key][s] = sc
-                print(f'    {task:12s} {key:15s} seed {s}  {sc:+.3f}', flush=True)
-            vals = list(per_seed[task][key].values())
-            res.setdefault(task, {})[key] = {
+                per_seed[task][arm][s_] = sc
+            vals = list(per_seed[task][arm].values())
+            res.setdefault(task, {})[arm] = {
                 'mean': float(np.mean(vals)),
                 'sd': float(np.std(vals, ddof=1)),
-                'per_seed': per_seed[task][key]}
+                'per_seed': per_seed[task][arm]}
 
     verdict = {'design': {
         'seeds': list(SEEDS), 'seq_len': SEQ_LEN,
