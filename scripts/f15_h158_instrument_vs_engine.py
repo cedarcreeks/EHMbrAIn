@@ -37,7 +37,10 @@ Usage: uv run python scripts/f15_h158_instrument_vs_engine.py
 """
 
 import json
+import os
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
@@ -85,10 +88,13 @@ def drift_labels():
 # family A: classical -- augmented-state Kalman bias magnitude (L7 machinery)
 # --------------------------------------------------------------------------
 
-def classical_scores(labels):
+def classical_scores(labels, only=None):
     """Max |b_hat| over the trajectory, per candidate biased channel, taking the
     strongest as the engine's 'this is an instrument' score. No training, so no
-    cross-validation needed -- every engine is scored the same way."""
+    cross-validation needed -- every engine is scored the same way.
+
+    `only` restricts the sweep to a subset of engines so the work can be split
+    across shard processes; it is embarrassingly parallel per engine."""
     H, ch, base = load_icm('cruise')
     bm = BaselineModel()
     snap = pd.read_parquet(FLEET / 'snapshots.parquet',
@@ -96,6 +102,8 @@ def classical_scores(labels):
                            + [f'cr_{c}' for c in COCKPIT])
     out, traj = {}, {}
     for eid, g in snap.groupby('engine_id'):
+        if only is not None and int(eid) not in only:
+            continue
         g = g.sort_values('cycle')
         n1 = g.cr_N1_cmd.to_numpy()
         meas = g[[f'cr_{c}' for c in COCKPIT]].to_numpy(float)
@@ -172,6 +180,57 @@ def net(ch, hidden=64):
     return Net()
 
 
+# --------------------------------------------------------------------------
+# PARALLELISM. Two slow stages, both embarrassingly parallel and both previously
+# serial: the Kalman sweep (100 engines x 3 candidate bias channels, pure numpy,
+# ~10 min) and the cross-validation (5 folds x 3 seeds, ~45 min). Split into
+# clean subprocesses -- not multiprocessing, because spawn hangs re-importing
+# this module and fork deadlocks on the parent's BLAS/torch threads, the classic
+# macOS Accelerate-plus-fork hazard (see scripts/f18_bidirectionality.py).
+# --------------------------------------------------------------------------
+
+
+def _shard_classical(shard, n_shards):
+    labels = drift_labels()
+    ids = sorted(int(e) for e in labels)
+    mine = set(ids[shard::n_shards])
+    out, _ = classical_scores(labels, only=mine)
+    (OUT / f'cls_{shard}.json').write_text(
+        json.dumps({str(k): v for k, v in out.items()}))
+    print(f'  classical shard {shard}: {len(out)} engines', flush=True)
+
+
+def _shard_fold(shard, n_shards):
+    """One cross-validation fold: train on the rest, score the held-out engines."""
+    import torch
+    torch.set_num_threads(1)
+    import torch.nn as nn
+    from ehmbrain.ai.models import predict_torch, train_torch
+    z = np.load(OUT / 'folds.npz', allow_pickle=True)
+    folds = [np.asarray(f) for f in z['folds']]
+    labels = {int(k): v for k, v in json.loads(
+        (OUT / 'labels.json').read_text()).items()}
+    c = fleet_cache()
+    ids = sorted(int(e) for e in labels if labels[e]['keep'])
+    te_ids = folds[shard].tolist()
+    tr_ids = [i for i in ids if i not in set(te_ids)]
+    lab = {k: {'drift': v['drift']} for k, v in labels.items()}
+    Xtr, ytr, _ = sequences(c, tr_ids, lab, cuts=12,
+                            rng=np.random.default_rng(100 + shard))
+    Xte, _, ete = sequences(c, te_ids, lab, cuts=12,
+                            rng=np.random.default_rng(200 + shard))
+    cpu = torch.device('cpu')
+    preds = []
+    for sd in SEEDS:
+        m = train_torch(net(Xtr.shape[2]), Xtr, ytr, epochs=40, lr=1e-3,
+                        bs=64, seed=sd, loss_fn=nn.BCEWithLogitsLoss(), dev=cpu)
+        preds.append(predict_torch(m, Xte, dev=cpu))
+    pmean = np.mean(preds, axis=0)
+    out = {str(int(e)): float(np.mean(pmean[ete == e])) for e in np.unique(ete)}
+    (OUT / f'seq_{shard}.json').write_text(json.dumps(out))
+    print(f'  fold shard {shard}: {len(out)} engines', flush=True)
+
+
 def sequence_scores(c, labels, pos_ids, neg_ids):
     """Pooled out-of-fold engine scores from grouped 5-fold CV."""
     import torch.nn as nn
@@ -229,10 +288,39 @@ def main():
     print(f'visible-drift positives {len(pos)}  invisible {len(inv)}  '
           f'clean {len(neg)}', flush=True)
 
-    print('== family A: augmented-state Kalman (L7) ==', flush=True)
-    cls, _ = classical_scores(labels)
-    print('== family B: Bi-GRU, grouped 5-fold CV ==', flush=True)
-    seq = sequence_scores(c, labels, pos + inv, neg)
+    n_proc = min(8, max(1, (os.cpu_count() or 4) - 2))
+
+    def dispatch(stage, n_shards, tag):
+        t0 = time.time()
+        procs = [subprocess.Popen(
+            [sys.executable, '-u', str(Path(__file__).resolve()),
+             '--shard', stage, str(i), str(n_shards)]) for i in range(n_shards)]
+        for pr in procs:
+            pr.wait()
+        bad = [i for i, pr in enumerate(procs) if pr.returncode != 0]
+        if bad:
+            raise SystemExit(f'{stage} shards failed: {bad}')
+        merged = {}
+        for i in range(n_shards):
+            merged.update(json.loads((OUT / f'{tag}_{i}.json').read_text()))
+        print(f'   {stage} done [{(time.time() - t0) / 60:.1f} min]', flush=True)
+        return {int(k): v for k, v in merged.items()}
+
+    print(f'== family A: augmented-state Kalman (L7), {n_proc} shards ==', flush=True)
+    cls = dispatch('classical', n_proc, 'cls')
+
+    # cache what the fold shards need: labels and the fold split
+    keep = set(pos + inv + neg)
+    (OUT / 'labels.json').write_text(json.dumps(
+        {str(k): {'drift': bool(v['drift']), 'keep': int(k) in keep}
+         for k, v in labels.items()}))
+    ids = sorted(pos + inv + neg)
+    order = np.random.default_rng(5).permutation(ids)
+    folds = np.array_split(order, FOLDS)
+    np.savez(OUT / 'folds.npz', folds=np.array(folds, dtype=object))
+    print(f'== family B: Bi-GRU, grouped {FOLDS}-fold CV, {FOLDS} shards ==',
+          flush=True)
+    seq = dispatch('fold', FOLDS, 'seq')
 
     res = {}
     for name, sc in (('classical_augmented_kalman', cls), ('sequence_model', seq)):
@@ -296,4 +384,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--shard':
+        OUT.mkdir(parents=True, exist_ok=True)
+        stage, sh, n = sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+        (_shard_classical if stage == 'classical' else _shard_fold)(sh, n)
+    else:
+        main()

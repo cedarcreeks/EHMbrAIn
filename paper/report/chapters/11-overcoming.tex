@@ -572,7 +572,7 @@ trajectory, three seeds per fold.
   Family & AUC & 95\,\% CI & fraud check \\
   \midrule
   augmented Kalman (classical) & $0.614$ & $[0.430,\ 0.789]$ & $0.433$ \\
-  Bi-GRU (sequence)            & $0.524$ & $[0.317,\ 0.731]$ & $0.377$ \\
+  Bi-GRU (sequence)            & $0.463$ & $[0.286,\ 0.657]$ & $0.405$ \\
   \bottomrule
 \end{tabular}
 \end{center}
@@ -586,8 +586,17 @@ trajectory, three seeds per fold.
   \label{fig:f15-instrument}
 \end{figure}
 
-\textbf{H15.8 refuted.} Neither family separates the two. Both intervals contain $0.5$ and the
-learned family is at chance.
+\textbf{H15.8 refuted.} Neither family separates the two. Both intervals contain $0.5$, and
+the learned family sits \emph{below} it --- worse than a coin.
+
+\paragraph{Re-run with the pooling corrected, and the conclusion held.} The learned arm
+originally used the same defective bidirectional read diagnosed in \cref{sec:f18-bidir}
+(\code{o[:, -1]}, which for a backward pass has seen one sample). Repeating this study with
+the correct read moved the classical arm not at all --- $0.614$ either way, as it must, since an
+augmented-state Kalman shares none of that code --- and moved the learned arm from $0.524$
+\emph{down} to $0.463$. So the defect had been mildly flattering the learner, and the null is
+not an implementation artifact: with a correctly pooled model the separation is worse, not
+better. The superseded figures are retained in the verdict JSON.
 
 \paragraph{The fraud check is what makes the null credible.} The eight engines drifting on a
 channel the cockpit cannot observe carry no signal by construction, and both families score
@@ -1171,7 +1180,7 @@ are allowed to fail.
     L-RUL/sweep & Does the AI beat it at \emph{every} life fraction? & \textbf{No} --- only at 90\,\% ($1.34\times$, $p=0.006$); a tie at 70\,\% ($1.01\times$). The learning advantage is late-life (\cref{sec:f8-lrul-sweep}) \\
     L-UQ & Is the 5.9$\times$ interval advantage the model or the calibration? & \textbf{Mostly calibration} --- at equal coverage the AI leads $1.34\times$ over advanced classical, $2.3\times$ over practice (\cref{sec:f-uq}) \\
     L-MECH & Is the wall instantaneous? Can a history attribute mechanism? & \textbf{Yes} --- 3 of 5 mechanisms recover from trajectory shape, \code{hot\_section} at $R^2\,0.78$; but learning beats hand features on only 2 of 5 (\cref{sec:f13-mech}) \\
-    L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.52$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
+    L-INST & Can either family tell a drifting sensor from a real fault? & \textbf{No} --- both at chance (AUC $0.61$ / $0.46$, CIs spanning $0.5$); tracking a bias is not attributing one (\cref{sec:f15-instrument}) \\
     L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
     L-HYB & Does the certificate work as a physics-injection channel? & \textbf{Refuted by its control} --- both physics arms beat pure ($p<0.001$), so the gain is channels. But injection \emph{works} on attribution where H4/L6 refuted it on prognosis (\cref{sec:f17-hybrid}) \\
     L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity} --- at equal parameters bidirectionality buys nothing ($p=0.19$/$0.42$); at doubled parameters it buys 94\,cy of RUL error ($p=0.016$) and still nothing on attribution (\cref{sec:f18-bidir}) \\
