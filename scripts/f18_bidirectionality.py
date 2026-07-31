@@ -58,11 +58,17 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 OUT = REPO_ROOT / 'data' / 'processed' / 'f18'
 SEEDS = tuple(range(10))
 ARMS = ('uni', 'bi_equal', 'bi_double')
+# Which recurrent cell. The first pass of this line used GRU while the source
+# paper -- and L-EXT's replication of it -- use LSTM, so the report's sentence
+# about "the published Bi-LSTM's edge" generalised from an untested cell. Set
+# with --cell lstm; outputs are kept separate so neither result overwrites the
+# other.
+CELL = os.environ.get('F18_CELL', 'gru')
 ALPHA = 0.05
 RUL_CAP = 12000.0
 
 
-def net(ch, n_out, arm, hidden=128, layers=2):
+def net(ch, n_out, arm, hidden=128, layers=2, cell=None):
     """One architecture, three arms, correct pooling.
 
     POOLING (the bug the first run had). For a unidirectional layer the state at
@@ -84,18 +90,19 @@ def net(ch, n_out, arm, hidden=128, layers=2):
     bi = arm != 'uni'
     h = hidden if arm in ('uni', 'bi_double') else hidden // 2
     out_dim = 2 * h if bi else h
+    Cell = nn.LSTM if (cell or CELL) == 'lstm' else nn.GRU
 
     class Net(nn.Module):
         def __init__(self):
             super().__init__()
             self.bi, self.h = bi, h
-            self.gru = nn.GRU(ch, h, layers, batch_first=True, dropout=0.1,
-                              bidirectional=bi)
+            self.rnn = Cell(ch, h, layers, batch_first=True, dropout=0.1,
+                            bidirectional=bi)
             self.head = nn.Sequential(nn.Linear(out_dim, 32), nn.GELU(),
                                       nn.Linear(32, n_out))
 
         def forward(self, x):
-            o, _ = self.gru(x)
+            o, _ = self.rnn(x)
             if self.bi:                      # forward @ last, backward @ first
                 z = torch.cat([o[:, -1, :self.h], o[:, 0, self.h:]], dim=-1)
             else:
@@ -139,7 +146,7 @@ def _shard_main(shard, n_shards):
         out[f'{task}|{arm}|{seed}'] = predict_torch(m, Xte, dev=cpu)
         print(f'  shard {shard}: {k}/{len(jobs)}  {task} {arm} seed {seed}',
               flush=True)
-    np.savez_compressed(OUT / f'preds_{shard}.npz', **out)
+    np.savez_compressed(OUT / f'preds_{CELL}_{shard}.npz', **out)
 
 
 def _all_jobs():
@@ -192,12 +199,21 @@ def main():
 
     np.savez_compressed(OUT / 'cache.npz', Xtr=Xtr, Mtr=Mtr, Rtr=Rtr, Xte=Xte)
     jobs = _all_jobs()
-    n_shards = min(8, max(1, (os.cpu_count() or 4) - 2))
-    print(f'== {len(jobs)} trainings over {n_shards} shard processes ==', flush=True)
+    # Shard count and scheduling class are knobs, because this is a background
+    # research job on a laptop. F18_SHARDS caps concurrency; F18_NICE=1 launches
+    # each shard under `taskpolicy -b`, which puts it in background QoS and macOS
+    # then schedules it on the EFFICIENCY cores. On this machine that is 6 E-cores,
+    # leaving the 4 performance cores free for interactive work -- much cooler and
+    # quieter, at the cost of wall time.
+    n_shards = int(os.environ.get('F18_SHARDS', 0)) or min(
+        8, max(1, (os.cpu_count() or 4) - 2))
+    prefix = ['taskpolicy', '-b'] if os.environ.get('F18_NICE') else []
+    print(f'== {len(jobs)} trainings, cell={CELL}, over {n_shards} shards'
+          f"{' on efficiency cores' if prefix else ''} ==", flush=True)
     t0 = time.time()
     procs = [subprocess.Popen(
-        [sys.executable, '-u', str(Path(__file__).resolve()),
-         '--shard', str(i), str(n_shards)]) for i in range(n_shards)]
+        prefix + [sys.executable, '-u', str(Path(__file__).resolve()),
+                  '--shard', str(i), str(n_shards)]) for i in range(n_shards)]
     for pr in procs:
         pr.wait()
     bad = [i for i, pr in enumerate(procs) if pr.returncode != 0]
@@ -207,7 +223,7 @@ def main():
 
     preds = {}
     for i in range(n_shards):
-        z = np.load(OUT / f'preds_{i}.npz')
+        z = np.load(OUT / f'preds_{CELL}_{i}.npz')
         for k in z.files:
             t, a, sd = k.split('|')
             preds[(t, a, int(sd))] = z[k]
@@ -232,6 +248,7 @@ def main():
                 'per_seed': per_seed[task][arm]}
 
     verdict = {'design': {
+        'cell': CELL,
         'seeds': list(SEEDS), 'seq_len': SEQ_LEN,
         'arms': {'uni': 'hidden 128, unidirectional (reference)',
                  'bi_equal': 'hidden 64 per direction -- same parameter budget',
@@ -282,7 +299,8 @@ def main():
                                   'gain is capacity rather than direction -- '
                                   'which is precisely what the source paper\'s '
                                   'bi-versus-uni comparison cannot separate')}
-    (OUT / 'bidir_verdict.json').write_text(json.dumps(verdict, indent=2))
+    (OUT / f'bidir_verdict_{CELL}.json').write_text(
+        json.dumps(verdict, indent=2))
 
     print()
     for task in tasks:

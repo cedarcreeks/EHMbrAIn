@@ -72,11 +72,19 @@ C7 on more data to confirm a ranking FD001 already confirmed, and is not worth 1
   deadlocks on the parent's BLAS/torch threads. Pattern that works:
   `f18_bidirectionality.py` / `f19_certificate_isolated.py` — parent builds and caches to
   `npz`, launches `--shard i n` subprocesses, collects.
+- **Shard count = number of PERFORMANCE cores, not total cores.** This machine is 4P + 6E.
+  Measured on an LSTM training, single thread: P-core 1.96 s/epoch, E-core (`taskpolicy -b`)
+  12.83 — **6.5× slower**. With eight shards, four land on E-cores, become stragglers and set
+  the wall time. That, not memory contention, is why a 60-training run took 75.7 min against a
+  predicted 25. `F18_SHARDS=4` is both cooler and faster: 410 % CPU and load 5.5, against
+  691 % and 9.7 with eight.
+- **To run the laptop cooler, cut shards — do not use `taskpolicy -b`.** E-cores would put 60
+  trainings at 4.4 h. `nice` does not reduce heat when nothing competes.
 - **MPS is not the bottleneck** for these models: 1.43 s/epoch against 1.56 on a single CPU
-  thread, because 1507 samples at batch 128 is twelve batches per epoch. Eight CPU shards beat
-  one MPS process by roughly 3×.
-- **Measure, do not estimate.** Time estimates were wrong three times on 2026-07-30 (75 min
-  for what was 3 h, twice; then 25 min for what was 52). Timing one epoch costs two minutes.
+  thread, because 1507 samples at batch 128 is twelve batches per epoch.
+- **Measure, do not estimate.** Time estimates were wrong four times on 2026-07-30 (75 min for
+  what was 3 h, twice; 25 min for what was 52; and an E-core recommendation that measured 6.5×
+  worse). Timing one epoch costs two minutes and changed the decision every time.
 - **Cross-run numbers are not comparable.** The `uni` attribution arm scored +0.181, +0.248 and
   +0.414 across three runs of a nominally identical configuration (per-seed sd 0.114). Only
   paired comparisons within a single run are reliable.
