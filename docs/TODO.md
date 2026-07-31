@@ -1,28 +1,35 @@
 # Pending work
 
-Updated 2026-07-30. Report at **140 pp**, **44 tests** green, 0 undefined references,
+Updated 2026-07-30. Report at **141 pp**, **44 tests** green, 0 undefined references,
 `origin/main` at `35f85c6`, tags through `prereg-v22`. Working tree clean, nothing running.
 
 ---
 
-## 1. Open defect — a claim in the report overreaches
+## 1. ~~Open defect~~ — RESOLVED, and it changed the claim
 
-**L-BIDIR's keyidea generalises a GRU experiment to a statement about LSTM.**
-`sec:f18-bidir` says *"the published Bi-LSTM's edge over an LSTM is capacity, not direction"*,
-but `scripts/f18_bidirectionality.py:92` uses `nn.GRU`. The paper's cell is LSTM, and L-EXT
-replicated it with `nn.LSTM` — the mechanism test did not.
+L-BIDIR generalised a GRU experiment to a statement about LSTM. Repeated with LSTM cells
+(`F18_CELL=lstm`), everything else identical:
 
-The parameter-doubling argument is cell-agnostic in principle, but "in principle" is not a
-measurement, and this is the same species of error the chapter exists to correct.
+| task | arm | GRU | LSTM |
+|---|---|---|---|
+| attribution ($R^2$) | uni | +0.181 | **−0.220** |
+| | bi_equal | +0.230 | −0.055 |
+| | bi_double | +0.167 | −0.312 |
+| prognosis (cy) | uni | 1490.9 | **1251.3** |
+| | bi_equal | 1475.6 | 1417.7 (+166 worse) |
+| | bi_double | **1396.7** (−94, p=0.016) | 1380.5 (+129 worse) |
 
-**Fix by running it, not by hedging.** Add a `cell` parameter, repeat the three arms
-(`uni`, `bi_equal`, `bi_double`) with LSTM cells, both tasks, same ten seeds. 60 trainings,
-sharded, ~55 min.
+**The finding does not transfer.** On GRU the doubled-parameter arm improved prognosis; on
+LSTM it worsens it. Sign reversed. The claim is now restricted to GRU in the report.
 
-- matches GRU → the finding is cell-agnostic and the sentence stands
-- does not match → restrict the claim to GRU and rewrite; interesting in itself
+**And the LSTM comparison cannot settle it either.** Hyperparameters came from F13's Optuna
+search *for a GRU*, and all three LSTM attribution arms return negative $R^2$ — a model not
+converging, not a cell that is bad at the task. So it measures tuning, not architecture, which
+is exactly this chapter's objection to a fifteen-way published ranking.
 
-Until then the sentence should be read as untested for LSTM.
+**If this is ever to become a claim about architecture** it needs a symmetric tuning budget per
+cell — an Optuna run for LSTM matching F13's for GRU, then the three arms again. That is the
+only version worth doing, and it is a study, not a re-run.
 
 ---
 
@@ -72,19 +79,22 @@ C7 on more data to confirm a ranking FD001 already confirmed, and is not worth 1
   deadlocks on the parent's BLAS/torch threads. Pattern that works:
   `f18_bidirectionality.py` / `f19_certificate_isolated.py` — parent builds and caches to
   `npz`, launches `--shard i n` subprocesses, collects.
-- **Shard count = number of PERFORMANCE cores, not total cores.** This machine is 4P + 6E.
+- **Shard count: 4 (= performance cores) is COOLER, not faster.** This machine is 4P + 6E.
   Measured on an LSTM training, single thread: P-core 1.96 s/epoch, E-core (`taskpolicy -b`)
-  12.83 — **6.5× slower**. With eight shards, four land on E-cores, become stragglers and set
-  the wall time. That, not memory contention, is why a 60-training run took 75.7 min against a
-  predicted 25. `F18_SHARDS=4` is both cooler and faster: 410 % CPU and load 5.5, against
-  691 % and 9.7 with eight.
+  12.83 — **6.5× slower**, so eight shards park half the work on slow cores. But measured
+  end-to-end, four shards took **112.2 min** for 60 LSTM trainings where eight would have taken
+  roughly 104 (75.7 min for GRU × 1.37 for LSTM's extra gate). So the straggler reasoning was
+  incomplete: E-cores are slow but still add net throughput. Four shards runs at 410 % CPU and
+  load 5.5 against 691 % and 9.7 — **buy it for heat and responsiveness, not for speed**.
 - **To run the laptop cooler, cut shards — do not use `taskpolicy -b`.** E-cores would put 60
   trainings at 4.4 h. `nice` does not reduce heat when nothing competes.
 - **MPS is not the bottleneck** for these models: 1.43 s/epoch against 1.56 on a single CPU
   thread, because 1507 samples at batch 128 is twelve batches per epoch.
-- **Measure, do not estimate.** Time estimates were wrong four times on 2026-07-30 (75 min for
-  what was 3 h, twice; 25 min for what was 52; and an E-core recommendation that measured 6.5×
-  worse). Timing one epoch costs two minutes and changed the decision every time.
+- **Measure, do not estimate.** Time estimates were wrong six times on 2026-07-30: 75 min for
+  what was 3 h (twice); 25 min for what was 52; an E-core recommendation that measured 6.5×
+  worse; 60 min for what was 112; and "four shards will be faster", which measured ~8% slower.
+  A single-training benchmark understates ~50 % because it misses contention. Timing one epoch
+  costs two minutes and changed the decision every time.
 - **Cross-run numbers are not comparable.** The `uni` attribution arm scored +0.181, +0.248 and
   +0.414 across three runs of a nominally identical configuration (per-seed sd 0.114). Only
   paired comparisons within a single run are reliable.

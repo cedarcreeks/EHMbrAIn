@@ -57,9 +57,9 @@ visible as wins.
     estimate to the identifiable subspace \emph{hurts} ($-0.119$, $t=-3.72$, channel count
     matched). A precision bound is not an absence of information & \cref{sec:f19-cert} \\
   Is a bidirectional network's edge the direction or the extra parameters? &
-    \textbf{The parameters}: at equal budget bidirectionality buys nothing on either
-    task; at doubled budget it buys $94$\,cy of RUL error and still nothing on
-    attribution & \cref{sec:f18-bidir} \\
+    \textbf{The parameters, on a GRU}: $94$\,cy of RUL error at doubled budget, nothing
+    at equal. The sign \emph{reverses} on an LSTM, and that comparison is confounded by
+    GRU-tuned hyperparameters & \cref{sec:f18-bidir,sec:f18-lstm} \\
   Would transients break the confusable pair? & \textbf{Not through operating points}: the
     whole calibrated envelope gives $1.38^{\circ}$, below cruise alone. True dynamics are
     priced ($0.7$ whitened units), not ruled out & \cref{sec:gate-t} \\
@@ -120,6 +120,9 @@ visible as wins.
     only a synthetic-truth benchmark can & \cref{sec:bt-honesty} \\
   How to know a null result is not a broken pipeline? & Give the method a case where physics
     says the information cannot exist, and check it finds nothing & \cref{sec:f15-instrument} \\
+  Can two architectures be compared at one architecture's hyperparameters? & \textbf{No} ---
+    all three LSTM arms return negative $R^2$ on tuning selected for a GRU; that measures the
+    tuning, not the cell & \cref{sec:f18-lstm} \\
   Does a published deep-learning PHM result survive this bar? & It replicates, but its
     architecture ranking is inside seed noise and it fails to train half the time &
     \cref{sec:f14-ext} \\

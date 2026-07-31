@@ -898,7 +898,7 @@ seeds, paired on seed (\code{scripts/f18\_bidirectionality.py}):
   \label{fig:bidir}
 \end{figure}
 
-\keyidea{At \emph{equal} parameter budget, bidirectionality buys nothing on either task ($p = 0.19$ and $p = 0.42$). At \emph{doubled} budget it buys $94$ cycles of RUL error ($p = 0.016$) and still nothing on attribution. So the published Bi-LSTM's edge over an LSTM is \textbf{capacity, not direction} --- a second confound in that paper, independent of its seed-noise ranking.}
+\keyidea{At \emph{equal} parameter budget, bidirectionality buys nothing on either task ($p = 0.19$ and $p = 0.42$). At \emph{doubled} budget it buys $94$ cycles of RUL error ($p = 0.016$) and still nothing on attribution. On a GRU cell, then, what a bidirectional layer contributes here is \textbf{capacity rather than direction}. Whether that reading extends to the LSTM the source paper actually uses is tested below --- and it does not survive.}
 
 \textbf{H15.2 refuted, in both halves.} Bidirectionality did not help attribution, and it did
 help prognosis. The stated mechanism was therefore wrong, and the likely reason is visible in
@@ -915,6 +915,48 @@ of $0.114$ that is consistent, but the consequence is a rule for reading this ch
 \textbf{only paired comparisons within a single run are reliable}, and numbers must not be
 subtracted across studies. Every verdict above is a within-run paired test for exactly that
 reason.
+
+\subsection{The same test on an LSTM cell, which is what the paper uses}
+\label{sec:f18-lstm}
+
+\paragraph{An overreach of this document's own, caught and corrected.} Everything above uses a
+\textbf{GRU} cell, while the source paper --- and \cref{sec:f14-ext}'s replication of it ---
+uses an \textbf{LSTM}. The parameter-doubling argument is cell-agnostic in principle, but ``in
+principle'' is not a measurement, and generalising from an untested cell is the same species of
+error this chapter exists to correct. Repeating all three arms with LSTM cells, everything else
+identical:
+
+\begin{center}\small
+\begin{tabular}{@{}llrrl@{}}
+  \toprule
+  Task & Arm & GRU & LSTM & LSTM $\Delta$ vs uni \\
+  \midrule
+  \multirow{3}{*}{attribution ($R^2$)}
+    & \code{uni}        & $+0.181$ & $-0.220 \pm 0.225$ & --- \\
+    & \code{bi\_equal}  & $+0.230$ & $-0.055 \pm 0.204$ & $+0.164$ ($p = 0.099$) \\
+    & \code{bi\_double} & $+0.167$ & $-0.312 \pm 0.177$ & $-0.092$ ($p = 0.86$) \\
+  \midrule
+  \multirow{3}{*}{prognosis (cy)}
+    & \code{uni}        & $1\,490.9$ & $\mathbf{1\,251.3 \pm 69.4}$ & --- \\
+    & \code{bi\_equal}  & $1\,475.6$ & $1\,417.7 \pm 116.4$ & $+166$ \emph{worse} ($p = 0.995$) \\
+    & \code{bi\_double} & $\mathbf{1\,396.7}$ & $1\,380.5 \pm 121.3$ & $+129$ \emph{worse} ($p = 0.997$) \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{The finding does not transfer.} On a GRU the doubled-parameter bidirectional arm
+\emph{improved} prognosis by $94$ cycles; on an LSTM it \emph{worsens} it by $129$. Opposite
+sign. The claim that the published architecture's edge is capacity rather than direction is
+therefore \textbf{restricted to the GRU cell} and is not supported for the cell the paper uses.
+
+\paragraph{And this comparison cannot settle the question either.} The hyperparameters ---
+hidden $128$, two layers, $\eta = 0.0057$, $122$ epochs --- were selected by \cref{sec:f13-mech}'s
+Optuna search \emph{for a GRU}. All three LSTM attribution arms return \emph{negative} $R^2$,
+which is not ``LSTM is poor at attribution'' but a model that is not converging: a learning rate
+suited to a three-gate cell need not suit a four-gate one. So this experiment cannot separate
+\emph{cell} from \emph{tuning}, and it is not evidence that bidirectionality hurts an LSTM.
+
+\keyidea{Two architectures compared at hyperparameters tuned for one of them measure the tuning, not the architecture --- which is precisely the objection this chapter raises against a fifteen-way published ranking. The honest status is that the capacity-not-direction reading holds for GRU, is untested for LSTM, and would need a symmetric tuning budget per cell to become a claim about architecture at all.}
 
 \paragraph{Disclosed: the first run of this line was void.} It read \code{o[:, -1]} from the
 bidirectional layer. That position is correct for a forward pass but not for a backward one,
@@ -1256,7 +1298,7 @@ are allowed to fail.
     L-EXT & Does a published deep-learning PHM result survive these standards? & \textbf{Partly} --- it replicates ($14.56$ vs $14.12$) but fails to train on 5 of 10 runs, and its 15-way ranking is inside seed noise (\cref{sec:f14-ext}) \\
     L-HYB & Does the certificate work as a physics-injection channel? & \textbf{Refuted by its control} --- both physics arms beat pure ($p<0.001$), so the gain is channels. But injection \emph{works} on attribution where H4/L6 refuted it on prognosis (\cref{sec:f17-hybrid}) \\
     L-CERT & Does gating the GPA estimate with the certificate help? & \textbf{No --- it hurts} ($-0.119$, $t=-3.72$) at equal channel count; the CRB as input adds nothing ($+0.007$). L-HYB's post-hoc was the channel count (\cref{sec:f19-cert}) \\
-    L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity} --- at equal parameters bidirectionality buys nothing ($p=0.19$/$0.42$); at doubled parameters it buys 94\,cy of RUL error ($p=0.016$) and still nothing on attribution (\cref{sec:f18-bidir}) \\
+    L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity, on a GRU cell} --- 94\,cy of RUL error at doubled parameters ($p=0.016$), nothing at equal. \textbf{Does not transfer to LSTM} (sign reverses), and that comparison is confounded by GRU-tuned hyperparameters (\cref{sec:f18-bidir,sec:f18-lstm}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\
