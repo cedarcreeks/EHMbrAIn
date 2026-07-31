@@ -1273,7 +1273,16 @@ Renombrada §«Why this is the breakthrough» → «Why this result is different
 
 ## F12 — HITO OBLIGATORIO: el dividendo del prior de flota (propuesto, `docs/f12-proposal.md`)
 
-Pendiente de congelar como **prereg-v16**. Responde la pregunta que queda tras F-FIX15: ¿hay
+⚠️ **RETIRADO 2026-07-29. No retomar tal como está.** El gate G1 es inválido: el "CRB" del
+certificado F10 YA lleva prior (`PRIOR_STD_PCT = 2.0` isótropo en `identifiability.py:30,48`,
+y `F = P0inv + Σ HᵀR⁻¹H`), o sea es una matriz de información **bayesiana**, no el CRB
+clásico. Batirlo solo demuestra que un prior correlacionado gana a uno isótropo de 2 %² —
+cierto antes de correr nada. G1 pasa gratis y no mide nada. El bound correcto sería van
+Trees con el prior verdadero, y contra ese, acercarse es comportamiento esperado. Segundo
+problema: el prior de flota lo escribimos nosotros en `datagen/fleet.py`. El tag v16 acabó
+usándose para F13. Documento original abajo, como registro.
+
+Responde la pregunta que queda tras F-FIX15: ¿hay
 algo que la IA pueda hacer en EHM que un método clásico competente NO pueda estructuralmente?
 
 **Afirmación**: la GPA clásica cierra las 7 dimensiones no restringidas del problema inverso
@@ -1315,3 +1324,72 @@ n = 20 motores × 10 direcciones = 200 puntos emparejados (no 10).
 G5 falla) terminan en resultado real y publicable. Maquinaria ya existe: verdad por vuelo en
 `snapshots.parquet` (`x_*`), CRB en `trad/identifiability.py`, `kalman_gpa`, flota v2, patrón
 de flotas variantes del barrido C6. Semanas, no proyecto nuevo. Ver §sec:future-f12 en ch12.
+
+---
+
+## SESIÓN 2026-07-29/30 — siete líneas nuevas al report, tres retiradas
+
+Report **141 pp**, **44 tests** verdes, 0 refs undefined. Tags **prereg-v15 … v22**.
+Ledger operativo en `docs/TODO.md`; límites de uso en `docs/safety-case-boundaries.md`.
+
+### Escritas al report (cap. 11 + 12 + A2)
+
+| Línea | Tag | Veredicto |
+|---|---|---|
+| **F-FIX15** re-auditoría de titulares | v15 | H5 6× → **1,34×** al calibrar los dos lados; H3 vs clásico avanzado **1,34× al 90 % y EMPATE al 70 %** |
+| **L-MECH / F13** atribución de mecanismo | v16 | ✅ 3/5 recuperables de la trayectoria, `hot_section` R²=0,78. G1b ✗: secuencial gana solo 2/5 |
+| **L-EXT / F14** réplica Bi-LSTM (Springer 2026) | v17 | Replica (14,56 vs 14,12) pero **5/10 corridas colapsan**; sd semilla 2,94 vs gaps 0,12–0,60 → **ranking = ruido** |
+| **L-INST / H15.8** instrumento vs motor | v18 | ✗ Ambas familias en azar (0,614 / 0,463); **fraud check pasa** → el nulo es nulo |
+| **Gate T / F16** transitorios | v19 | ✗ vía puntos de operación: envolvente entero **1,38°**, por debajo de cruise solo. Requisito dinámico tasado (0,7 u. blanqueadas) |
+| **L-HYB / H15.3** híbrido con certificado | v20 | ✗ por su propio control (B−A +0,139, p=0,0004). **Hallazgo mayor: inyección de física falla en prognosis y ayuda en atribución** |
+| **L-BIDIR / H15.2** direccionalidad | v21 | ✗ en las dos mitades. Capacidad, no dirección — **solo con GRU**; con LSTM el signo se invierte |
+| **L-CERT / H15.11** certificado aislado | v22 | ✗ y al revés: enmascarar **perjudica** (−0,119, t=−3,72) con canales igualados. El post-hoc C−B de L-HYB era el conteo |
+
+**Regla unificadora (en conclusiones):** *la forma de trayectoria separa lo que TIENE forma.*
+Cuatro instancias: gana en rodilla de rodaje y diente de sierra de lavado, pierde en dos
+mecanismos lineales planos y en la rampa de deriva de sensor.
+
+### Retiradas, con motivo en el registro
+
+- **F12** prior de flota → gate tautológico (arriba).
+- **Reloj de ambigüedad** (H15.6/H15.7) → su propio riesgo declarado se cumplió (los episodios
+  agudos son rampas sin evento), H15.8 lo corrobora, y su rama negativa duplicaba L-H2.
+- **K3 workscope hit rate** + canal de atribución de K4/K5 → **degenerado**: a 95 % de vida
+  `hot_section` domina en **100/100 motores**. Predictor constante = 100 %. Declarado como
+  limitación de SynCFM56 en `sec:limitations-conclusions`.
+
+### Añadido fuera del report
+
+- `docs/safety-case-boundaries.md` + sección `sec:boundaries` en conclusiones.
+- `tests/test_time_axis.py` — 6 tests que guardan la regla temporal (44 en total ahora).
+- `paper/oem-brief/` — brief 2 pp, deck 17 diapos, guía de presentación 8 pp en castellano,
+  para responsable de performance en OEM muy crítico con la IA. Enfoque auditoría, no venta.
+
+### Errores propios corregidos en el camino (los cuatro, declarados en el documento)
+
+1. **Bug de pooling bidireccional**: `o[:, -1]` da al pase hacia atrás UNA muestra. Anuló dos
+   corridas (F18, F15). Correcto: forward@último ⊕ backward@primero.
+2. **Post-hoc C−B** de L-HYB: confundido por conteo de canales. Al igualarlos, **el signo se
+   invierte**.
+3. **Sobre-generalización GRU→LSTM** en L-BIDIR, ya en el documento. Restringida al medirlo.
+4. **K3 degenerado**, detectado con una comprobación de 2 min antes de construir sobre él.
+
+### Notas de ingeniería (detalle en `docs/TODO.md` §4)
+
+- Paralelismo: **subprocesos por shard**, no `multiprocessing` (`spawn` cuelga re-importando,
+  `fork` deadlock por hilos BLAS/torch del padre). Patrón en `f18`/`f19`.
+- **4 shards (= P-cores) es más frío, NO más rápido**: 112,2 min vs ~104 estimados con 8.
+- **MPS solo 1,26×** sobre 1 hebra: 12 lotes por época, la GPU espera a Python.
+- **Cifras entre corridas no son comparables** (brazo `uni`: +0,181 / +0,248 / +0,414).
+- **Medir, no estimar**: seis estimaciones de tiempo equivocadas en un día.
+
+### Pendiente
+
+1. **N-CMAPSS DS02** — puerta de viabilidad de ~2 h primero. El motivo bueno **no** es el que
+   dice L8: N-CMAPSS envía la verdad de salud (grupo `T`), único dataset externo que lo hace,
+   así que F10 y F11 podrían recomputarse **fuera de nuestro simulador** y atacar la
+   circularidad. Obstáculo: no envía ICM.
+2. **L-BIDIR con presupuesto de ajuste simétrico por célula** si se quiere convertir en
+   afirmación sobre arquitectura (Optuna para LSTM equivalente al de F13 para GRU).
+3. L3 (EGT estación real) · L10 (forma de mapa) · M3 (pérdida con restricción física) ·
+   validación de PCS sobre el learner F7 · publicación de SynCFM56 con DOI.
