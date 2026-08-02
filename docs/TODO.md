@@ -1,7 +1,7 @@
 # Pending work
 
-Updated 2026-07-30. Report at **141 pp**, **44 tests** green, 0 undefined references,
-`origin/main` at `35f85c6`, tags through `prereg-v22`. Working tree clean, nothing running.
+Updated 2026-08-02. Report at **142 pp**, **44 tests** green, 0 undefined references,
+`origin/main` at `a828df8`, tags through `prereg-v23`. Working tree clean, nothing running.
 
 ---
 
@@ -33,35 +33,39 @@ only version worth doing, and it is a study, not a re-run.
 
 ---
 
-## 2. N-CMAPSS — gate RUN, passed; see `docs/f20-ncmapss-gate.md`
+## 2. ~~N-CMAPSS~~ — DONE. The circularity objection is answered.
 
-Answered on documentation alone, without downloading (path A). Full write-up in that file;
-the short version:
+Gate passed on documentation alone, then executed. Full account in
+`docs/f20-ncmapss-gate.md` and §sec:f20-ncmapss; verdict in
+`data/processed/f20/ncmapss_icm.json`.
 
-- **14.68 GB**, one zip for DS01–DS08, no per-subset download. My "roughly 1.2 GB" was wrong by
-  twelve times. The report's existing reason for substituting FD001 is understated, not
-  overstated, and stands.
-- **No Jacobian or influence coefficients are published anywhere.** Everyone treats the C-MAPSS
-  model as a black box. So F10 cannot simply be ported — the original worry was right.
-- **But the ICM does not have to come from NASA.** Each sample pairs `θ` with `x_s` at a known
-  `w`, so regressing sensor deviations on `θ` at matched `w` estimates the influence matrix
-  from the data. Ordinary way to get a Jacobian from a closed model.
-- **Caveat to gate on:** degradation is coordinated within a unit, so `θ` columns correlate.
-  The seven failure modes are spread across subsets, so pooling buys the variation — check
-  conditioning/rank before using any estimated ICM, and if it fails, that is the finding.
-- Also corrected: N-CMAPSS ships `θ` in the **repository** distribution (which is where DS02
-  lives), not in the **Challenge** subset, which strips it to `W`, `X_s`, `Y`, `A`.
+**Identifiability gate:** condition **5.6**, effective rank **10/10** over nine of the ten
+repository files, 699 012 subsampled rows, 430 condition bins. All ten health parameters
+separately identifiable — pooling across subsets is what bought it, since the seven failure
+modes are spread between files rather than within one.
 
-**The by-product is worth more than the original goal.** An estimated ICM allows measuring the
-confusable-pair angle on a completely independent engine model — different engine, different
-authors, 14 sensors instead of 3. That tests whether the $1.3^{\circ}$ wall is a fact about
-turbofans or an artifact of our deck, which is the strongest available answer to the
-circularity objection. Compare on the shared sensor subset, report the full 14-channel angle
-alongside as the analogue of our extended set (already $25$–$30^{\circ}$, §sec:gate-t).
+| sensor set | ours (pyCycle, CFM56-7B) | N-CMAPSS (NASA C-MAPSS) |
+|---|---|---|
+| cockpit class, 3 channels | 1.30° | **0.66°** |
+| full instrumentation | 26.71° | **20.92°** |
 
-**Order:** download outside the reproducible pipeline → estimate ICM and gate on conditioning →
-angle comparison → only then consider porting F10/F11. Roughly a day to the ICM, hours for the
-angle, open-ended after that.
+**Both the wall and its cure reproduce** on a different engine, in different software, by
+different people. The central negative of the document is not an artifact of its own simulator,
+and the conclusions' opening keyidea now demonstrates that rather than asserting it.
+
+Limits recorded with the result: the matrix is *estimated* and carries regression error, so the
+comparison is of magnitude and structure not of value; the sensor sets correspond only
+approximately (`T48` is HPT-outlet total temperature where our EGT is a station-4.5 proxy); and
+`DS08d` unpacked truncated by 32 bytes and was skipped, logged in the verdict, with the two
+other all-component subsets loading normally.
+
+**Corrections to beliefs I had flagged:** the archive is **14.68 GB**, not ~1.2, and there is no
+per-subset download. `θ` ships in the **repository** distribution, not in the Challenge subset,
+which strips it. DS02 is 2.28 GB and carries 10 health parameters over 6.5 M rows.
+
+**Still open from this line, and now cheap:** porting F10's certificate and F11's floor onto
+N-CMAPSS truth. The ICM they need now exists and is identifiable. This was the original goal
+and it is no longer blocked — but the angle comparison was the higher-value half and it is done.
 
 ---
 
@@ -95,11 +99,17 @@ angle, open-ended after that.
   trainings at 4.4 h. `nice` does not reduce heat when nothing competes.
 - **MPS is not the bottleneck** for these models: 1.43 s/epoch against 1.56 on a single CPU
   thread, because 1507 samples at batch 128 is twelve batches per epoch.
-- **Measure, do not estimate.** Time estimates were wrong six times on 2026-07-30: 75 min for
-  what was 3 h (twice); 25 min for what was 52; an E-core recommendation that measured 6.5×
-  worse; 60 min for what was 112; and "four shards will be faster", which measured ~8% slower.
-  A single-training benchmark understates ~50 % because it misses contention. Timing one epoch
-  costs two minutes and changed the decision every time.
+- **Measure, do not estimate.** Wrong seven times across 2026-07-30/08-02: 75 min for what was
+  3 h (twice); 25 min for what was 52; an E-core recommendation that measured 6.5× worse; 60 min
+  for what was 112; "four shards will be faster", which measured ~8 % slower; and a download
+  ETA of 14 h read off a 0.3 MB/s sample that was S3 warming up — it finished at 10 MB/s. A
+  single-training benchmark understates ~50 % because it misses contention, and a transfer rate
+  sampled in the first minute is not the transfer rate.
+- **A pipeline swallows exit codes.** `curl ... | tail` returned 0 while curl had died with
+  `(56) Recv failure` at 8.78 of 14.68 GB. The truncated archive would have surfaced three
+  steps later, inside the analysis. Always verify a download against its `Content-Length`, and
+  wrap long transfers in a resume loop with `--speed-limit`/`--speed-time` — `--retry` alone
+  does not cover a mid-transfer stall.
 - **Cross-run numbers are not comparable.** The `uni` attribution arm scored +0.181, +0.248 and
   +0.414 across three runs of a nominally identical configuration (per-seed sd 0.114). Only
   paired comparisons within a single run are reliable.

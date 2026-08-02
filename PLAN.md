@@ -1393,3 +1393,70 @@ mecanismos lineales planos y en la rampa de deriva de sensor.
    afirmación sobre arquitectura (Optuna para LSTM equivalente al de F13 para GRU).
 3. L3 (EGT estación real) · L10 (forma de mapa) · M3 (pérdida con restricción física) ·
    validación de PCS sobre el learner F7 · publicación de SynCFM56 con DOI.
+
+---
+
+## SESIÓN 2026-08-02 — L8 ejecutada: la circularidad, contestada
+
+Report **142 pp**, 44 tests verdes. Tags **prereg-v23**. Ledger en `docs/TODO.md`.
+
+### L-EXT2 / F20 (v23) — el muro medido en un motor que no construimos
+
+`docs/f20-ncmapss-gate.md` (puerta) · `scripts/f20_ncmapss_icm.py` · §sec:f20-ncmapss
+
+La objeción de fondo del proyecto era que **toda** la geometría desciende de la ICM de nuestro
+propio gemelo pyCycle: los 1,3° del par confusable, el límite de rango 3, el certificado y el
+veredicto de H2. L-ICM ya mostró que sobrevive a perturbar nuestra calibración, pero eso es
+nuestro modelo auditándose solo.
+
+**Ruta**: nadie publica el Jacobiano de C-MAPSS. Pero una ICM *es* un Jacobiano, y cada muestra
+de N-CMAPSS empareja `θ` con `x_s` a una `w` conocida → regresión de desviaciones sobre `θ` en
+bins de condición. Forma normal de obtener un Jacobiano de un modelo cerrado.
+
+**Puerta de identificabilidad, escrita antes**: condición **5,6**, rango efectivo **10/10**
+sobre 9 de los 10 ficheros del repositorio, 699 012 filas submuestreadas, 430 bins. Agrupar
+subconjuntos es lo que compra la variación (los 7 modos de fallo están repartidos ENTRE
+ficheros).
+
+| conjunto de sensores | nuestro (pyCycle) | N-CMAPSS (C-MAPSS) |
+|---|---|---|
+| cabina, 3 canales | 1,30° | **0,66°** |
+| instrumentación completa | 26,71° | **20,92°** |
+
+**Se reproducen el muro Y su cura**, en otro motor, otro software, otra gente. El negativo
+central del documento no es artefacto de su propio simulador. El keyidea de apertura de
+conclusiones ahora lo demuestra en vez de prometerlo.
+
+**Límites en el cuerpo, no en nota**: la matriz es *estimada* (error de regresión → comparar
+magnitud y estructura, no valor); los sensores se corresponden solo aproximadamente (`T48` es
+salida de HPT, nuestro EGT es proxy de estación 4.5); `DS08d` salió truncado 32 bytes al
+descomprimir y se saltó, registrado en el verdict.
+
+**Fuera del pipeline reproducible**: 14,68 GB que `make all` nunca debe requerir, misma
+disciplina que la sustitución de FD001. `h5py` añadido; `data/external/ncmapss/` gitignorado
+porque `data/external` sí está en git.
+
+### Creencias corregidas al medirlas
+
+- Archivo **14,68 GB**, no ~1,2. Y no hay descarga por subconjunto.
+- `θ` viene en la distribución del **repositorio**, no en el subconjunto del **Challenge**,
+  que lo despoja a `W`, `X_s`, `Y`, `A`.
+- DS02 = 2,28 GB, 10 parámetros de salud, 6,5 M filas.
+- `T_var` confirmado: los 10 modificadores eff/flow de fan, LPC, HPC, HPT, LPT.
+
+### L-BIDIR con celda LSTM (cierra el defecto abierto)
+
+Repetido con `F18_CELL=lstm`: **el hallazgo no transfiere**. En GRU el brazo de parámetros
+doblados mejoraba prognosis (−94 cy, p=0,016); en LSTM la empeora (+129 cy). Signo invertido.
+Afirmación **restringida a GRU** en el report. Y esa comparación tampoco zanja nada: los
+hiperparámetros venían del Optuna de F13 **para GRU**, y los tres brazos LSTM de atribución dan
+R² negativo — modelo que no converge, no célula mala. Mide el ajuste, no la arquitectura, que es
+exactamente la objeción del capítulo al ranking de quince. Nueva fila en preguntas de método.
+
+### Pendiente
+
+1. **Portar F10 y F11 a N-CMAPSS** — antes bloqueado por falta de ICM; ya no lo está. Era el
+   objetivo original de L8; la mitad de más valor (el ángulo) ya está hecha.
+2. **L-BIDIR con presupuesto simétrico por célula** si ha de ser afirmación sobre arquitectura.
+3. L3 (EGT estación real) · L10 (forma de mapa) · M3 (pérdida con restricción física) ·
+   validación de PCS · publicación de SynCFM56 con DOI.
