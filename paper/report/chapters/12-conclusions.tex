@@ -42,7 +42,8 @@ visible as wins.
   Can observability be bought without new hardware? & \textbf{Partly}: report-schedule design
     $+79$\,\%; learned fusion triples classical & \cref{ch:tomography} (H7) \\
   Can we certify what a diagnosis honestly knows? & \textbf{Yes}, validated against truth
-    ($\rho=0.70$) & \cref{ch:breakthrough} (H10) \\
+    ($\rho=0.70$), but \textbf{under-powered}: a physics-free null reaches $0.242$ and
+    $p=0.085$ & \cref{ch:breakthrough} (H10), \cref{sec:f21-port} \\
   Is the isolation wall instantaneous, or does it hold over a history? & \textbf{Instantaneous}:
     3 of 5 degradation mechanisms are attributable from trajectory shape, \code{hot\_section}
     at $R^2\,0.78$ & \cref{sec:f13-mech} \\
@@ -64,6 +65,12 @@ visible as wins.
     turbofans}: on NASA's C-MAPSS the same pair is $0.66^{\circ}$ on cockpit-class channels
     and $20.9^{\circ}$ with full instrumentation, against our $1.3^{\circ}$ and
     $26.7^{\circ}$ & \cref{sec:f20-ncmapss} \\
+  Does the certificate survive a physics-free control? & \textbf{Not conclusively}: real
+    $\rho=0.697$ against a shuffled-matrix null median $0.242$, but $p=0.085$ --- a rank test
+    over ten directions is under-powered. The N-CMAPSS port fails the same control outright
+    & \cref{sec:f21-port} \\
+  Does the prognostic floor hold on external truth? & \textbf{Yes}: irreducible share
+    $0.68$--$0.82$ on N-CMAPSS against our $0.87$--$0.88$ & \cref{sec:f21-port} \\
   Would transients break the confusable pair? & \textbf{Not through operating points}: the
     whole calibrated envelope gives $1.38^{\circ}$, below cruise alone. True dynamics are
     priced ($0.7$ whitened units), not ruled out & \cref{sec:gate-t} \\
@@ -253,7 +260,7 @@ in the decision register or the relevant chapter.
 The project's furthest reach (\cref{ch:breakthrough}) turns its two rarest assets --- a
 calibrated differentiable twin and complete ground truth --- into something the field has
 wanted and never had: a per-engine certificate of \emph{what gas-path diagnosis can and
-cannot know}, proven honest against the true component state ($\rho = 0.70$ between certified
+cannot know}, tested against the true component state ($\rho = 0.70$ between certified
 precision and actual error, $p = 0.025$). It converts smearing from a hidden failure into an
 explicit, trustworthy, per-direction confidence statement, and the same Fisher-information
 object tells an operator which sensor rescues which fault ($45\times$ for HPC efficiency

@@ -250,6 +250,14 @@ La idea: para un motor y sus condiciones reales de vuelo, puedo calcular cuánta
 información sobre cada componente llega de verdad a los sensores. Y de ahí sale un
 límite: esto lo puedes saber, esto no lo puede saber \emph{nadie} con esos sensores.
 
+\escena{si te preguntan si esto está validado, di el matiz antes de que lo busquen} Una
+cosa que encontramos tarde y nosotros mismos: la afirmación de que esa cota \emph{ordena} el
+error real del estimador ---correlación 0,70--- no supera su propio control. Si barajas la
+matriz para que no tenga física, todavía sacas 0,24 de media, así que parte de aquel 0,70 era
+el acoplamiento. Hay señal real por encima, pero con diez direcciones el test no llega a
+significación. Las cifras de \emph{adquisición} que vienen ahora son medidas distintas y no
+están afectadas.
+
 Mira la tabla. Si añades sondas de estación --- presión y temperatura a la salida del
 fan, a la salida del compresor de alta --- la incertidumbre sobre el rendimiento del
 compresor de alta se reduce \cifra{45 veces}: pasa de un valor que no te deja concluir

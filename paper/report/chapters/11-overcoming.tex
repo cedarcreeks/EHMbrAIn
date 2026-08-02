@@ -1133,6 +1133,113 @@ in the verdict rather than passed over silently; the two other all-component sub
 applied to the FD001 substitution in \cref{sec:sim-to-real}. The gate reasoning and the download
 provenance are recorded in \code{docs/f20-ncmapss-gate.md}.
 
+\section{L-CERT2: porting the certificate and the floor to external truth --- and the control they never had}
+\label{sec:f21-port}
+
+\Cref{sec:f20-ncmapss} established the geometry externally. The obvious next step is the one
+the plan wanted all along: recompute the two results this project could only validate against
+its own generator --- the certificate (\cref{ch:breakthrough}) and the prognostic floor
+(\cref{sec:bt-prognostic-floor}) --- on NASA's truth. One of them ports. The other does not, and
+in failing it exposed a defect in the original.
+
+\subsection{The floor ports, and confirms}
+
+F11 needs no influence matrix at all: condition on each unit's \emph{true} health state, take
+its nearest neighbours in health space, and read the spread of their true remaining lives. Over
+99 N-CMAPSS units (\code{scripts/f21\_ncmapss\_cert\_floor.py}, \code{prereg-v24}):
+
+\begin{center}\small
+\begin{tabular}{@{}lrr@{}}
+  \toprule
+  Life fraction & irreducible share, N-CMAPSS & irreducible share, ours \\
+  \midrule
+  $50\,\%$ & $0.68$ & $0.87$ \\
+  $70\,\%$ & $0.72$ & $0.85$ \\
+  $90\,\%$ & $0.82$ & $0.88$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+Absolute floors are not comparable --- N-CMAPSS units live tens of cycles where ours live
+thousands --- but the \emph{share} is, and in both fleets most of the remaining-life spread
+between engines in identical true condition is irreducible. \textbf{F11's central claim
+survives on data this project did not generate.} The trend differs in detail: ours is roughly
+flat across life, N-CMAPSS rises, which is worth noting and not worth explaining away here.
+
+\subsection{The certificate does not port --- and the control is the reason}
+
+F10 needs three things N-CMAPSS does not ship: an influence matrix (estimated in
+\cref{sec:f20-ncmapss}), a noise covariance (estimated from within-flight lag-1 residuals), and
+an estimator to be honest \emph{about} (a WLS gas-path solve). Run that way, the certificate
+appears to work beautifully: Spearman $\rho = 0.842$ ($p = 0.0022$) between the bound and the
+estimator's true per-direction error, better than the $0.70$ of the original.
+
+It is an artifact, and one control shows it. The bound and the estimator are computed from the
+\emph{same} matrix. Column-shuffling that matrix destroys the physics while keeping the coupling
+and the multiset of column norms --- and the shuffled control reproduces the correlation almost
+exactly, $\rho = 0.830$ against the real $0.842$.
+
+\keyidea{Both the CRB for direction $j$ and the estimator's error in direction $j$ grow when column $j$ of $\mathbf{H}$ is weak, \emph{whether or not that column is the physically right one}. A ranking correlation between them can therefore be produced by a matrix with no physics in it. \textbf{The N-CMAPSS port measures the coupling, not the certificate, and is withdrawn.}}
+
+\subsection{Running the same control on our own F10}
+
+That mechanism is not specific to N-CMAPSS. In \cref{ch:breakthrough} the certificate is built
+from the pyCycle influence matrix and the Kalman estimator uses the same matrix, so the same
+coupling exists, and \textbf{F10 never had this control}. Contribution C8 is the project's
+most-promoted result; the control is cheap; it had to be run
+(\code{scripts/f22\_f10\_shuffle\_control.py}, \code{prereg-v25}).
+
+\begin{center}\small
+\begin{tabular}{@{}lrrr@{}}
+  \toprule
+  & real $\rho$ & control median & empirical $p$ \\
+  \midrule
+  this study (pyCycle CFM56-7B) & $\mathbf{0.697}$ & $0.242$ & $0.085$ \\
+  N-CMAPSS port                 & $0.842$ & $0.830$ & --- \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.64\textwidth]{shuffle_control}
+  \caption{The honesty correlation against its own null. Grey spans the 5th--95th percentile of
+  200 column-shuffled draws, in which the influence matrix carries no physics. Auto-generated
+  (\protect\code{prereg-v25}).}
+  \label{fig:shuffle-control}
+\end{figure}
+
+\textbf{The reimplementation is faithful} --- $\rho = 0.697$ against the published $0.70$ --- so
+what follows is about the original claim, not about a coding difference.
+
+\textbf{The verdict is genuinely mixed, and both halves matter.} The control median is
+$\mathbf{0.242}$, not zero: a physics-free matrix already ranks somewhat, so \emph{part} of the
+published $0.70$ was always the coupling, and that context was never in this document. But the
+real value sits far above that median, so the certificate does carry real signal. What it does
+not do is clear significance: the null distribution has a long tail whose 95th percentile
+reaches $0.722$, \emph{above} the real value, giving $p = 0.085$.
+
+\keyidea{H10.1 is neither confirmed nor refuted by this control --- it is \textbf{under-powered}. With ten health directions, a rank correlation cannot separate a certificate that works from a coupling that mimics one. The honest status of $\rho = 0.70$ is: real signal, partly attributable to a shared matrix, and never significant against its own null.}
+
+\paragraph{What follows for C8.} The claim is qualified rather than withdrawn, and the
+qualification travels with the number: every place this document quotes $\rho = 0.70$ now
+quotes the null beside it (\cref{sec:contributions,ch:breakthrough,sec:questions-answered}).
+The contrast with N-CMAPSS is the useful part --- there the certificate added \emph{nothing}
+over the coupling, here it adds a great deal, which is evidence that a well-founded influence
+matrix matters and an estimated one is not a substitute.
+
+\paragraph{Why this was not caught earlier, stated plainly.} Every later line in this chapter
+carries a control arm --- \cref{sec:f17-hybrid} has one that fired, \cref{sec:f19-cert} has one
+that inverted a post-hoc, \cref{sec:f15-instrument} has a fraud check that validated a null.
+F10 predates that discipline and never had one. The lesson is not about this certificate: it is
+that \textbf{the control is the part of an experiment worth designing first}, and the results
+here that survived scrutiny are exactly the ones that had one.
+
+\paragraph{What would settle it.} More directions, or an independent estimator. The rank test
+has $n = 10$ by construction, so no amount of fleet data helps; what would help is comparing
+the bound against an estimator that does \emph{not} use the same matrix --- a learned state
+estimator, for instance --- which breaks the coupling by design rather than by shuffling.
+
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
 
@@ -1374,6 +1481,7 @@ are allowed to fail.
     L-CERT & Does gating the GPA estimate with the certificate help? & \textbf{No --- it hurts} ($-0.119$, $t=-3.72$) at equal channel count; the CRB as input adds nothing ($+0.007$). L-HYB's post-hoc was the channel count (\cref{sec:f19-cert}) \\
     L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity, on a GRU cell} --- 94\,cy of RUL error at doubled parameters ($p=0.016$), nothing at equal. \textbf{Does not transfer to LSTM} (sign reverses), and that comparison is confounded by GRU-tuned hyperparameters (\cref{sec:f18-bidir,sec:f18-lstm}) \\
     L-EXT2 & Is the confusable wall an artifact of our own deck? & \textbf{No} --- on NASA's C-MAPSS, a different engine and code, the pair sits at $0.66^{\circ}$ on cockpit-class channels and opens to $20.9^{\circ}$ with full instrumentation; ours are $1.3^{\circ}$/$26.7^{\circ}$ (\cref{sec:f20-ncmapss}) \\
+    L-CERT2 & Do the certificate and the floor port to external truth? & \textbf{Floor yes, certificate no} --- irreducible share $0.68$--$0.82$ vs ours $0.87$--$0.88$; the certificate's $\rho=0.842$ on N-CMAPSS is matched by a physics-free null at $0.830$, and the same control on \emph{our} F10 gives $\rho=0.697$ against a null median $0.242$ at $p=0.085$ (\cref{sec:f21-port}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\

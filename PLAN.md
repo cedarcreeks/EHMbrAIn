@@ -1460,3 +1460,62 @@ exactamente la objeción del capítulo al ranking de quince. Nueva fila en pregu
 2. **L-BIDIR con presupuesto simétrico por célula** si ha de ser afirmación sobre arquitectura.
 3. L3 (EGT estación real) · L10 (forma de mapa) · M3 (pérdida con restricción física) ·
    validación de PCS · publicación de SynCFM56 con DOI.
+
+---
+
+## SESIÓN 2026-08-02 (cont.) — F10 pierde el titular que nunca tuvo control
+
+Report **144 pp**, 44 tests verdes. Tags **prereg-v24, v25**.
+
+### L-CERT2 / F21+F22 — el piso se porta, el certificado no
+
+`scripts/f21_ncmapss_cert_floor.py` · `scripts/f22_f10_shuffle_control.py` · §sec:f21-port
+
+**F11 CONFIRMA fuera de nuestro simulador.** No necesita ICM: condiciona sobre la salud
+verdadera, vecinos más cercanos, dispersión de la vida restante real. Fracción irreducible
+**0,68 / 0,72 / 0,82** contra nuestros **0,87 / 0,85 / 0,88** sobre 99 unidades. Los pisos
+absolutos no son comparables (sus unidades viven decenas de ciclos, las nuestras miles) pero
+la *fracción* sí, y en las dos flotas domina lo irreducible.
+
+**F10 NO se porta.** ρ = 0,842 en N-CMAPSS, aparentemente mejor que el 0,70 original. Pero
+barajar las columnas de H —destruye la física, conserva el acoplamiento y el multiconjunto de
+normas de columna— da **0,830**. El resultado era el acoplamiento. Retirado.
+
+**Mecanismo**: tanto el CRB de la dirección *j* como el error del estimador en *j* crecen
+cuando la columna *j* de H es débil, **sea o no la columna físicamente correcta**. Una
+correlación de rangos entre ambos la puede producir una matriz sin física dentro.
+
+### Y el control que F10 nunca tuvo, sobre nuestros propios datos
+
+| | ρ real | mediana control | p empírico |
+|---|---|---|---|
+| nuestro (pyCycle) | **0,697** | 0,242 | **0,085** |
+| N-CMAPSS | 0,842 | 0,830 | — |
+
+Reimplementación fiel (0,697 vs 0,70 publicado), así que esto es sobre la afirmación, no sobre
+el código. **Veredicto mixto y las dos mitades importan**: la mediana del control es 0,242 y no
+cero, así que *parte* del 0,70 siempre fue el acoplamiento y ese contexto nunca estuvo en el
+documento; pero el valor real está muy por encima, así que el certificado sí aporta señal. Lo
+que no hay es significación: el p95 del nulo llega a **0,722**, por encima del valor real.
+
+**H10.1 queda infrapotenciada, no refutada.** Con diez direcciones un test de rangos no puede
+separar un certificado que funciona de un acoplamiento que lo imita. Estado honesto de ρ=0,70:
+*señal real, en parte atribuible a una matriz compartida, nunca significativa contra su nulo.*
+
+**C8 se matiza, no se retira**, y el matiz **viaja con el número**: ch01, ch12, ch13, A2,
+one-pager, slides, guion en castellano y el brief OEM completo. Misma disciplina que prereg-v15.
+
+**Por qué no salió antes**: F10 es anterior a la disciplina de brazo de control. Todas las
+líneas posteriores llevan uno —el de H15.3 disparó, el de H15.11 invirtió un post-hoc, el de
+H15.8 validó un nulo— y en los tres el control cambió el veredicto. La lección no es sobre este
+certificado: **el control es la parte del experimento que hay que diseñar primero**.
+
+**Qué lo zanjaría**: no más datos de flota, n=10 direcciones es estructural. Un estimador que
+**no** use la misma matriz (p. ej. uno aprendido), que rompe el acoplamiento por diseño y no
+por barajado.
+
+### Pendiente
+
+1. Estimador independiente para desacoplar H10.1 (lo único que zanja C8).
+2. L-BIDIR con presupuesto simétrico por célula.
+3. L3 · L10 · M3 · validación de PCS · publicación de SynCFM56 con DOI.

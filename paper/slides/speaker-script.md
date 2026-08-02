@@ -549,7 +549,15 @@ the quantitative floor for everything after. Do not skip 19.]_
 > real engine the true component state is unknowable.
 >
 > Here it is knowable. The certified precision ranks the filter's actual error
-> against ground truth with a correlation of 0.70. The directions the certificate
+> against ground truth with a correlation of 0.70 — and I have to give you the
+> caveat with the number, because we only ran the control afterwards. Both the
+> bound and the estimator are built from the same influence matrix, and if you
+> shuffle that matrix so it carries no physics at all, you still get 0.24 on
+> average and occasionally 0.72. So part of the 0.70 was always the shared
+> matrix. The certificate is well above that null, but with ten directions the
+> test cannot reach significance — p is 0.085. Real signal, never proven.
+>
+> The directions the certificate
 > calls identifiable are the ones the estimator gets right; the ones it calls
 > unobservable are where the estimate is worthless. To our knowledge that is the
 > first ground-truth-validated identifiability guarantee for gas path diagnosis —

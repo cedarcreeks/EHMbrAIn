@@ -12,7 +12,7 @@ of an engine's remaining life is genuinely unknowable from its present state ---
 where a better prognostic can help and where it cannot.
 \end{quote}
 
-\keyidea{Accumulated Fisher information over an engine's real flight history yields a per-direction identifiability certificate --- and, uniquely, one \emph{proven honest against ground truth} ($\rho=0.70$): the Cram\'er--Rao bound earns the anisotropic shape, split-conformal the scale, and the same object says which sensor rescues which fault.}
+\keyidea{Accumulated Fisher information over an engine's real flight history yields a per-direction identifiability certificate whose honesty is testable against ground truth ($\rho=0.70$): the Cram\'er--Rao bound earns the anisotropic shape, split-conformal the scale, and the same object says which sensor rescues which fault. \textbf{Read that $0.70$ with \cref{sec:f21-port}}: against a physics-free null it is real signal but not significant ($p=0.085$), because a rank test over ten directions cannot be.}
 
 
 \section{The gap nobody has closed}
@@ -69,7 +69,8 @@ reading noise.
   \caption{Left: the identifiability certificate --- certified precision (CRB std) per health
   direction, cockpit versus extended sensors; below the dashed line is identifiable. Right:
   the honesty proof --- certified precision versus the Kalman filter's actual per-direction
-  error against ground truth (Spearman $\rho = 0.70$). Auto-generated.}
+  error against ground truth (Spearman $\rho = 0.70$; null median $0.242$, $p=0.085$,
+  \cref{sec:f21-port}). Auto-generated.}
   \label{fig:f10}
 \end{figure}
 
@@ -91,7 +92,8 @@ engines gives \cref{tab:f10}:
 
 \begin{itemize}
   \item \textbf{H10.1 confirmed --- the certificate is honest.} The certified precision ranks
-    the Kalman filter's actual per-direction error with Spearman $\rho = 0.70$
+    the Kalman filter's actual per-direction error with Spearman $\rho = 0.70$ (against a
+    column-shuffled null of $0.242$, $p = 0.085$ --- \cref{sec:f21-port})
     ($p = 0.025$): the directions the certificate calls identifiable are exactly the ones the
     estimator gets right, and the ones it calls unobservable are exactly where the estimate
     is worthless (\cref{fig:f10}, right). To our knowledge this is the first

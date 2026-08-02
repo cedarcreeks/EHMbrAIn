@@ -1,7 +1,12 @@
 # Pending work
 
-Updated 2026-08-02. Report at **142 pp**, **44 tests** green, 0 undefined references,
-`origin/main` at `a828df8`, tags through `prereg-v23`. Working tree clean, nothing running.
+Updated 2026-08-02. Report at **144 pp**, **44 tests** green, 0 undefined references,
+tags through `prereg-v25`. Working tree clean, nothing running.
+
+> **Read first:** §sec:f21-port qualified the project's most-promoted result. F10's
+> $\rho = 0.70$ never had a control; against a physics-free null it reaches $p = 0.085$.
+> Real signal, never significant. The qualification now travels with the number everywhere it
+> is quoted.
 
 ---
 
@@ -33,39 +38,33 @@ only version worth doing, and it is a study, not a re-run.
 
 ---
 
-## 2. ~~N-CMAPSS~~ — DONE. The circularity objection is answered.
+## 2. ~~N-CMAPSS~~ — DONE, and it found a defect in our own F10
 
-Gate passed on documentation alone, then executed. Full account in
-`docs/f20-ncmapss-gate.md` and §sec:f20-ncmapss; verdict in
-`data/processed/f20/ncmapss_icm.json`.
+Three lines, all in the report.
 
-**Identifiability gate:** condition **5.6**, effective rank **10/10** over nine of the ten
-repository files, 699 012 subsampled rows, 430 condition bins. All ten health parameters
-separately identifiable — pooling across subsets is what bought it, since the seven failure
-modes are spread between files rather than within one.
+**L-EXT2 (`sec:f20-ncmapss`, prereg-v23) — the wall is not ours.** ICM estimated from
+N-CMAPSS (condition 5.6, rank 10/10, 699 012 rows). Confusable pair **0.66°** on cockpit-class
+channels and **20.92°** with full instrumentation, against our **1.30°** and **26.71°**. Both
+the wall and its cure reproduce on a different engine, in different software, by other people.
 
-| sensor set | ours (pyCycle, CFM56-7B) | N-CMAPSS (NASA C-MAPSS) |
-|---|---|---|
-| cockpit class, 3 channels | 1.30° | **0.66°** |
-| full instrumentation | 26.71° | **20.92°** |
+**L-CERT2 (`sec:f21-port`, prereg-v24/25) — the floor ports, the certificate does not.**
 
-**Both the wall and its cure reproduce** on a different engine, in different software, by
-different people. The central negative of the document is not an artifact of its own simulator,
-and the conclusions' opening keyidea now demonstrates that rather than asserting it.
+- **F11 confirms externally**: irreducible share 0.68 / 0.72 / 0.82 against our 0.87 / 0.85 /
+  0.88. Needs no influence matrix, so it is clean.
+- **F10 does not port**: ρ = 0.842 on N-CMAPSS, but a column-shuffled matrix — no physics,
+  same coupling — reaches 0.830. The correlation measures the shared matrix.
+- **And the same control on our own F10**: real ρ = **0.697** (faithful to the published 0.70)
+  against a null median **0.242**, p95 **0.722**, **p = 0.085**. Real signal well above the
+  null median, never significant against it. **Under-powered, not refuted** — a rank test over
+  ten directions cannot resolve it.
 
-Limits recorded with the result: the matrix is *estimated* and carries regression error, so the
-comparison is of magnitude and structure not of value; the sensor sets correspond only
-approximately (`T48` is HPT-outlet total temperature where our EGT is a station-4.5 proxy); and
-`DS08d` unpacked truncated by 32 bytes and was skipped, logged in the verdict, with the two
-other all-component subsets loading normally.
+**Why it was missed:** F10 predates the control-arm discipline. Every later line has one
+(H15.3's fired, H15.11's inverted a post-hoc, H15.8's validated a null), and in each case the
+control changed the verdict.
 
-**Corrections to beliefs I had flagged:** the archive is **14.68 GB**, not ~1.2, and there is no
-per-subset download. `θ` ships in the **repository** distribution, not in the Challenge subset,
-which strips it. DS02 is 2.28 GB and carries 10 health parameters over 6.5 M rows.
-
-**Still open from this line, and now cheap:** porting F10's certificate and F11's floor onto
-N-CMAPSS truth. The ICM they need now exists and is identifiable. This was the original goal
-and it is no longer blocked — but the angle comparison was the higher-value half and it is done.
+**What would settle it:** not more fleet data — n = 10 directions is structural. An estimator
+that does *not* use the same matrix, e.g. a learned state estimator, breaks the coupling by
+design rather than by shuffling.
 
 ---
 
@@ -113,6 +112,10 @@ and it is no longer blocked — but the angle comparison was the higher-value ha
 - **Cross-run numbers are not comparable.** The `uni` attribution arm scored +0.181, +0.248 and
   +0.414 across three runs of a nominally identical configuration (per-seed sd 0.114). Only
   paired comparisons within a single run are reliable.
+- **Every claim needs a null, not just a p-value.** F10's ρ = 0.70 looked decisive for months
+  because nobody asked what a physics-free matrix would score. It scores 0.242 on average and
+  0.722 at the 95th percentile. Where an estimator and its bound share a component, shuffle
+  that component: it keeps the coupling and destroys the meaning.
 - **Bidirectional pooling.** Read forward-at-last concatenated with backward-at-first. `o[:, -1]`
   gives the backward pass a single sample and silently cripples the model — it cost two void
   runs (F18, F15).

@@ -117,7 +117,12 @@ you get, per engine and per health direction, a bound on what any diagnosis can
 possibly know. Validated against the true component state, which only a
 synthetic-truth testbed permits.
 
-It answers the question an OEM actually owns:
+It answers the question an OEM actually owns --- and one caveat travels with it, because we
+found it ourselves and late: the \emph{ranking} claim (that the bound orders the estimator's
+true error, $\rho = 0.70$) is real signal but does not clear a physics-free null
+($0.24$ median, $p = 0.085$), because the bound and the estimator share one matrix and a rank
+test over ten directions cannot separate them. The \emph{acquisition} figures below are
+separate measurements and are unaffected.
 
 \begin{center}\small
 \begin{tabular}{@{}lr@{}}

@@ -1291,6 +1291,52 @@ def fig_ncmapss_angle():
     print('  ncmapss angle figure done')
 
 
+def fig_shuffle_control():
+    """F22: the certificate's honesty correlation against its own null."""
+    import matplotlib.pyplot as plt
+    p22 = REPO_ROOT / 'data' / 'processed' / 'f22' / 'f10_shuffle_control.json'
+    p21 = REPO_ROOT / 'data' / 'processed' / 'f21' / 'ncmapss_cert_floor.json'
+    if not p22.exists():
+        return
+    v = json.loads(p22.read_text())
+    INK, BLUE, GRAY, RED = '#212529', '#4263EB', '#868E96', '#E03131'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.6, 3.0))
+    c = v['control']
+    # null band from the shuffled draws
+    ax.add_patch(plt.Rectangle((-0.42, c['p05']), 0.84, c['p95'] - c['p05'],
+                               color=GRAY, alpha=0.28, zorder=1))
+    ax.plot([-0.42, 0.42], [c['median']] * 2, color=GRAY, lw=2.0, zorder=2)
+    ax.scatter([0], [v['rho_real']], s=70, color=BLUE, zorder=4)
+    ax.annotate(f"$\\rho$={v['rho_real']:.3f}\n$p$={c['empirical_p']:.3f}",
+                (0, v['rho_real']), xytext=(10, -4), textcoords='offset points',
+                fontsize=8, color=INK)
+    if p21.exists():
+        f21 = json.loads(p21.read_text())['F10_certificate']
+        r2 = f21['spearman_across_directions']['rho']
+        m2 = f21['shuffled_H_control']['rho_median']
+        ax.add_patch(plt.Rectangle((0.58, m2 - 0.02), 0.84, 0.04,
+                                   color=GRAY, alpha=0.28, zorder=1))
+        ax.plot([0.58, 1.42], [m2] * 2, color=GRAY, lw=2.0, zorder=2)
+        ax.scatter([1], [r2], s=70, color=RED, zorder=4)
+        ax.annotate(f'$\\rho$={r2:.3f}\nnull {m2:.3f}', (1, r2),
+                    xytext=(10, -4), textcoords='offset points', fontsize=8,
+                    color=INK)
+    ax.axhline(0, color=INK, lw=0.7)
+    ax.set_xticks([0, 1])
+    ax.set_xticklabels(['this study\n(pyCycle CFM56-7B)',
+                        'N-CMAPSS port\n(NASA C-MAPSS)'], fontsize=8)
+    ax.set_xlim(-0.6, 1.6)
+    ax.set_ylabel('Spearman(CRB, actual error)')
+    ax.set_title('the certificate against a physics-free null: grey is the '
+                 'column-shuffled control', fontsize=8)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'shuffle_control.pdf'); plt.close(fig)
+    print('  shuffle control figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2230,6 +2276,7 @@ def artifact_assets():
     fig_f15_instrument()
     fig_gate_t()
     fig_ncmapss_angle()
+    fig_shuffle_control()
     fig_bidir()
     fig_cert_isolated()
     fig_hybrid_arms()
