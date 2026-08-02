@@ -569,6 +569,42 @@ their own drivers, each writing a verdict artifact its figure or table reads:
   \bottomrule
 \end{tabular}
 \end{center}
+% ============================ OPEN DEFECT — INCOMPLETE GUIDE =========================
+% This table stops at f10/econ. THIRTEEN drivers are missing, and between them they
+% produce the whole of ch:overcoming. (f11_prognostic_floor.py IS wired, under the f8
+% target, but is likewise absent from this table — it feeds C9.)
+%   f_uq_reattribution.py        -> sec:f-uq       (the honest conformal re-attribution)
+%   f13_gate1_mechanism.py       -> sec:f13-mech   (L-MECH)
+%   f14_bilstm_replication.py    -> sec:f14-ext    (L-EXT)
+%   f15_h158_instrument_vs_engine.py -> sec:f15-instrument (L-INST)
+%   f16_gate_t_transient.py      -> sec:gate-t     (Gate T)
+%   f17_certificate_hybrid.py    -> sec:f17-hybrid (L-HYB)
+%   f18_bidirectionality.py      -> sec:f18-bidir + sec:f18-lstm
+%                                   (L-BIDIR; needs F18_CELL=gru AND F18_CELL=lstm,
+%                                    two runs, or the LSTM section has no data)
+%   f19_certificate_isolated.py  -> sec:f19-cert   (L-CERT)
+%   f20_ncmapss_icm.py           -> sec:f20-ncmapss (L-EXT2)
+%   f21_ncmapss_cert_floor.py    -> sec:f21-port   (L-CERT2)
+%   f22_f10_shuffle_control.py   -> sec:f21-port   (the control F10 never had)
+%   f23_decoupled_certificate.py -> sec:f23-decoupled (L-DECOUP)
+%   f24_crb_scale_magnitude.py   -> sec:f24-scale  (L-SCALE)
+%
+% Two claims on this page are therefore currently FALSE:
+%   1. "this section gives the complete replication path" — it does not;
+%   2. "make all runs everything below and rebuilds this document" — the Makefile has
+%      no target for any of the thirteen, so a clean clone cannot regenerate ch11,
+%      which is ~35 of 146 pages and holds the entire adversarial audit.
+%
+% Note f20/f21 additionally need the N-CMAPSS download (14.68 GB), so their row must
+% carry that precondition rather than implying a self-contained run.
+% Also: the 657 s / "about eleven minutes" figure below covers ONLY the wired stages.
+% The unwired thirteen are hours, not minutes (F18 alone measured 112.2 min), so the
+% cost sentence needs a scope qualifier once the target exists.
+%
+% Fix = add a `make overcoming` target with per-script wall-clock noted, extend this
+% table, and qualify both claims above.
+% Tracked: docs/TODO.md section 0, defect D2.
+% =====================================================================================
 
 Two platform notes a replicator needs (both learned the hard way, both in the decision
 register): torch-MPS training runs must execute in the \emph{foreground} on macOS

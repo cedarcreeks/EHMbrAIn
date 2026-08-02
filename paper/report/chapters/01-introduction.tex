@@ -150,6 +150,29 @@ prerequisite.
     quality in \cref{sec:noise-sweep}.
   \item[\textbf{C7.}] Sim-to-real validation: the full methodology is re-run on N-CMAPSS to
     check that the method ranking is not an artifact of our own simulator.
+% ============================ OPEN DEFECT — DO NOT SHIP AS IS ========================
+% This C8 entry is the LAST place in the repository that quotes rho = 0.70 unqualified.
+% Every other site (ch13 keyidea, sec:f21-port, sec:f23-decoupled, sec:f24-scale, the
+% one-pager, the OEM brief, the slides and the Spanish guide) already carries the
+% decomposition. Here the contributions list still reads as if the honesty test PASSED.
+%
+% What the body actually establishes, after four controls:
+%   ~0.24 of the 0.70 is the influence matrix the bound and the estimator share (F22);
+%   ~0.46 survives an estimator that never sees it, at p = 0.100 (F23);
+%   the magnitude route fails its own pre-declared gate, CRB varies 1.15 % between
+%     engines (F24);
+%   => the certificate is NOT shown dishonest. It is UNMEASURABLE ON THIS FLEET.
+%
+% The contributions list is what a reader meets first, so this is a real contradiction
+% with chapters 11 and 12, not a wording preference. Fix = restate C8 as a certificate
+% whose honesty test is under-powered on SynCFM56, and point at sec:future-c8.
+%
+% NOTE the "45x" acquisition figure below SURVIVES: it is a ratio between sensor
+% configurations, i.e. a relative claim, and F24 only disqualified ABSOLUTE magnitude.
+% It needs a pointer, not a retraction.
+%
+% Tracked: docs/TODO.md section 0, defect D1.
+% =====================================================================================
   \item[\textbf{C8.}] \textbf{The earned-confidence certificate} (\cref{ch:breakthrough}): a
     per-engine, history-resolved identifiability guarantee for gas-path diagnosis --- and,
     uniquely, a \emph{test against ground truth} of whether it is honest ($\rho = 0.70$ between

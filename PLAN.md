@@ -1574,3 +1574,60 @@ re-ejecución, no teoría nueva. La palanca existe: §ch:tomography movió la se
 **79 %** cambiando *una* condición de reporte.
 
 Es el único experimento pendiente que resolvería la afirmación más promocionada del proyecto.
+
+---
+
+## Auditoría de consistencia del repositorio — 2026-08-02, tras L-SCALE
+
+Barrido completo de todos los documentos generados, buscando dónde el repositorio se
+contradice a sí mismo. **La ciencia está cerrada; la documentación no.** Cuatro defectos,
+ninguno mueve un número, los cuatro son sitios donde el repositorio tergiversa trabajo que
+sí se hizo — que en este proyecto es el error caro.
+
+Cada uno queda marcado **in situ**, con un bloque de comentario en el sitio exacto, además
+de la ficha en `docs/TODO.md` sección 0. No se arregla nada en este pase: se documenta.
+
+| id | defecto | sitio marcado |
+|---|---|---|
+| D1 | la lista de contribuciones aún lee como si C8 hubiera pasado | `01-introduction.tex`, entrada C8 |
+| D2 | `make all` no reconstruye el capítulo 11 | `Makefile` + `03-methodology.tex` §replication |
+| D3 | el preregistro aparenta abandonado en v14 | `docs/prereg-index.md` (nuevo) |
+| D4 | el material OEM se queda en F23 | `oem-brief.tex` (y gemelos) |
+
+**D1** es el último sitio del repositorio que cita $\rho = 0{,}70$ sin matizar, y está en la
+posición más visible que existe: lo primero que lee un tribunal. Contradice a los capítulos
+11 y 12. El `45\times` de adquisición **sobrevive** — es un ratio entre configuraciones de
+sensor, y F24 descalificó solo la magnitud absoluta.
+
+**D2** son trece drivers sin target: `f_uq_reattribution` y `f13`–`f24`. Unas 35 de 146
+páginas, y toda la auditoría adversarial. Dos frases de `sec:replication` son hoy **falsas**:
+que da "the complete replication path" y que `make all` "runs everything below". Las
+restricciones de orden que un target ingenuo rompería van escritas en el Makefile: f23 antes
+de f24, f13 antes de ambos, f20 antes de f21/f22, y F18 necesita **dos** pasadas, `gru` y
+`lstm`, o la sección LSTM se queda sin datos.
+
+**D3 es el de peor ratio óptica/esfuerzo, y por eso va primero.** `docs/` tiene
+`prereg-v1..v14`, sin `v4`, y nada después de `v14`. La lectura natural es que la disciplina
+se abandonó *justo donde empieza la auditoría adversarial*. Es falsa —desde `v15` el
+preregistro es el docstring del driver, 32 a 49 líneas con hipótesis, diseño, puerta
+numérica y qué significaría un nulo, sellado con tag anotado— pero el repositorio sostiene
+esa lectura. Y el cambio de medio es defendible como **mejora**: `MIN_CV = 0.05` como
+constante sobre la que el script ramifica no se mueve a posteriori tan fácil como un umbral
+en prosa. Queda pendiente escribirlo en `sec:safeguards` y cerrar el hueco de `v4`.
+
+**D4** no es un error: "no supera un nulo físico-libre" sigue siendo cierto y sigue siendo la
+frase operativa. Es incompleto. Decisión abierta a propósito.
+
+### Lo que esta auditoría NO cambia
+
+La pregunta "¿aporta la IA frente a lo ya aplicado?" está cerrada y estos cuatro defectos no
+la tocan. Tampoco la toca el experimento de flota diversa (pendiente #1): el certificado es
+un objeto **clásico**, Fisher/CRB sobre la ICM, así que correrlo decide si una herramienta
+tradicional queda validada, no si la IA aporta.
+
+Respuesta registrada, contra la baseline **avanzada** (similarity, no Theil-Sen): sí en
+latencia de detección (recall 0,130 → 0,478, retraso 6033 → 499 ciclos a falsas alarmas
+igualadas, McNemar p = 0,0039) y sí en RUL tardío (1,34× a 90 % de vida, y 1,34× en anchura
+de intervalo conformal). **No** antes del 70 % de vida: 1,18× con p = 0,205 a mitad de vida,
+y empate exacto (1,005×) al 70 %. **No** en aislar el par confundible: 0,308 contra 0,308,
+idéntico, y Gate T explicó por qué. El certificado como feature **empeora** (−0,119, t = −3,72).

@@ -1,7 +1,11 @@
 # Pending work
 
 Updated 2026-08-02. Report at **146 pp**, **44 tests** green, 0 undefined references,
-tags through `prereg-v25`. Working tree clean, nothing running.
+tags through `prereg-v27`. Working tree clean, nothing running.
+
+> **The science is closed. Four documentation defects are not** — see section 0. None of
+> them changes a number; all four are places where the repository misrepresents work that
+> was actually done, which for this project is the expensive kind of error.
 
 > **Read first:** the project's most-promoted result is qualified everywhere it is quoted, and
 > after four tests its status is precise. Of F10's $\rho = 0.70$, **$\approx0.24$ is the matrix
@@ -13,6 +17,61 @@ tags through `prereg-v25`. Working tree clean, nothing running.
 >
 > **The certificate is not shown to be dishonest. It is shown to be unmeasurable *on this
 > fleet*.** Both walls are properties of SynCFM56, not of the instrument — see item 1.
+
+---
+
+## 0. Documentation defects — OPEN, and they are what stands between here and "done"
+
+Found by a full-repo consistency audit on 2026-08-02, after L-SCALE. All four are marked
+**in situ** with a comment block at the exact site, so they cannot be lost. Total ≈ 1.5 h.
+
+### D1 — the contributions list still reads as if C8 passed
+**Site:** `paper/report/chapters/01-introduction.tex`, entry `C8` (marked in file).
+
+It is the **last place in the repository** quoting $\rho = 0.70$ unqualified. Every other
+site already carries the decomposition. The contributions list is what a reader meets
+first, so this contradicts chapters 11 and 12 in the most visible position available.
+
+Restate as a certificate whose honesty test is *under-powered on SynCFM56*, and point at
+`sec:future-c8`. The $45\times$ acquisition figure **survives** — it is a ratio between
+sensor configurations, and F24 disqualified only absolute magnitude — but needs a pointer.
+
+### D2 — `make all` cannot rebuild chapter 11
+**Sites:** `Makefile` (comment block before `.PHONY`) and
+`paper/report/chapters/03-methodology.tex`, `sec:replication` (comment after the
+extension table).
+
+Thirteen drivers have no target: `f_uq_reattribution`, `f13`–`f24`. That is ~35 of 146
+pages and the entire adversarial audit. Two statements in `sec:replication` are currently
+**false**: that it gives "the complete replication path", and that `make all` "runs
+everything below". Ordering constraints a naive target would break are written into the
+Makefile comment (f23 before f24; f13 before both; f20 before f21/f22; F18 needs *two*
+runs, `gru` and `lstm`).
+
+Also: the "657 s / about eleven minutes" cost figure covers only the wired stages and will
+need a scope qualifier — the unwired thirteen are hours (F18 alone measured 112.2 min).
+
+### D3 — the pre-registration looks abandoned at v14
+**Site:** `docs/prereg-index.md` (written; it records the gap and indexes all 27 tags).
+
+`docs/` holds `prereg-v1.md`…`v14.md`, no `v4`, nothing after `v14`. The natural reading is
+that the discipline was dropped **exactly where the adversarial audit begins**. Wrong, but
+the repository supports it. From `v15` the pre-registration is the driver docstring
+(32–49 lines: hypothesis, design, numeric gate, meaning of a null) sealed by an annotated
+tag. Arguably *stronger* — `MIN_CV = 0.05` as a branching constant cannot be quietly moved.
+
+**Still to do:** a sentence in `sec:safeguards`/`sec:replication` stating the medium change
+and pointing at the index; and closing the `v4` hole (content is in `docs/f10-proposal.md`).
+Of the four defects this one has the worst optics-to-effort ratio — fix it first.
+
+### D4 — the OEM set stops at F23 (minor, judgement call)
+**Site:** `paper/oem-brief/oem-brief.tex` (marked); same wording in `oem-slides.tex` and
+`guia-presentacion-oem.tex`.
+
+Not wrong — "does not clear a physics-free null" is still true and still the operative
+sentence. Incomplete: F24 sharpens the status to "unmeasurable *on this fleet*, and here is
+the fleet that would measure it". Deliberately left open: a named next experiment plays
+better with a sceptic than an open caveat, but this is a 2-page brief, not an audit trail.
 
 ---
 
@@ -120,7 +179,7 @@ and it is now the top of the queue.
 
 ---
 
-## 4. Standing engineering notes
+## 5. Standing engineering notes
 
 - **Parallel over serial, always.** Independent jobs go to shard subprocesses.
   `multiprocessing` does not work here: `spawn` hangs re-importing the module, `fork`
