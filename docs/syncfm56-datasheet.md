@@ -54,6 +54,33 @@ its display shunt out of scope; two snapshot conditions with ambient/power scatt
 mission mix; chronic labels correlate with age by nature; at most three acute episodes and one
 sensor drift family per engine; N1/N2 absolute labels approximate (generic component maps).
 
+<!-- ============== OPEN DEFECT D6 — THE TWO LIMITATIONS THAT MATTER MOST ============
+  A datasheet exists to state limitations, and this list is missing the two that between
+  them disabled the project's flagship test. Both were measured, both are now on record in
+  the report, and neither has reached the document a dataset user would read first.
+
+  (a) MISSION HOMOGENEITY, NOW QUANTIFIED. The line above says "not a full mission mix"
+      qualitatively. It now has a number: every engine flies a near-identical N1 profile,
+      so the per-engine Cramer-Rao bound varies only 1.15 % across the fleet (sec:f24-scale,
+      prereg-v27). That is below the 5 % gate F24 declared in advance, which is why the
+      within-direction magnitude test -- the powered route to validating the certificate --
+      could not be reported as evidence. This is the single most consequential property of
+      SynCFM56 and it belongs in this list with its number.
+
+  (b) MECHANISM DEGENERACY. hot_section dominates 100 of 100 engines, which made the K3
+      line degenerate and forced its withdrawal. Already declared a SynCFM56 limitation in
+      docs/TODO.md; absent here.
+
+  Worth adding alongside them, since it is likewise a composition property rather than a
+  method failure: with ten health directions, a rank test needs rho ~ 0.55 to clear
+  significance, which is what caps the certificate's ranking statistic (sec:f23-decoupled).
+
+  These are not defects OF the dataset -- v1.1 is frozen and stays frozen. They are facts
+  a user must know before choosing it, and they are exactly what the mission-diverse
+  regeneration (TODO section 3, sec:future-c8) would change.
+  Tracked: docs/TODO.md section 0, defect D6.
+================================================================================= -->
+
 ## Distribution & license
 
 Regenerable from the public repository (https://github.com/cedarcreeks/EHMbrAIn), MIT-licensed

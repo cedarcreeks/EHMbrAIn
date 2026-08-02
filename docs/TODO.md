@@ -3,8 +3,8 @@
 Updated 2026-08-02. Report at **146 pp**, **44 tests** green, 0 undefined references,
 tags through `prereg-v27`. Working tree clean, nothing running.
 
-> **The science is closed. Four documentation defects are not** — see section 0. None of
-> them changes a number; all four are places where the repository misrepresents work that
+> **The science is closed. Seven documentation defects are not** — see section 0. None of
+> them changes a number; all seven are places where the repository misrepresents work that
 > was actually done, which for this project is the expensive kind of error.
 
 > **Read first:** the project's most-promoted result is qualified everywhere it is quoted, and
@@ -22,8 +22,16 @@ tags through `prereg-v27`. Working tree clean, nothing running.
 
 ## 0. Documentation defects — OPEN, and they are what stands between here and "done"
 
-Found by a full-repo consistency audit on 2026-08-02, after L-SCALE. All four are marked
-**in situ** with a comment block at the exact site, so they cannot be lost. Total ≈ 1.5 h.
+Found by a full-repo consistency audit on 2026-08-02, after L-SCALE. All seven are marked
+**in situ** with a comment block at the exact site, so they cannot be lost. Total ≈ 2.5 h.
+
+**Listed by severity, not by number** (ids are stable because other files cite them):
+**D5** first — it is a false claim on a public front page. Then **D3** — cheapest, and it
+undercuts the one discipline this project sells. Then D1, D6, D2, D7. **D4** is a
+judgement call, not a defect.
+
+Only D5 and D1 are *wrong*. D2, D3, D6 and D7 are **omissions that mislead**: work that was
+done, correctly, and then not written where the reader who needs it would look.
 
 ### D1 — the contributions list still reads as if C8 passed
 **Site:** `paper/report/chapters/01-introduction.tex`, entry `C8` (marked in file).
@@ -62,7 +70,42 @@ tag. Arguably *stronger* — `MIN_CV = 0.05` as a branching constant cannot be q
 
 **Still to do:** a sentence in `sec:safeguards`/`sec:replication` stating the medium change
 and pointing at the index; and closing the `v4` hole (content is in `docs/f10-proposal.md`).
-Of the four defects this one has the worst optics-to-effort ratio — fix it first.
+Of the seven this one has the worst optics-to-effort ratio: cheap, and it undercuts the one
+discipline the project sells. Do it right after D5.
+
+### D5 — the README advertises the pre-audit number, publicly
+**Site:** `README.md`, `## Status` (marked in file).
+
+**Fix order: D5, then D3, then the rest — see the note above.** The H4 row reads *"prognosis 3–6×"* — measured against Theil-Sen,
+a naive linear extrapolation. Against the advanced classical baseline a shop actually uses
+(similarity matching) the honest figures are **1.34×** at 90 % of life, **1.005×** — an
+exact tie — at 70 %, and 1.18× at **p = 0.205**, not significant, at 50 %. The entire
+re-audit exists to correct that claim, and the front door still shows the old one to the
+public. Three more in the same file: the status list stops at H6 (nothing from tomography,
+overcoming, breakthrough, economics, N-CMAPSS or the C8 audit); "36 gate tests" contradicts
+"44 gate tests" fourteen lines above it; and the `make all` line repeats D2's falsehood.
+
+### D6 — the datasheet omits the two limitations that matter most
+**Site:** `docs/syncfm56-datasheet.md`, "Known limitations" (marked in file).
+
+A datasheet exists to state limitations, and this one is missing the two that between them
+disabled the flagship test. **Mission homogeneity now has a number**: every engine flies a
+near-identical N1 profile, so the per-engine CRB varies **1.15 %** fleet-wide — under F24's
+pre-declared 5 % gate, which is precisely why the powered magnitude test could not be
+reported. **Mechanism degeneracy**: `hot_section` dominates 100/100 engines, which killed
+K3. Neither is a defect *of* v1.1, which stays frozen; both are facts a user must know
+before choosing it, and both are what the mission-diverse regeneration would change.
+
+### D7 — N1 prescribes two patterns measured false on this machine
+**Site:** `docs/engineering-norms.md`, norm N1 (marked in file).
+
+N1 is the norm this project leans on hardest. It says use `ProcessPoolExecutor` — which
+**does not work** for the torch workloads here (spawn hangs re-importing, fork deadlocks on
+the parent's BLAS threads); the working pattern is subprocess shards, as in F18/F19/F23.
+And it says run tensor work on the GPU, where MPS measured **1.43 s/epoch against 1.56 on
+one CPU thread** for these model sizes — twelve batches per epoch, so launch overhead
+dominates. The shard-count and E-core findings live only in section 5 below, which is a
+session log, not a norm. A replicator reads the norm.
 
 ### D4 — the OEM set stops at F23 (minor, judgement call)
 **Site:** `paper/oem-brief/oem-brief.tex` (marked); same wording in `oem-slides.tex` and

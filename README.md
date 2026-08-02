@@ -92,6 +92,29 @@ Full mapping of scripts to report tables/figures: report ch. 3, "Replication gui
 
 ## Status
 
+<!-- ===================== OPEN DEFECT D5 — PUBLIC OVERCLAIM ==========================
+  This README is the repository's front door and it currently describes a project that
+  ended at H6. Four problems, one of them a live false claim:
+
+  1. "prognosis 3-6x" in the H4 row below is THE deflated number. It is measured against
+     Theil-Sen, a naive linear extrapolation. Against the advanced classical baseline a
+     shop actually uses (similarity matching) the honest figure is 1.34x at 90 % of life,
+     1.005x -- an exact tie -- at 70 %, and 1.18x at p = 0.205, not significant, at 50 %.
+     The entire re-audit (sec:f8-lrul-sweep, sec:f-uq) exists to correct this claim, and
+     the front page still advertises the pre-audit version to the public.
+  2. The status list stops at H6. Everything after it is missing: the tomography chapter,
+     the whole overcoming chapter, the breakthrough chapter, the economics chapter, the
+     N-CMAPSS external validation, and the four-control audit of C8.
+  3. Line "environment + 36 gate tests" contradicts "make test # 44 gate tests" fourteen
+     lines above it, in this same file.
+  4. "make all # full pipeline -> ... -> report PDF" carries the same falsehood as D2:
+     thirteen drivers are unwired, so it cannot rebuild chapter 11.
+
+  Fix = restate H4 against the advanced baseline, extend the status list through F24, make
+  the test count agree with itself, and qualify the make all line.
+  Tracked: docs/TODO.md section 0, defect D5.
+==================================================================================== -->
+
 - [x] **H0** — environment runs an end-to-end pyCycle cycle; repo skeleton in place
 - [x] **H1** — calibrated CFM56-7B26 model + baseline decks + influence coefficient matrix
 - [x] **H2** — SynCFM56 synthetic fleet (v1.1: multi-episode, twice-hardened difficulty gate)

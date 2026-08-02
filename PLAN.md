@@ -1631,3 +1631,42 @@ igualadas, McNemar p = 0,0039) y sí en RUL tardío (1,34× a 90 % de vida, y 1,
 de intervalo conformal). **No** antes del 70 % de vida: 1,18× con p = 0,205 a mitad de vida,
 y empate exacto (1,005×) al 70 %. **No** en aislar el par confundible: 0,308 contra 0,308,
 idéntico, y Gate T explicó por qué. El certificado como feature **empeora** (−0,119, t = −3,72).
+
+### Segunda pasada de la auditoría — los `.md` (2026-08-02)
+
+El primer barrido cubrió el report, el Makefile y el material OEM. Faltaban los documentos
+markdown, y ahí salieron tres más, una de ellas peor que cualquiera de las cuatro primeras.
+
+**D5 — el README anuncia el número pre-auditoría, en público.** La fila H4 dice
+*"prognosis 3–6×"*, que es contra Theil-Sen, extrapolación lineal ingenua. Contra la
+baseline avanzada que un taller usa de verdad el número honesto es **1,34×** al 90 % de
+vida, **1,005×** —empate exacto— al 70 %, y 1,18× con **p = 0,205** al 50 %. Toda la
+re-auditoría existe para corregir esa cifra y la portada del repositorio público sigue
+enseñando la vieja. Además: la lista de estado se para en H6, "36 gate tests" contradice a
+"44 gate tests" catorce líneas más arriba en el mismo fichero, y la línea de `make all`
+repite la falsedad de D2. **Es la primera que hay que arreglar.**
+
+**D6 — el datasheet omite las dos limitaciones que más pesan.** Un datasheet existe para
+declarar limitaciones, y a éste le faltan las dos que entre ambas deshabilitaron el test
+estrella. La homogeneidad de misión **ya tiene número**: todos los motores vuelan un perfil
+de N1 casi idéntico, así que el CRB por motor varía **1,15 %** en toda la flota, por debajo
+de la puerta del 5 % que F24 declaró antes de correr. Y `hot_section` domina 100 de 100
+motores, que es lo que mató K3. Ninguna es un defecto *de* v1.1 —que sigue congelada— sino
+un hecho que un usuario debe conocer antes de elegirla, y son exactamente lo que cambiaría
+la regeneración con diversidad de misión.
+
+**D7 — la norma N1 prescribe dos patrones que medimos falsos.** N1 es la norma en la que
+más se apoya el proyecto. Dice usar `ProcessPoolExecutor`, que **no funciona** con las
+cargas torch de aquí: `spawn` cuelga al reimportar y `fork` bloquea con los hilos BLAS del
+padre. El patrón que funciona son shards por subproceso (F18/F19/F23). Y dice llevar el
+trabajo tensorial a GPU, donde MPS midió **1,43 s/época contra 1,56 en una sola hebra de
+CPU** para estos tamaños: doce lotes por época, así que domina el lanzamiento de kernels.
+Lo del recuento de shards y los E-cores vive solo en las notas de sesión del TODO, que es
+un registro, no una norma. Un replicador lee la norma.
+
+### Cómo quedan las siete
+
+Solo **D5 y D1 están mal**. D2, D3, D6 y D7 son **omisiones que engañan**: trabajo hecho,
+hecho bien, y luego no escrito donde lo buscaría quien lo necesita. D4 es una decisión
+abierta, no un defecto. Orden por gravedad, no por número: D5, D3, D1, D6, D2, D7. Unas
+2,5 h en total, y con eso el estudio queda cerrado con integridad.

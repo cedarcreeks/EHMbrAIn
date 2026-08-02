@@ -19,6 +19,33 @@ independent units MUST run those units in parallel:
   XGBoost: `tree_method='hist'` (multicore CPU; no MPS support).
 - Emit per-task progress so a stalled worker is visible.
 
+<!-- ============ OPEN DEFECT D7 — N1 PRESCRIBES TWO MEASURED-WRONG PATTERNS =========
+  N1 is the norm the project leans on hardest, and two of its instructions were measured
+  false on this machine during F13-F24. A replicator following it as written loses time.
+
+  (a) "Use ProcessPoolExecutor" DOES NOT WORK for the torch workloads here. spawn hangs
+      re-importing the module; fork deadlocks on the parent's BLAS/torch threads (macOS
+      Accelerate). The pattern that works is SUBPROCESS SHARDS: parent builds and caches
+      to npz, launches `--shard i n` subprocesses, collects. Reference implementations:
+      scripts/f18_bidirectionality.py, scripts/f19_certificate_isolated.py,
+      scripts/f23_decoupled_certificate.py. Shard count via F18_SHARDS / F23_SHARDS.
+
+  (b) "Tensor / ML workloads: run on the GPU" IS NOT THE WIN THIS IMPLIES for these model
+      sizes. Measured: MPS 1.43 s/epoch against 1.56 on a SINGLE CPU thread -- 1.09x, and
+      1.26x over one thread in the earlier F4 measurement. The reason is structural, not
+      fixable: 1507 samples at batch 128 is twelve batches per epoch, so kernel launch
+      dominates. GPU remains right for F4-scale work; it is not a general rule.
+
+  Also missing from N1, and measured: shard count 4 (= performance cores on a 4P+6E
+  machine) is COOLER, not faster. Eight shards measured ~8 % faster end-to-end while
+  running 691 % CPU against 410 %. Buy four for heat and responsiveness. Do NOT use
+  `taskpolicy -b` to run cool -- E-cores measured 6.5x slower per epoch (12.83 s vs 1.96).
+
+  All of this is currently recorded only in docs/TODO.md "standing engineering notes",
+  which is a session log, not a norm. It belongs here, where a replicator looks.
+  Tracked: docs/TODO.md section 0, defect D7.
+================================================================================= -->
+
 ## N2 — Rebuild, never re-seed, after a failed Newton solve
 
 A failed solve corrupts a pyCycle point's internal states beyond repair.
