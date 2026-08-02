@@ -1251,6 +1251,46 @@ def fig_cert_isolated():
     print('  certificate isolation figure done')
 
 
+def fig_ncmapss_angle():
+    """F20: the confusable-pair angle on an engine model we did not build."""
+    import matplotlib.pyplot as plt
+    path = REPO_ROOT / 'data' / 'processed' / 'f20' / 'ncmapss_icm.json'
+    if not path.exists():
+        return
+    a = json.loads(path.read_text()).get('angle')
+    if not a or 'angle_cockpit_deg' not in a:
+        return
+    INK, BLUE, TEAL, RED = '#212529', '#4263EB', '#1098AD', '#E03131'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'axes.grid.axis': 'y',
+                         'grid.color': '#E9ECEF', 'figure.dpi': 150})
+    fig, ax = plt.subplots(figsize=(5.4, 3.0))
+    labels = ['cockpit-class\n(3 channels)', 'full instrumentation\n(extended / 14 ch)']
+    ours = [a['ours_cockpit_deg'], a['ours_extended_deg']]
+    theirs = [a['angle_cockpit_deg'], a['angle_all14_deg']]
+    x = np.arange(2); w = 0.36
+    ax.bar(x - w / 2, ours, w, color=BLUE, label='this study (pyCycle CFM56-7B)')
+    ax.bar(x + w / 2, theirs, w, color=TEAL, label='N-CMAPSS (NASA C-MAPSS)')
+    for xi, v in zip(x - w / 2, ours):
+        ax.annotate(f'{v:.2f}$^\\circ$', (xi, v), xytext=(0, 3),
+                    textcoords='offset points', ha='center', fontsize=7.5)
+    for xi, v in zip(x + w / 2, theirs):
+        ax.annotate(f'{v:.2f}$^\\circ$', (xi, v), xytext=(0, 3),
+                    textcoords='offset points', ha='center', fontsize=7.5)
+    ax.axhline(5.0, color=RED, lw=1.0, ls='--')
+    ax.annotate('separability threshold', (1.42, 5.6), fontsize=7, color=RED,
+                ha='right')
+    ax.set_yscale('log')
+    ax.set_xticks(x); ax.set_xticklabels(labels, fontsize=8)
+    ax.set_ylabel('$\\eta_{HPC}$ vs $\\eta_{HPT}$ angle [deg]')
+    ax.set_title('the wall reproduces on an engine model this project did not build',
+                 fontsize=8)
+    ax.legend(frameon=False, fontsize=7.5, loc='upper left')
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'ncmapss_angle.pdf'); plt.close(fig)
+    print('  ncmapss angle figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2189,6 +2229,7 @@ def artifact_assets():
     fig_f14_bilstm()
     fig_f15_instrument()
     fig_gate_t()
+    fig_ncmapss_angle()
     fig_bidir()
     fig_cert_isolated()
     fig_hybrid_arms()

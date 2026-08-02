@@ -1059,6 +1059,80 @@ already, and it agrees with \cref{sec:f8-lh2}: real probes lift confusable isola
 $0.15 \to 0.92$, and nothing in this gate suggests transients would be the cheaper route to the
 same place.
 
+\section{L-EXT2: the wall, measured on an engine model this project did not build}
+\label{sec:f20-ncmapss}
+
+\paragraph{The objection this answers.} Every geometric claim in this document descends from one
+object: the influence coefficient matrix of \emph{our} pyCycle twin. The $1.3^{\circ}$
+confusable pair, the rank-3 cockpit limit, the certificate of \cref{ch:breakthrough} and the
+negative verdict on H2 all follow from it. \Cref{sec:f-icm} showed the verdict survives
+perturbing our own calibration --- but that is still our model auditing itself. The open
+objection has always been sharper: \emph{is the wall a fact about turbofans, or an artifact of
+one deck?}
+
+N-CMAPSS answers it, because it is the only external run-to-failure dataset that ships the
+\textbf{true health parameters} alongside the measurements. It is a different engine, simulated
+with a different code (NASA's C-MAPSS~\cite{AriasChao2021}), by different people, with 14
+sensors instead of 3.
+
+\paragraph{Getting a Jacobian out of a black box.} No influence matrix is published for
+C-MAPSS, and the benchmark literature treats the model as closed. But an ICM \emph{is} a
+Jacobian, and every N-CMAPSS sample pairs a health state $\boldsymbol{\theta}$ with
+measurements $\mathbf{x}_s$ at a known operating condition $\mathbf{w}$. Regressing sensor
+deviations on $\boldsymbol{\theta}$ within bins of $\mathbf{w}$ estimates the matrix from data
+--- the ordinary way to obtain a Jacobian when the model cannot be perturbed
+(\code{scripts/f20\_ncmapss\_icm.py}, \code{prereg-v23}).
+
+\textbf{The identifiability gate comes first, and it had to.} Degradation is coordinated within
+a unit, so the $\boldsymbol{\theta}$ columns correlate and a single subset need not separate
+them. The seven failure modes are spread \emph{across} subsets, so pooling is what buys the
+variation. Over nine of the ten repository files (699\,012 subsampled rows, 430 condition bins):
+condition number $\mathbf{5.6}$, effective rank $\mathbf{10/10}$. All ten health parameters are
+separately identifiable, and the fit proceeds.
+
+\begin{center}\small
+\begin{tabular}{@{}lrr@{}}
+  \toprule
+  Sensor set & this study (pyCycle, CFM56-7B) & N-CMAPSS (C-MAPSS) \\
+  \midrule
+  cockpit class (3 channels)      & $1.30^{\circ}$  & $\mathbf{0.66^{\circ}}$ \\
+  full instrumentation            & $26.71^{\circ}$ & $\mathbf{20.92^{\circ}}$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.62\textwidth]{ncmapss_angle}
+  \caption{The $\eta_{\mathrm{HPC}}$ against $\eta_{\mathrm{HPT}}$ angle on two independent
+  engine models, log scale. Cockpit-class channels are $\{N_2, W_f, \mathrm{EGT}\}$ here and
+  their N-CMAPSS analogues $\{N_c, W_f, T_{48}\}$. Auto-generated
+  (\protect\code{prereg-v23}).}
+  \label{fig:ncmapss-angle}
+\end{figure}
+
+\keyidea{On an engine model built by other people, in other software, for a different engine, the confusable pair sits at $0.66^{\circ}$ on cockpit-class instrumentation and opens to $20.9^{\circ}$ with full instrumentation. Both the wall and its cure reproduce. \textbf{The central negative of this document is not an artifact of its own simulator.}}
+
+\paragraph{What may and may not be concluded.} The two numbers are not equal and should not be
+quoted as if they were. Different engines, and the sensor sets correspond only approximately ---
+$T_{48}$ is an HPT-outlet total temperature where our EGT is a station-4.5 proxy
+(\cref{sec:limitations}). What transfers is the \emph{order of magnitude and the structure}: a
+pair separated by under two degrees on cockpit-class instrumentation in both models, opening by
+a factor of twenty to thirty once station probes are present in both. That is precisely the
+class of claim \cref{ch:conclusions} says is transferable --- rankings, mechanisms and geometry,
+not absolute values --- and it is now demonstrated rather than asserted.
+
+Two further honest limits. The matrix here is \textbf{estimated}, not exact: it carries
+regression error, which is another reason to read the comparison at the level of magnitude.
+And one of the ten files (\code{DS08d}) unpacked truncated by 32 bytes and was skipped, recorded
+in the verdict rather than passed over silently; the two other all-component subsets
+(\code{DS08a}, \code{DS08c}) loaded, so no failure mode is missing from the pool.
+
+\paragraph{Scope.} This study sits \emph{outside} the reproducible pipeline. It needs a
+14.68\,GB download, and \code{make all} must never require it --- the same disclosure discipline
+applied to the FD001 substitution in \cref{sec:sim-to-real}. The gate reasoning and the download
+provenance are recorded in \code{docs/f20-ncmapss-gate.md}.
+
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
 
@@ -1299,6 +1373,7 @@ are allowed to fail.
     L-HYB & Does the certificate work as a physics-injection channel? & \textbf{Refuted by its control} --- both physics arms beat pure ($p<0.001$), so the gain is channels. But injection \emph{works} on attribution where H4/L6 refuted it on prognosis (\cref{sec:f17-hybrid}) \\
     L-CERT & Does gating the GPA estimate with the certificate help? & \textbf{No --- it hurts} ($-0.119$, $t=-3.72$) at equal channel count; the CRB as input adds nothing ($+0.007$). L-HYB's post-hoc was the channel count (\cref{sec:f19-cert}) \\
     L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity, on a GRU cell} --- 94\,cy of RUL error at doubled parameters ($p=0.016$), nothing at equal. \textbf{Does not transfer to LSTM} (sign reverses), and that comparison is confounded by GRU-tuned hyperparameters (\cref{sec:f18-bidir,sec:f18-lstm}) \\
+    L-EXT2 & Is the confusable wall an artifact of our own deck? & \textbf{No} --- on NASA's C-MAPSS, a different engine and code, the pair sits at $0.66^{\circ}$ on cockpit-class channels and opens to $20.9^{\circ}$ with full instrumentation; ours are $1.3^{\circ}$/$26.7^{\circ}$ (\cref{sec:f20-ncmapss}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\
     C6/noise & Do the verdicts survive better or worse sensors? & \textbf{Prognosis yes, detection emphatically, the tie no} --- and halving the noise does not break the wall (\cref{sec:noise-sweep}) \\

@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "AI-based vs traditional Engine Health Monitoring (gas path analysis) on a synthetic CFM56-7B fleet"
 requires-python = ">=3.11"
 dependencies = [
+    "h5py>=3.16.0",
     "matplotlib>=3.11.0",
     "numpy<2",
     "om-pycycle>=4.4.0",
