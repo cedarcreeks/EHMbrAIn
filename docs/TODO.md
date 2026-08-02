@@ -33,30 +33,35 @@ only version worth doing, and it is a study, not a re-run.
 
 ---
 
-## 2. N-CMAPSS DS02 (plan line L8) — feasibility gate first
+## 2. N-CMAPSS — gate RUN, passed; see `docs/f20-ncmapss-gate.md`
 
-Not on disk; only FD001 (5.5 MB) is. So this is data acquisition plus a new pipeline, not a
-re-run.
+Answered on documentation alone, without downloading (path A). Full write-up in that file;
+the short version:
 
-**The plan undersells why it matters.** N-CMAPSS ships the *true health parameters* in its `T`
-group — the only external dataset that does. That means the F10 certificate and the F11 floor,
-the two results this project could only validate against its own generator, might be
-recomputable on data that did not come from our simulator. That attacks the circularity
-objection directly, and it is a better reason than L8's stated one ("transfer with real
-per-cycle flight physics").
+- **14.68 GB**, one zip for DS01–DS08, no per-subset download. My "roughly 1.2 GB" was wrong by
+  twelve times. The report's existing reason for substituting FD001 is understated, not
+  overstated, and stands.
+- **No Jacobian or influence coefficients are published anywhere.** Everyone treats the C-MAPSS
+  model as a black box. So F10 cannot simply be ported — the original worry was right.
+- **But the ICM does not have to come from NASA.** Each sample pairs `θ` with `x_s` at a known
+  `w`, so regressing sensor deviations on `θ` at matched `w` estimates the influence matrix
+  from the data. Ordinary way to get a Jacobian from a closed model.
+- **Caveat to gate on:** degradation is coordinated within a unit, so `θ` columns correlate.
+  The seven failure modes are spread across subsets, so pooling buys the variation — check
+  conditioning/rank before using any estimated ICM, and if it fails, that is the finding.
+- Also corrected: N-CMAPSS ships `θ` in the **repository** distribution (which is where DS02
+  lives), not in the **Challenge** subset, which strips it to `W`, `X_s`, `Y`, `A`.
 
-**The obstacle:** F10 needs an influence coefficient matrix and N-CMAPSS does not ship one.
-Recovering sensitivities numerically, or from their model description, is research rather than
-a port — days, and possibly not feasible.
+**The by-product is worth more than the original goal.** An estimated ICM allows measuring the
+confusable-pair angle on a completely independent engine model — different engine, different
+authors, 14 sensors instead of 3. That tests whether the $1.3^{\circ}$ wall is a fact about
+turbofans or an artifact of our deck, which is the strongest available answer to the
+circularity objection. Compare on the shared sensor subset, report the full 14-channel angle
+alongside as the analogue of our extended set (already $25$–$30^{\circ}$, §sec:gate-t).
 
-**Gate, ~2 h, before committing anything:**
-1. Download DS02; verify actual size and schema. *Do not trust remembered figures* — roughly
-   1.2 GB and about nine units is a belief, not a measurement.
-2. Inspect whether `T` is usable as truth in the form F10/F11 need.
-3. Check whether anything ICM-equivalent is recoverable.
-
-Gate passes → the most valuable line left in the plan. Gate fails → L8 reduces to re-running
-C7 on more data to confirm a ranking FD001 already confirmed, and is not worth 1–2 days.
+**Order:** download outside the reproducible pipeline → estimate ICM and gate on conditioning →
+angle comparison → only then consider porting F10/F11. Roughly a day to the ICM, hours for the
+angle, open-ended after that.
 
 ---
 
