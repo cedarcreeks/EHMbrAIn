@@ -61,3 +61,6 @@ data/processed/icm/icm_robustness.json
 data/processed/fleet_v2/*.parquet
 # noise-axis fleets (C6): regenerable from the catalog with noise=<mult>
 data/processed/fleet_noise*/
+
+# N-CMAPSS: 14.7 GB, one-off study outside the reproducible pipeline
+data/external/ncmapss/
