@@ -1530,3 +1530,47 @@ conformal). **Arreglar la escala primero, medir magnitud después.** Estudio pro
 1. Estimador independiente para desacoplar H10.1 (lo único que zanja C8).
 2. L-BIDIR con presupuesto simétrico por célula.
 3. L3 · L10 · M3 · validación de PCS · publicación de SynCFM56 con DOI.
+
+
+---
+
+## SESIÓN 2026-08-02 (cierre) — C8 queda acotado: no deshonesto, no medible en esta flota
+
+Report **146 pp**, 44 tests verdes. Tags **prereg-v26, v27**.
+
+### L-DECOUP / F23 (v26) — romper el acoplamiento por diseño
+
+Estimador **aprendido** que nunca ve H, así que permutar las precisiones certificadas cambia la
+afirmación bajo test y nada más. El nulo se desploma **0,242 → 0,006**. ρ=**0,455**, positivo en
+las diez semillas. Pero **p=0,100**.
+
+**Descomposición del 0,70 original**: ~0,24 matriz compartida, ~0,46 señal real.
+
+### L-SCALE / F24 (v27) — arreglar la escala y medir magnitud
+
+**Parte 1, la escala no es una escala.** Calibrando en validación:
+`log|err| = -2,188 + 0,382 log CRB`. La cota subestima **8,9×** (esperable: es cota para
+estimadores insesgados) pero el exponente es **0,382, no 1** → la distorsión es de **forma**, no
+de escala, así que ninguna constante la arregla. Tras calibrar con dos parámetros, el 90 % de
+los errores sigue dentro de un factor **5,6**.
+
+**Parte 2, el test potente cae por su propia puerta.** El CRB varía solo **1,15 %** entre
+motores (umbral 5 %), porque toda la flota vuela perfiles de N1 casi idénticos. El test
+dentro-de-dirección da p=0,041 y p=0,009 con n=200 y **NO se reportan como evidencia**: con un
+predictor que se mueve un 1 %, eso es lo que fabrica un n grande. La puerta iba escrita antes.
+
+### Estado final de C8
+
+**El certificado no queda demostrado deshonesto. Queda demostrado NO MEDIBLE EN ESTA FLOTA.**
+Los dos muros son de SynCFM56, no del instrumento: el ranking está limitado a diez direcciones
+por la física, y la magnitud está deshabilitada por una flota cuyos motores vuelan todos igual.
+
+### PENDIENTE #1 — flota con diversidad de misión
+
+Regenerar SynCFM56 con mezclas de ruta lo bastante distintas para que motores distintos ganen
+cotas distintas. Entonces la precisión certificada se regresa contra el error logrado, con los
+efectos de dirección diferenciados y un predictor que se mueve. Cambio de generador más
+re-ejecución, no teoría nueva. La palanca existe: §ch:tomography movió la separabilidad un
+**79 %** cambiando *una* condición de reporte.
+
+Es el único experimento pendiente que resolvería la afirmación más promocionada del proyecto.

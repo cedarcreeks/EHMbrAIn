@@ -1,14 +1,18 @@
 # Pending work
 
-Updated 2026-08-02. Report at **145 pp**, **44 tests** green, 0 undefined references,
+Updated 2026-08-02. Report at **146 pp**, **44 tests** green, 0 undefined references,
 tags through `prereg-v25`. Working tree clean, nothing running.
 
-> **Read first:** the project's most-promoted result is now qualified everywhere it is quoted.
-> F10's $\rho = 0.70$ never had a control. Decomposed by §sec:f21-port and §sec:f23-decoupled:
-> **$\approx0.24$ is the matrix the bound shares with the estimator, $\approx0.46$ survives an
-> estimator that never sees it, and neither clears significance** — ten health directions is
-> too few for a rank test, and ten is fixed by the physics. The certificate is not shown to be
-> dishonest; it is shown to be **unprovable by the test F10 chose**.
+> **Read first:** the project's most-promoted result is qualified everywhere it is quoted, and
+> after four tests its status is precise. Of F10's $\rho = 0.70$, **$\approx0.24$ is the matrix
+> the bound shares with the estimator and $\approx0.46$ survives an estimator that never sees
+> it** (§sec:f21-port, §sec:f23-decoupled). Testing magnitude instead of ranking is blocked too:
+> the bound understates error $8.9\times$ with exponent $0.382$ — a *shape* error, so no single
+> constant repairs it — and the powered statistic fails its own gate because the CRB varies only
+> **1.15 %** between engines (§sec:f24-scale).
+>
+> **The certificate is not shown to be dishonest. It is shown to be unmeasurable *on this
+> fleet*.** Both walls are properties of SynCFM56, not of the instrument — see item 1.
 
 ---
 
@@ -69,16 +73,42 @@ $\mathbf{H}$ collapses the null from 0.242 to **0.006**, confirming the coupling
 the certificate still ranks at $\rho = 0.455$ on all ten seeds — but $p = 0.100$. The design
 worked; the statistic is the wall.
 
-**What would actually settle it:** not more engines and not a better estimator, but a different
-*statistic*. Compare certified precision against achieved error in **physical units** across
-engines — thousands of paired observations instead of ten — which is regression, not ranking.
-That needs the CRB's absolute scale to be trustworthy, and §sec:bt-honesty already shows it is
-not (H10.2 refuted, repaired only by conformal). **Fix the scale first, then test magnitude.**
-A study of its own.
+**And the magnitude route was run too** (`sec:f24-scale`, prereg-v27), which was supposed to be
+the way past that wall. Two findings, both negative and both useful:
+
+- Calibrating on validation gives $\log|\mathrm{err}| = -2.188 + 0.382 \log \mathrm{CRB}$. The
+  bound understates achievable error $8.9\times$ — expected for a bound on *unbiased* estimators
+  — but the exponent is **0.382, not 1**, so the distortion is a **shape** error and no single
+  constant repairs it. After a two-parameter fit, 90 % of test errors still sit within a factor
+  of **5.6**.
+- The powered within-direction test (n = 200 instead of 10) **fails its pre-declared gate**: the
+  CRB varies only **1.15 %** between engines, because every engine in SynCFM56 flies a
+  near-identical N1 profile. It returned $p = 0.041$ and $p = 0.009$ and **those are not
+  reported as evidence** — with a predictor that moves 1 %, that is what n = 200 manufactures.
 
 ---
 
-## 3. Remaining plan lines, each a study of its own
+## 3. The one experiment that would settle C8 — a mission-diverse fleet
+
+Both walls are properties of the fleet, not of the certificate:
+
+- the **ranking** statistic is capped at ten health directions, fixed by the physics;
+- the **magnitude** statistic needs the bound to vary between engines, and it varies 1.15 %.
+
+**Regenerate SynCFM56 with deliberate mission diversity** — route mixes different enough that
+engines earn materially different bounds. Then certified precision can be regressed against
+achieved error across engines, direction effects differenced out, with a predictor that
+actually moves. Generator change plus a re-run, not new theory.
+
+The leverage is known to exist: §ch:tomography moved separability by **79 %** by changing a
+single report condition, so operating history has first-order influence on this geometry.
+
+This is the only outstanding experiment that would resolve the project's most-promoted claim,
+and it is now the top of the queue.
+
+---
+
+## 4. Remaining plan lines, each a study of its own
 
 | Line | What | Note |
 |---|---|---|

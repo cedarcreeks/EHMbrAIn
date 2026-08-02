@@ -1284,14 +1284,71 @@ the validation design, not in the instrument, and it is a more useful finding th
 ambiguity: before this section one could not distinguish ``the certificate does not work'' from
 ``the certificate cannot be measured this way''. Now one can.
 
-\paragraph{What would actually settle it.} Not more engines, and not a better estimator --- a
-different \emph{statistic}. A rank correlation over ten items is weak by construction. A test
-with real power would compare certified precision against achieved error in \emph{physical
-units} across engines --- thousands of paired observations rather than ten --- which is a
-regression question, not a ranking one, and would need the CRB's absolute scale to be
-trustworthy. \Cref{sec:bt-honesty} already establishes that it is not (H10.2 refuted, repaired
-only by conformal calibration). So the honest path is: fix the scale first, then test the
-magnitude. That is a study of its own and it is recorded as such.
+\subsection{Fixing the scale, and the second wall behind it}
+\label{sec:f24-scale}
+
+The previous subsection named the way out: stop ranking, measure magnitude. That needs the
+CRB's absolute scale to be trustworthy, which \cref{sec:bt-honesty} shows it is not, so the
+order is calibrate then test (\code{scripts/f24\_crb\_scale\_magnitude.py},
+\code{prereg-v27}). Errors still come from the learned estimator of
+\cref{sec:f23-decoupled}, so the decoupling is preserved.
+
+\paragraph{Part 1 --- the scale, and it is not a scale.} Fitting
+$\log|\mathrm{err}| = a + b \log \mathrm{CRB}$ on \emph{validation} engines only:
+
+\begin{center}\small
+$\log|\mathrm{err}| = -2.188 + 0.382\,\log \mathrm{CRB}$
+\end{center}
+
+Two readings, and the second is the important one. The bound understates achievable error by
+$\mathbf{8.9\times}$ at $\mathrm{CRB}=1\,\%$ --- expected, since a Cram\'er--Rao bound is a floor
+for \emph{unbiased} estimators. But the exponent is $\mathbf{0.382}$, not $1$. \textbf{The
+distortion is not a scale error, it is a shape error in magnitude}: a single multiplicative
+constant cannot repair the bound, because the relationship between certified precision and
+achievable error is not proportional. After a two-parameter calibration, $90\,\%$ of test
+errors still fall only within a factor of $\mathbf{5.6}$ of prediction --- a precision forecast
+with six-fold uncertainty decides nothing operationally.
+
+\paragraph{Part 2 --- the powered statistic, and the gate that disqualifies it.} The certificate
+is per engine: it accumulates Fisher information over that engine's own flown conditions, so
+engines that flew differently should earn different bounds. Differencing out each direction then
+gives a test with $n = 200$ instead of $10$, immune to the ten-direction ceiling.
+
+That test was gated in advance on whether the CRB varies between engines at all, and
+\textbf{the gate fails}: the within-direction coefficient of variation of the CRB is
+$\mathbf{1.15\,\%}$ against a $5\,\%$ threshold.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrl@{}}
+  \toprule
+  Statistic & value & $p$ & $n$ \\
+  \midrule
+  between direction (F10's) & $\rho = 0.370$ & $0.293$ & $10$ \\
+  within direction & $r = 0.145$ & $0.041$ & $200$ \\
+  within direction & $\rho = 0.184$ & $0.009$ & $200$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\keyidea{The within-direction test returns $p = 0.041$ and $p = 0.009$, and \textbf{those numbers are not reported as evidence}, because the pre-declared gate says they cannot be. With a predictor that varies by one per cent across engines, a correlation of $0.145$ at $n = 200$ is what a large sample manufactures, not what a real effect looks like. Quoting them would be the same error the shuffled-matrix control exists to catch, wearing different clothes.}
+
+\paragraph{Why the fleet cannot answer this.} The gate fails for a reason that is a property of
+SynCFM56 rather than of the certificate: every engine flies a near-identical N1 profile, so the
+accumulated Fisher information comes out nearly the same for all of them. The certificate is
+per-engine in principle and near-constant in practice, and with no variation in the predictor
+there is nothing to regress against.
+
+\paragraph{What would settle C8, concretely.} A fleet with \textbf{deliberate mission
+diversity} --- engines flying materially different route mixes, so that different histories earn
+genuinely different bounds. Then the within-direction test has a predictor that moves, the
+ten-direction ceiling is irrelevant, and certified precision can be regressed against achieved
+error with real power. The lever is known to exist: \cref{ch:tomography} already showed that
+changing \emph{one} report condition moves separability by $79\,\%$, so operating-history
+diversity has first-order leverage on this geometry. That is a generator change plus a re-run,
+which is a study of its own and is recorded as the one experiment that would resolve the
+project's most-promoted claim.
+
+\keyidea{After three tests, C8's status is precise rather than vague. The certificate is not shown to be dishonest. It is shown to be unmeasurable \emph{on this fleet}: the ranking statistic is capped at ten directions by the physics, and the magnitude statistic is disabled by a fleet whose engines all fly the same way. The fix is a more diverse fleet, not a better estimator.}
 
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
@@ -1534,6 +1591,8 @@ are allowed to fail.
     L-CERT & Does gating the GPA estimate with the certificate help? & \textbf{No --- it hurts} ($-0.119$, $t=-3.72$) at equal channel count; the CRB as input adds nothing ($+0.007$). L-HYB's post-hoc was the channel count (\cref{sec:f19-cert}) \\
     L-BIDIR & Is the published Bi-LSTM's edge direction or capacity? & \textbf{Capacity, on a GRU cell} --- 94\,cy of RUL error at doubled parameters ($p=0.016$), nothing at equal. \textbf{Does not transfer to LSTM} (sign reverses), and that comparison is confounded by GRU-tuned hyperparameters (\cref{sec:f18-bidir,sec:f18-lstm}) \\
     L-EXT2 & Is the confusable wall an artifact of our own deck? & \textbf{No} --- on NASA's C-MAPSS, a different engine and code, the pair sits at $0.66^{\circ}$ on cockpit-class channels and opens to $20.9^{\circ}$ with full instrumentation; ours are $1.3^{\circ}$/$26.7^{\circ}$ (\cref{sec:f20-ncmapss}) \\
+    L-DECOUP & Is the certificate broken, or unmeasurable this way? & \textbf{Unmeasurable} --- with a learned estimator that never sees $\mathbf{H}$ the null collapses to $0.006$ and $\rho=0.455$ holds on all ten seeds, but $p=0.100$: ten directions is too few for a rank test (\cref{sec:f23-decoupled}) \\
+    L-SCALE & Can magnitude be tested instead of ranking? & \textbf{Not on this fleet} --- the CRB understates error $8.9\times$ with exponent $0.382$ (a shape error, not a scale one), and the powered test is disqualified by its own gate: the CRB varies only $1.15\,\%$ between engines (\cref{sec:f24-scale}) \\
     L-CERT2 & Do the certificate and the floor port to external truth? & \textbf{Floor yes, certificate no} --- irreducible share $0.68$--$0.82$ vs ours $0.87$--$0.88$; the certificate's $\rho=0.842$ on N-CMAPSS is matched by a physics-free null at $0.830$, and the same control on \emph{our} F10 gives $\rho=0.697$ against a null median $0.242$ at $p=0.085$ (\cref{sec:f21-port}) \\
     Gate T & Would transients open the confusable angle? & \textbf{Not via operating points} --- the whole envelope gives $1.38^{\circ}$, below cruise alone; true dynamics are priced, not ruled out (\cref{sec:gate-t}) \\
     L-ICM & Does the observability verdict survive calibration error? & \textbf{Yes at the core, no at the fringe} --- the confusable \emph{pair} is invariant, the confusable \emph{count} is not (\cref{sec:f-icm}) \\

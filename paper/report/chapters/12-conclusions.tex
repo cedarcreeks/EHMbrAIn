@@ -65,10 +65,13 @@ visible as wins.
     turbofans}: on NASA's C-MAPSS the same pair is $0.66^{\circ}$ on cockpit-class channels
     and $20.9^{\circ}$ with full instrumentation, against our $1.3^{\circ}$ and
     $26.7^{\circ}$ & \cref{sec:f20-ncmapss} \\
-  Does the certificate survive a physics-free control? & \textbf{Not conclusively}: real
-    $\rho=0.697$ against a shuffled-matrix null median $0.242$, but $p=0.085$ --- a rank test
-    over ten directions is under-powered. The N-CMAPSS port fails the same control outright
-    & \cref{sec:f21-port} \\
+  Does the certificate survive a physics-free control? & \textbf{Not conclusively, and now we
+    know why}: of $\rho=0.70$, $\approx0.24$ is the matrix the bound shares with the estimator
+    and $\approx0.46$ survives an estimator that never sees it --- but ten directions cannot
+    reach significance ($p=0.085$, $0.100$) & \cref{sec:f21-port,sec:f23-decoupled} \\
+  Can magnitude be tested instead of ranking? & \textbf{Not on this fleet}: the bound
+    understates error $8.9\times$ with exponent $0.382$, and every engine flies the same
+    profile so the CRB varies only $1.15\,\%$ between them & \cref{sec:f24-scale} \\
   Does the prognostic floor hold on external truth? & \textbf{Yes}: irreducible share
     $0.68$--$0.82$ on N-CMAPSS against our $0.87$--$0.88$ & \cref{sec:f21-port} \\
   Would transients break the confusable pair? & \textbf{Not through operating points}: the
@@ -390,6 +393,29 @@ produce gains everywhere; only a genuine prior produces gains shaped like the nu
 that shape is predicted in advance by an object computed without ever looking at the
 estimator. Every branch, including outright failure at the first gate, terminates in a result
 worth stating.
+
+\subsection{The one experiment that would settle C8}
+\label{sec:future-c8}
+
+Three tests have now failed to prove the certificate honest, and between them they say
+precisely why (\cref{sec:f21-port,sec:f23-decoupled,sec:f24-scale}). The ranking statistic is
+capped at ten health directions, which the physics fixes. The magnitude statistic needs the
+bound to vary between engines, and in SynCFM56 it does not: every engine flies a near-identical
+N1 profile, so the accumulated Fisher information is nearly the same for all of them and the
+within-direction coefficient of variation is $1.15\,\%$.
+
+Neither wall is about the certificate. Both are about the fleet.
+
+\textbf{The experiment is a fleet with deliberate mission diversity} --- route mixes different
+enough that engines earn materially different bounds. Then certified precision can be regressed
+against achieved error across engines, with direction effects differenced out and a predictor
+that actually moves. That is a generator change and a re-run, not new theory, and the leverage
+is known to be there: \cref{ch:tomography} moved separability by $79\,\%$ by changing a single
+report condition, so operating history has first-order influence on this geometry.
+
+Until it is run, the honest statement is the one this document now carries everywhere the
+number appears: \emph{the certificate is not shown to be dishonest, it is shown to be
+unmeasurable on this fleet.}
 
 \subsection{The remaining programme}
 
