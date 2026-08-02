@@ -1,12 +1,14 @@
 # Pending work
 
-Updated 2026-08-02. Report at **144 pp**, **44 tests** green, 0 undefined references,
+Updated 2026-08-02. Report at **145 pp**, **44 tests** green, 0 undefined references,
 tags through `prereg-v25`. Working tree clean, nothing running.
 
-> **Read first:** §sec:f21-port qualified the project's most-promoted result. F10's
-> $\rho = 0.70$ never had a control; against a physics-free null it reaches $p = 0.085$.
-> Real signal, never significant. The qualification now travels with the number everywhere it
-> is quoted.
+> **Read first:** the project's most-promoted result is now qualified everywhere it is quoted.
+> F10's $\rho = 0.70$ never had a control. Decomposed by §sec:f21-port and §sec:f23-decoupled:
+> **$\approx0.24$ is the matrix the bound shares with the estimator, $\approx0.46$ survives an
+> estimator that never sees it, and neither clears significance** — ten health directions is
+> too few for a rank test, and ten is fixed by the physics. The certificate is not shown to be
+> dishonest; it is shown to be **unprovable by the test F10 chose**.
 
 ---
 
@@ -62,9 +64,17 @@ the wall and its cure reproduce on a different engine, in different software, by
 (H15.3's fired, H15.11's inverted a post-hoc, H15.8's validated a null), and in each case the
 control changed the verdict.
 
-**What would settle it:** not more fleet data — n = 10 directions is structural. An estimator
-that does *not* use the same matrix, e.g. a learned state estimator, breaks the coupling by
-design rather than by shuffling.
+**That was run** (`sec:f23-decoupled`, prereg-v26): a learned estimator that never sees
+$\mathbf{H}$ collapses the null from 0.242 to **0.006**, confirming the coupling is gone, and
+the certificate still ranks at $\rho = 0.455$ on all ten seeds — but $p = 0.100$. The design
+worked; the statistic is the wall.
+
+**What would actually settle it:** not more engines and not a better estimator, but a different
+*statistic*. Compare certified precision against achieved error in **physical units** across
+engines — thousands of paired observations instead of ten — which is regression, not ranking.
+That needs the CRB's absolute scale to be trustworthy, and §sec:bt-honesty already shows it is
+not (H10.2 refuted, repaired only by conformal). **Fix the scale first, then test magnitude.**
+A study of its own.
 
 ---
 

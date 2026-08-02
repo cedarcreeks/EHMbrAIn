@@ -554,8 +554,15 @@ the quantitative floor for everything after. Do not skip 19.]_
 > bound and the estimator are built from the same influence matrix, and if you
 > shuffle that matrix so it carries no physics at all, you still get 0.24 on
 > average and occasionally 0.72. So part of the 0.70 was always the shared
-> matrix. The certificate is well above that null, but with ten directions the
-> test cannot reach significance — p is 0.085. Real signal, never proven.
+> matrix. So we ran it again against a learned estimator that never sees the
+> influence matrix at all. That collapses the null to essentially zero, and the
+> certificate still ranks the error at 0.46 on every one of ten seeds. Between
+> the two: roughly a quarter of that 0.70 was the shared matrix, roughly half of
+> it is real. And neither version reaches significance, because ten directions is
+> too few for a rank test — that is arithmetic, not physics.
+>
+> The honest sentence is: the certificate is not shown to be dishonest, it is
+> shown to be unprovable by the test we chose.
 >
 > The directions the certificate
 > calls identifiable are the ones the estimator gets right; the ones it calls

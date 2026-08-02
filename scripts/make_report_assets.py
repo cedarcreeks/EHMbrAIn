@@ -1337,6 +1337,55 @@ def fig_shuffle_control():
     print('  shuffle control figure done')
 
 
+def fig_decoupled():
+    """F23: the certificate against an estimator that never used H."""
+    import matplotlib.pyplot as plt
+    p23 = REPO_ROOT / 'data' / 'processed' / 'f23' / 'decoupled_verdict.json'
+    p22 = REPO_ROOT / 'data' / 'processed' / 'f22' / 'f10_shuffle_control.json'
+    if not p23.exists():
+        return
+    v = json.loads(p23.read_text())
+    INK, BLUE, GRAY, TEAL = '#212529', '#4263EB', '#868E96', '#1098AD'
+    plt.rcParams.update({'font.size': 9, 'font.family': 'serif',
+                         'axes.spines.top': False, 'axes.spines.right': False,
+                         'axes.grid': True, 'grid.color': '#E9ECEF',
+                         'figure.dpi': 150})
+    fig, (ax, bx) = plt.subplots(1, 2, figsize=(6.8, 3.0))
+
+    # left: the scatter the claim rests on
+    crb = np.array(v['crb_pct']); err = np.array(v['learned_abs_err_pct'])
+    ax.scatter(crb, err, s=34, color=BLUE, zorder=3)
+    for nm, a, b in zip(v['health_params'], crb, err):
+        ax.annotate(nm.replace('.', '\\,'), (a, b), xytext=(3, 3),
+                    textcoords='offset points', fontsize=5.5, color=GRAY)
+    ax.set_xlabel('certified precision, CRB [\\%]', fontsize=8)
+    ax.set_ylabel("learned estimator's $|$error$|$ [\\%]", fontsize=8)
+    ax.set_title(f"$\\rho$ = {v['rho']:.3f}", fontsize=8.5)
+
+    # right: each test against its own null
+    rows = [('F10\nKalman', 0.697, 0.242, 0.085),
+            ('F23\nlearned', v['rho'], v['permutation_null']['median'],
+             v['permutation_null']['empirical_p'])]
+    if p22.exists():
+        rows[0] = ('F10\nKalman (shares $H$)',
+                   json.loads(p22.read_text())['rho_real'],
+                   json.loads(p22.read_text())['control']['median'], 0.085)
+    y = np.arange(len(rows))
+    for i, (lab, r, nul, pv) in enumerate(rows):
+        bx.plot([nul, r], [i, i], color=GRAY, lw=1.2, zorder=1)
+        bx.scatter([nul], [i], s=46, color=GRAY, marker='s', zorder=3)
+        bx.scatter([r], [i], s=62, color=(BLUE if i else TEAL), zorder=4)
+        bx.annotate(f'$p$={pv:.3f}', (r, i), xytext=(6, 5),
+                    textcoords='offset points', fontsize=7.5, color=INK)
+    bx.axvline(0, color=INK, lw=0.7)
+    bx.set_yticks(y); bx.set_yticklabels([r[0] for r in rows], fontsize=7.5)
+    bx.set_ylim(-0.6, len(rows) - 0.4)
+    bx.set_xlabel('Spearman: null (square) $\\to$ measured (circle)', fontsize=8)
+    bx.set_title('breaking the coupling collapses the null', fontsize=8.5)
+    fig.tight_layout(); fig.savefig(FIG_DIR / 'decoupled.pdf'); plt.close(fig)
+    print('  decoupled certificate figure done')
+
+
 def fig_uq_reattribution():
     """L-UQ (prereg-v15): interval half-widths once every predictor gets the
     same conformal calibration, against the frozen uncalibrated band."""
@@ -2277,6 +2326,7 @@ def artifact_assets():
     fig_gate_t()
     fig_ncmapss_angle()
     fig_shuffle_control()
+    fig_decoupled()
     fig_bidir()
     fig_cert_isolated()
     fig_hybrid_arms()

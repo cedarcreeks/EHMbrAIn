@@ -1510,9 +1510,20 @@ líneas posteriores llevan uno —el de H15.3 disparó, el de H15.11 invirtió u
 H15.8 validó un nulo— y en los tres el control cambió el veredicto. La lección no es sobre este
 certificado: **el control es la parte del experimento que hay que diseñar primero**.
 
-**Qué lo zanjaría**: no más datos de flota, n=10 direcciones es estructural. Un estimador que
-**no** use la misma matriz (p. ej. uno aprendido), que rompe el acoplamiento por diseño y no
-por barajado.
+**Corrido** (F23 / L-DECOUP, §sec:f23-decoupled, prereg-v26): estimador aprendido que **nunca ve
+H**. El nulo se desploma de 0,242 a **0,006** —el acoplamiento está roto— y el certificado sigue
+ordenando a **ρ=0,455**, positivo en las diez semillas (0,18–0,56). Pero **p=0,100**.
+
+**Descomposición de aquel 0,70**: ~0,24 era la matriz compartida, ~0,46 es señal que sobrevive
+sin ella. **El certificado no queda demostrado deshonesto: queda demostrado no-demostrable por
+el test que F10 eligió.** Con diez direcciones, ρ tendría que llegar a ~0,55 para p<0,05, y diez
+lo fija la física.
+
+**Qué lo zanjaría de verdad**: no más motores ni mejor estimador, sino otro *estadístico*.
+Comparar precisión certificada contra error logrado en **unidades físicas** entre motores —miles
+de pares en vez de diez— que es regresión, no ranking. Eso exige que la escala absoluta del CRB
+sea fiable, y §sec:bt-honesty ya muestra que no lo es (H10.2 refutada, reparada solo con
+conformal). **Arreglar la escala primero, medir magnitud después.** Estudio propio.
 
 ### Pendiente
 

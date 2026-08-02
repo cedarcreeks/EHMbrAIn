@@ -1235,10 +1235,63 @@ F10 predates that discipline and never had one. The lesson is not about this cer
 that \textbf{the control is the part of an experiment worth designing first}, and the results
 here that survived scrutiny are exactly the ones that had one.
 
-\paragraph{What would settle it.} More directions, or an independent estimator. The rank test
-has $n = 10$ by construction, so no amount of fleet data helps; what would help is comparing
-the bound against an estimator that does \emph{not} use the same matrix --- a learned state
-estimator, for instance --- which breaks the coupling by design rather than by shuffling.
+\subsection{Breaking the coupling by design}
+\label{sec:f23-decoupled}
+
+The shuffle test is blunt because shuffling $\mathbf{H}$ moves the bound \emph{and} the
+estimator. The clean version removes the shared object instead: replace the Kalman with a
+\textbf{learned} estimator --- a sequence model mapping the deviation trajectory to the ten
+health parameters, trained against ground truth --- which never sees $\mathbf{H}$ at all
+(\code{scripts/f23\_decoupled\_certificate.py}, \code{prereg-v26}, ten seeds).
+
+Now permuting the certified precisions changes the claim under test and nothing else, so the
+permutation is an honest null. It is also nearly free: nothing is retrained, so ten thousand
+permutations cost less than one of the two hundred shuffles the previous test needed.
+
+\begin{center}\small
+\begin{tabular}{@{}lrrrl@{}}
+  \toprule
+  Estimator & $\rho$ & null median & null p95 & $p$ \\
+  \midrule
+  Kalman (shares $\mathbf{H}$ with the bound) & $0.697$ & $0.242$ & $0.722$ & $0.085$ \\
+  learned (never sees $\mathbf{H}$)           & $0.455$ & $\mathbf{0.006}$ & $0.552$ & $0.100$ \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.86\textwidth]{decoupled}
+  \caption{Left: certified precision against the learned estimator's true per-direction error.
+  Right: each test against its own null --- square is the null, circle the measured value.
+  Removing the shared matrix collapses the null from $0.242$ to $0.006$. Auto-generated
+  (\protect\code{prereg-v26}).}
+  \label{fig:decoupled}
+\end{figure}
+
+\textbf{The design worked, and the claim still cannot be proven.} The null collapses from
+$0.242$ to $\mathbf{0.006}$ --- essentially zero, as an honest permutation should be --- so the
+coupling really is gone. The certificate still ranks the error at $\rho = 0.455$, consistently
+across all ten seeds ($0.18$ to $0.56$, every one positive), so this is not one lucky model.
+But $p = 0.100$: with ten directions, $\rho$ would have to reach about $0.55$ to clear
+significance.
+
+\keyidea{The two experiments are consistent, and together they decompose the original number: of F10's $\rho = 0.70$, roughly $0.24$ was the shared matrix and roughly $0.46$ is signal that survives when the coupling is removed. What blocks the claim is not the certificate --- it is that \textbf{ten health directions is too few for a rank test}, and ten is fixed by the physics, not by how much fleet data one collects.}
+
+\paragraph{The honest status of C8, stated once and for all.} The certificate is not shown to
+be dishonest. It is shown to be \textbf{unprovable by the test F10 chose}. That is a defect in
+the validation design, not in the instrument, and it is a more useful finding than the earlier
+ambiguity: before this section one could not distinguish ``the certificate does not work'' from
+``the certificate cannot be measured this way''. Now one can.
+
+\paragraph{What would actually settle it.} Not more engines, and not a better estimator --- a
+different \emph{statistic}. A rank correlation over ten items is weak by construction. A test
+with real power would compare certified precision against achieved error in \emph{physical
+units} across engines --- thousands of paired observations rather than ten --- which is a
+regression question, not a ranking one, and would need the CRB's absolute scale to be
+trustworthy. \Cref{sec:bt-honesty} already establishes that it is not (H10.2 refuted, repaired
+only by conformal calibration). So the honest path is: fix the scale first, then test the
+magnitude. That is a study of its own and it is recorded as such.
 
 \section{L-ICM: the sensitivity study the premise owed}
 \label{sec:f-icm}
