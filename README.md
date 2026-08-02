@@ -56,15 +56,22 @@ TeXstudio users: set the bibliography tool to Biber (Options → Configure → B
 ## Replicate everything (one command)
 
 ```bash
-make all        # full pipeline -> verdicts -> case studies -> report PDF
-make test       # 44 gate tests
+make all         # core pipeline -> verdicts -> case studies -> report PDF (~15 min)
+make full        # adds the F8 limitations program
+make overcoming  # F13-F24: the adversarial audit behind report ch. 11 (HOURS, not minutes)
+make test        # 44 gate tests
 uv run streamlit run dashboard/app.py   # interactive fleet/engine/verdicts views
 ```
+
+`make all` rebuilds the report from cached verdicts; it does **not** re-run F13–F24. To
+regenerate chapter 11's evidence from scratch, run `make overcoming` first — it retrains
+every sequence model in the audit and costs hours (F18 alone measured 112 min). Two of its
+stages (`f20`, `f21`) additionally need the N-CMAPSS dataset downloaded (14.7 GB).
 
 Or stage by stage (~15 min on an Apple M5, plus tuning):
 
 ```bash
-uv sync && uv run pytest                          # environment + 36 gate tests
+uv sync && uv run pytest                          # environment + 44 gate tests
 uv run python scripts/run_design_point.py         # F1: design point
 uv run python scripts/run_anchors.py              # F1: calibration vs TCDS/EEDB
 uv run python scripts/make_decks.py               # F1: baseline decks
@@ -90,35 +97,56 @@ macOS notes: torch-MPS runs must be foreground (backgrounded runs segfault);
 XGBoost is intentionally absent (OpenMP clash with torch-MPS — sklearn HistGB instead).
 Full mapping of scripts to report tables/figures: report ch. 3, "Replication guide".
 
+## What it found
+
+Every number below is against the **advanced** classical baseline — similarity matching,
+what a shop actually uses — not against a naive linear extrapolation. That distinction is
+most of the result: against Theil-Sen the AI advantage looks two to six times larger, and
+this project spent a full re-audit phase deflating its own headlines to the figures here.
+
+**Where AI wins, and it is real:**
+
+| task | traditional | AI | test |
+|---|---|---|---|
+| detection recall (matched false alarms) | 0.130 | **0.478** | McNemar *p* = 0.0039 |
+| detection delay | 6033 cy | **499 cy** | 8 AI-only wins, 0 the other way |
+| RUL RMSE @ 90 % life | 1118 cy | **834 cy** | Wilcoxon *p* = 0.0018 |
+| conformal interval half-width | 2717 cy | **2028 cy** | at matched ~90 % coverage |
+| unscheduled → scheduled conversion | 15 % net | **35 % net** | within 7.5 pt of the irreducible floor |
+
+**Where it does not, and the controls say why:**
+
+- **Fault isolation of the confusable pair: 0.308 vs 0.308.** Identical. The η_HPC/η_HPT
+  pair sits 1.3° apart in noise-whitened signature space, and no architecture invents
+  information the sensors never carried. Reproduced on an external engine model.
+- **RUL before ~70 % of life: a tie** (1.005× at 70 %; 1.18× at *p* = 0.205 at 50 %).
+- **The identifiability certificate as an AI feature actively hurts** (−0.119, *t* = −3.72).
+- **The certificate's own honesty test is under-powered on this fleet** — not refuted,
+  unmeasurable: ranking is capped at ten health directions, and the magnitude route fails
+  its pre-declared gate because the per-engine bound varies only 1.15 % across a fleet
+  where every engine flies the same profile. `docs/TODO.md` §3 names the one experiment
+  that would settle it.
+
 ## Status
-
-<!-- ===================== OPEN DEFECT D5 — PUBLIC OVERCLAIM ==========================
-  This README is the repository's front door and it currently describes a project that
-  ended at H6. Four problems, one of them a live false claim:
-
-  1. "prognosis 3-6x" in the H4 row below is THE deflated number. It is measured against
-     Theil-Sen, a naive linear extrapolation. Against the advanced classical baseline a
-     shop actually uses (similarity matching) the honest figure is 1.34x at 90 % of life,
-     1.005x -- an exact tie -- at 70 %, and 1.18x at p = 0.205, not significant, at 50 %.
-     The entire re-audit (sec:f8-lrul-sweep, sec:f-uq) exists to correct this claim, and
-     the front page still advertises the pre-audit version to the public.
-  2. The status list stops at H6. Everything after it is missing: the tomography chapter,
-     the whole overcoming chapter, the breakthrough chapter, the economics chapter, the
-     N-CMAPSS external validation, and the four-control audit of C8.
-  3. Line "environment + 36 gate tests" contradicts "make test # 44 gate tests" fourteen
-     lines above it, in this same file.
-  4. "make all # full pipeline -> ... -> report PDF" carries the same falsehood as D2:
-     thirteen drivers are unwired, so it cannot rebuild chapter 11.
-
-  Fix = restate H4 against the advanced baseline, extend the status list through F24, make
-  the test count agree with itself, and qualify the make all line.
-  Tracked: docs/TODO.md section 0, defect D5.
-==================================================================================== -->
 
 - [x] **H0** — environment runs an end-to-end pyCycle cycle; repo skeleton in place
 - [x] **H1** — calibrated CFM56-7B26 model + baseline decks + influence coefficient matrix
 - [x] **H2** — SynCFM56 synthetic fleet (v1.1: multi-episode, twice-hardened difficulty gate)
 - [x] **H3** — traditional EHM pipeline with test-fleet metrics (floor numbers, pre-tuning)
-- [ ] **H4** — AI suite delivered (prognosis 3–6×, conformal, PCS); gate NOT declared — detection/diagnosis pending the F5 tuned round
+- [x] **H4** — AI suite (detection, diagnosis, RUL, hybrids, conformal, PCS); **refuted** at
+  the pre-registered gate — the physics-informed hybrid does not beat the pure learner
 - [x] **H5** — pre-registered verdicts: H1/H3/H5 confirmed, H2/H4 refuted; FD001 ranking check passed
 - [x] **H6** — five case studies, Streamlit dashboard, `make all` replication, conclusions
+- [x] **F7–F8** — GPA tomography; the limitations program (surrogate twin, nonlinear v2 fleet,
+  recoverable fraction, architecture breadth, drift, the real-vs-virtual sensor wall)
+- [x] **F10–F12** — identifiability certificate (C8), prognostic floor (C9), operational
+  conversion; F12 withdrawn as tautological, with the reason on record
+- [x] **F13–F19** — the overcoming program: mechanism attribution, published Bi-LSTM
+  replication, instrument-vs-engine, Gate T on transients, certificate hybrid and isolation
+- [x] **F20–F24** — external validation on N-CMAPSS, and a four-control audit of this
+  project's own most-promoted result, which changed the claim
+
+All verdicts, including the refutations and the withdrawn lines, are in
+`paper/report/report.pdf` (146 pp). Pre-registration tags `prereg-v1`…`prereg-v27` are
+indexed in [docs/prereg-index.md](docs/prereg-index.md); `docs/TODO.md` carries what is
+still open.

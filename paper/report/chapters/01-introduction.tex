@@ -150,36 +150,21 @@ prerequisite.
     quality in \cref{sec:noise-sweep}.
   \item[\textbf{C7.}] Sim-to-real validation: the full methodology is re-run on N-CMAPSS to
     check that the method ranking is not an artifact of our own simulator.
-% ============================ OPEN DEFECT — DO NOT SHIP AS IS ========================
-% This C8 entry is the LAST place in the repository that quotes rho = 0.70 unqualified.
-% Every other site (ch13 keyidea, sec:f21-port, sec:f23-decoupled, sec:f24-scale, the
-% one-pager, the OEM brief, the slides and the Spanish guide) already carries the
-% decomposition. Here the contributions list still reads as if the honesty test PASSED.
-%
-% What the body actually establishes, after four controls:
-%   ~0.24 of the 0.70 is the influence matrix the bound and the estimator share (F22);
-%   ~0.46 survives an estimator that never sees it, at p = 0.100 (F23);
-%   the magnitude route fails its own pre-declared gate, CRB varies 1.15 % between
-%     engines (F24);
-%   => the certificate is NOT shown dishonest. It is UNMEASURABLE ON THIS FLEET.
-%
-% The contributions list is what a reader meets first, so this is a real contradiction
-% with chapters 11 and 12, not a wording preference. Fix = restate C8 as a certificate
-% whose honesty test is under-powered on SynCFM56, and point at sec:future-c8.
-%
-% NOTE the "45x" acquisition figure below SURVIVES: it is a ratio between sensor
-% configurations, i.e. a relative claim, and F24 only disqualified ABSOLUTE magnitude.
-% It needs a pointer, not a retraction.
-%
-% Tracked: docs/TODO.md section 0, defect D1.
-% =====================================================================================
   \item[\textbf{C8.}] \textbf{The earned-confidence certificate} (\cref{ch:breakthrough}): a
-    per-engine, history-resolved identifiability guarantee for gas-path diagnosis --- and,
-    uniquely, a \emph{test against ground truth} of whether it is honest ($\rho = 0.70$ between
-    certified precision and actual error). It states exactly which health directions an
-    engine's data lets one conclude, and doubles as a sensor-acquisition instrument
-    (predicting that station probes rescue HPC efficiency $45\times$). The validation is one
-    only a synthetic-truth benchmark can perform.
+    per-engine, history-resolved identifiability guarantee for gas-path diagnosis. It states
+    exactly which health directions an engine's own service history lets one conclude, and
+    doubles as a sensor-acquisition instrument --- predicting, and this part is confirmed,
+    that station probes rescue HPC efficiency $45\times$. Its \emph{honesty} --- whether
+    certified precision really orders achievable error --- is the contribution's second half
+    and the one this document treats at length: an exploratory $\rho = 0.70$ became, under
+    four controls the original test lacked, a decomposition ($\approx 0.24$ shared matrix,
+    $\approx 0.46$ surviving an estimator that never sees it) in which neither part clears
+    significance. \textbf{The certificate is not shown to be dishonest; it is shown to be
+    unmeasurable on this fleet} --- ranking is capped at ten health directions, and the
+    magnitude route fails a pre-declared gate because the bound varies $1.15\,\%$ between
+    engines that all fly the same profile (\cref{sec:f23-decoupled,sec:f24-scale}). The
+    experiment that would settle it is named in \cref{sec:future-c8}. Both the validation and
+    its refutation are ones only a synthetic-truth benchmark can perform, which is the point.
   \item[\textbf{C9.}] \textbf{The prognostic floor} (\cref{sec:bt-prognostic-floor}): the
     predictive counterpart of C8. By conditioning on each engine's \emph{true} current health
     state it measures, against ground truth, the aleatoric floor on remaining-life error --- the

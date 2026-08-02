@@ -1,17 +1,16 @@
 # Pre-registration index — where each frozen hypothesis actually lives
 
-**Status: this file records an OPEN DOCUMENTATION DEFECT (D3 in `TODO.md`).**
-Written 2026-08-02, covering `prereg-v1` … `prereg-v27`.
+Written 2026-08-02, covering `prereg-v1` … `prereg-v27`. **Defect D3 closed** — see the end.
 
-## The problem, stated plainly
+## The problem this file was written to fix
 
-Anyone auditing this project opens `docs/` and finds `prereg-v1.md` … `prereg-v14.md`,
+Anyone auditing this project opened `docs/` and found `prereg-v1.md` … `prereg-v14.md`,
 with `v4` missing and nothing after `v14`. The natural reading is that the
 pre-registration discipline — the single practice the project's credibility rests on —
 was **abandoned at v14, exactly where the adversarial audit begins**.
 
-That reading is wrong, but the repository currently supports it, and that is the defect.
-Every tag from `v15` on IS pre-registered; the *medium* changed and nobody wrote that down.
+That reading was wrong, but the repository supported it. Every tag from `v15` on IS
+pre-registered; the *medium* changed and nobody had written that down.
 
 ## What actually happened
 
@@ -40,7 +39,7 @@ matters — the docstring is content, the tag is the seal.
 | `v1` | global freeze: hypotheses, dataset hashes, tuning budget, statistics | `docs/prereg-v1.md` |
 | `v2` | F7 confirmatory | `docs/prereg-v2.md`, `docs/f7-proposal.md` |
 | `v3` | F8/L6 H4-v2 | `docs/prereg-v3.md` |
-| **`v4`** | **F10 identifiability certificate** | **`docs/f10-proposal.md`** — no `prereg-v4.md` exists |
+| `v4` | F10 identifiability certificate | `docs/f10-proposal.md` (frozen content) + `docs/prereg-v4.md` (retroactive record of outcomes) |
 | `v5` | F8/L9 PCS validation | `docs/prereg-v5.md` |
 | `v6` | F8/L7 drift estimation | `docs/prereg-v6.md` |
 | `v7` | F8/L4 recoverable fraction | `docs/prereg-v7.md` |
@@ -68,20 +67,24 @@ matters — the docstring is content, the tag is the seal.
 Recover any of them with `git show prereg-vN` (annotation) or
 `git show prereg-vN:scripts/<driver>.py` (the docstring as frozen at the tag).
 
-## What is still pending
+## How D3 was closed (2026-08-02)
 
-1. **A sentence in `sec:safeguards` or `sec:replication`** stating that from `v15` the
-   pre-registration medium is the driver docstring sealed by an annotated tag, and
-   pointing here. Without it the report describes a practice the repository appears to
-   contradict. *This is the item that matters* — the optics are worse than the defect.
-2. **`docs/prereg-v4.md`, or a redirect**, so the numbering has no hole. F10 is the
-   project's most-promoted result and the most-audited; a missing pre-registration file
-   at exactly that tag is the worst possible place for a gap, even though
-   `docs/f10-proposal.md` holds the content.
-3. **Decide and record whether the medium change was an improvement.** The honest case
-   is that it was: a gate written as `MIN_CV = 0.05` in the file that branches on it is
-   harder to move after the fact than the same threshold in prose. That argument belongs
-   in the methodology chapter, made explicitly, not left for a reader to reconstruct.
+1. **The report now states the medium change.** `sec:safeguards`, under
+   *Pre-registration*: tags `v1`–`v14` freeze a prose document, and from `v15` — the point
+   at which the project turned its instruments on its own headline results — the
+   pre-registration is the driver docstring sealed by an annotated tag. It says why that
+   is an improvement rather than a lapse, with `sec:f24-scale` as the worked case:
+   `MIN_CV = 0.05` was committed before the run, the fleet returned 1.15 %, and the
+   significant $p$-values the test produced were refused as evidence rather than argued
+   about afterwards.
+2. **`docs/prereg-v4.md` exists**, and is explicit that it was written after the fact as a
+   map to the tag plus the outcomes the tag could not know. Writing a retroactive file
+   that *looked* frozen would have been the exact failure twenty-seven tags exist to
+   prevent.
+3. **The index above is the third piece** — every tag resolvable to its content.
+
+Nothing here changed a result. It changed whether a reader can tell that no result was
+changed, which is the only thing pre-registration was ever for.
 
 ## Rule going forward
 

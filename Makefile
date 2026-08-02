@@ -74,39 +74,38 @@ slides:
 test:
 	uv run pytest -q
 
-# ===================== PENDING: ch11 (Overcoming) IS NOT WIRED =======================
-# `make all` does NOT regenerate chapter 11 — about 35 of the report's 146 pages, and
-# the chapter that holds the entire adversarial audit. Thirteen drivers have no target,
-# so a clean clone cannot reproduce them. paper/report/chapters/03-methodology.tex still
-# claims "the complete replication path"; that claim is false until this is fixed.
+# ===================== ch11: the adversarial audit (F13-F24) =========================
+# HOURS, not minutes — this retrains every sequence model in the audit. `make all` does
+# NOT run it; it rebuilds the report from the verdict artifacts these produce.
 #
-# Needs a `make overcoming` target covering, in dependency order:
-#   scripts/f_uq_reattribution.py            sec:f-uq
-#   scripts/f13_gate1_mechanism.py           sec:f13-mech        (Optuna 25 trials/family)
-#   scripts/f14_bilstm_replication.py        sec:f14-ext
-#   scripts/f15_h158_instrument_vs_engine.py sec:f15-instrument  (sharded)
-#   scripts/f16_gate_t_transient.py          sec:gate-t
-#   scripts/f17_certificate_hybrid.py        sec:f17-hybrid
-#   F18_CELL=gru  scripts/f18_bidirectionality.py   sec:f18-bidir
-#   F18_CELL=lstm scripts/f18_bidirectionality.py   sec:f18-lstm   <- BOTH are required
-#   scripts/f19_certificate_isolated.py      sec:f19-cert        (sharded)
-#   scripts/f20_ncmapss_icm.py               sec:f20-ncmapss     ) need the N-CMAPSS
-#   scripts/f21_ncmapss_cert_floor.py        sec:f21-port        ) download first, 14.68 GB
-#   scripts/f22_f10_shuffle_control.py       sec:f21-port
-#   scripts/f23_decoupled_certificate.py     sec:f23-decoupled   (writes the cache f24 reads)
-#   scripts/f24_crb_scale_magnitude.py       sec:f24-scale       <- MUST run after f23
-#
-# Ordering constraints that a naive target would get wrong:
-#   * f24 reads data/processed/f23/preds_*.npz and f23/cache.npz — f23 first, always.
-#   * f13 writes gate1_verdict.json, whose best_params_sequence f23 and f24 both load.
-#   * f21/f22 depend on f20's estimated ICM.
-# Sharded scripts honour F18_SHARDS / F23_SHARDS (default 4 = performance cores). Four is
-# for heat and responsiveness, not speed — see docs/TODO.md standing engineering notes.
-#
-# COST: this is hours, not minutes. F18 alone measured 112.2 min for the LSTM pass. The
-# "657 seconds / about eleven minutes" figure in sec:replication covers only the wired
-# stages and will need a scope qualifier once this target exists.
-# Tracked: docs/TODO.md section 0, defect D2.
-# =====================================================================================
+# Ordering is load-bearing, not stylistic:
+#   * f13 writes gate1_verdict.json, whose best_params_sequence f23 AND f24 both load;
+#   * f23 writes f23/cache.npz and f23/preds_*.npz, which f24 reads — f23 always first;
+#   * F18 needs BOTH cells: one pass writes bidir_verdict_gru.json, the other _lstm.json,
+#     and sec:f18-lstm has no data without the second.
+# Shard count via F18_SHARDS / F23_SHARDS (default 4 = performance cores). Four is for
+# heat and responsiveness, not speed — see docs/TODO.md, standing engineering notes.
+overcoming: f13
+	$(PY) scripts/f_uq_reattribution.py                # sec:f-uq
+	$(PY) scripts/f14_bilstm_replication.py            # sec:f14-ext
+	$(PY) scripts/f15_h158_instrument_vs_engine.py     # sec:f15-instrument (sharded)
+	$(PY) scripts/f16_gate_t_transient.py              # sec:gate-t
+	$(PY) scripts/f17_certificate_hybrid.py            # sec:f17-hybrid
+	F18_CELL=gru  $(PY) scripts/f18_bidirectionality.py   # sec:f18-bidir
+	F18_CELL=lstm $(PY) scripts/f18_bidirectionality.py   # sec:f18-lstm  (~112 min)
+	$(PY) scripts/f19_certificate_isolated.py          # sec:f19-cert (sharded)
+	$(PY) scripts/f22_f10_shuffle_control.py           # sec:f21-port, the F10 control
+	$(PY) scripts/f23_decoupled_certificate.py         # sec:f23-decoupled
+	$(PY) scripts/f24_crb_scale_magnitude.py           # sec:f24-scale (needs f23)
 
-.PHONY: all model fleet audits pipelines f5 f8 evidence report onepager slides test
+f13:
+	$(PY) scripts/f13_gate1_mechanism.py               # sec:f13-mech (Optuna, 25 trials/family)
+
+# External validation. Needs the N-CMAPSS dataset (14.7 GB) downloaded first; f20 estimates
+# the influence matrix that f21 then certifies against.
+ncmapss:
+	$(PY) scripts/f20_ncmapss_icm.py                   # sec:f20-ncmapss
+	$(PY) scripts/f21_ncmapss_cert_floor.py            # sec:f21-port
+
+.PHONY: all full model fleet audits pipelines f5 f8 evidence report onepager slides test \
+        overcoming f13 ncmapss

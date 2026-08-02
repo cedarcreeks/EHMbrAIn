@@ -13,38 +13,62 @@ independent units MUST run those units in parallel:
   (one worker per core; each worker builds its own Problem — OpenMDAO objects
   are not shareable across processes). Keep warm-start continuation *within*
   a worker's task; never split a continuation chain across workers.
-- **Tensor / ML workloads** (phase F4 training and inference, SHAP): run on
-  the GPU. On Apple silicon use the PyTorch MPS backend:
-  `device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')`.
-  XGBoost: `tree_method='hist'` (multicore CPU; no MPS support).
+- **Tensor / ML workloads**: parallelize across **subprocess shards**, not
+  `ProcessPoolExecutor` — see the two measured corrections below. XGBoost:
+  `tree_method='hist'` (multicore CPU; no MPS support).
 - Emit per-task progress so a stalled worker is visible.
 
-<!-- ============ OPEN DEFECT D7 — N1 PRESCRIBES TWO MEASURED-WRONG PATTERNS =========
-  N1 is the norm the project leans on hardest, and two of its instructions were measured
-  false on this machine during F13-F24. A replicator following it as written loses time.
+### N1a — `multiprocessing` does not work for the torch workloads here
 
-  (a) "Use ProcessPoolExecutor" DOES NOT WORK for the torch workloads here. spawn hangs
-      re-importing the module; fork deadlocks on the parent's BLAS/torch threads (macOS
-      Accelerate). The pattern that works is SUBPROCESS SHARDS: parent builds and caches
-      to npz, launches `--shard i n` subprocesses, collects. Reference implementations:
-      scripts/f18_bidirectionality.py, scripts/f19_certificate_isolated.py,
-      scripts/f23_decoupled_certificate.py. Shard count via F18_SHARDS / F23_SHARDS.
+Measured during F13–F24. `spawn` hangs re-importing the module; `fork` deadlocks on the
+parent's BLAS/torch threads (macOS Accelerate). Both fail silently-ish: the run simply
+stops making progress, which is the worst failure mode for a long job.
 
-  (b) "Tensor / ML workloads: run on the GPU" IS NOT THE WIN THIS IMPLIES for these model
-      sizes. Measured: MPS 1.43 s/epoch against 1.56 on a SINGLE CPU thread -- 1.09x, and
-      1.26x over one thread in the earlier F4 measurement. The reason is structural, not
-      fixable: 1507 samples at batch 128 is twelve batches per epoch, so kernel launch
-      dominates. GPU remains right for F4-scale work; it is not a general rule.
+**The pattern that works** — parent builds the data once and caches it to `npz`, launches
+`--shard i n` subprocesses, collects their outputs:
 
-  Also missing from N1, and measured: shard count 4 (= performance cores on a 4P+6E
-  machine) is COOLER, not faster. Eight shards measured ~8 % faster end-to-end while
-  running 691 % CPU against 410 %. Buy four for heat and responsiveness. Do NOT use
-  `taskpolicy -b` to run cool -- E-cores measured 6.5x slower per epoch (12.83 s vs 1.96).
+```python
+procs = [subprocess.Popen([sys.executable, '-u', __file__, '--shard', str(i), str(n)])
+         for i in range(n)]
+for p in procs:
+    p.wait()
+```
 
-  All of this is currently recorded only in docs/TODO.md "standing engineering notes",
-  which is a session log, not a norm. It belongs here, where a replicator looks.
-  Tracked: docs/TODO.md section 0, defect D7.
-================================================================================= -->
+Each shard calls `torch.set_num_threads(1)` and handles seeds `i % n == shard`. Reference
+implementations: `scripts/f18_bidirectionality.py`, `scripts/f19_certificate_isolated.py`,
+`scripts/f23_decoupled_certificate.py`. Shard count via `F18_SHARDS` / `F23_SHARDS`.
+
+### N1b — the GPU is not automatically the answer; measure first
+
+MPS is right for F4-scale work and **not** a general rule. For the F13–F24 model sizes,
+measured: **MPS 1.43 s/epoch against 1.56 on a single CPU thread** — 1.09×. The reason is
+structural rather than fixable: 1507 samples at batch 128 is twelve batches per epoch, so
+kernel-launch overhead dominates the arithmetic. Where MPS *is* used:
+
+```python
+device = torch.device('mps' if torch.backends.mps.is_available() else 'cpu')
+```
+
+and on macOS such runs must execute in the **foreground** — backgrounded MPS runs segfault.
+
+### N1c — shard count is a thermal decision, not a speed one
+
+On a 4P + 6E Apple machine, four shards (= performance cores) runs at 410 % CPU and load
+5.5; eight runs at 691 % and 9.7, and measured **~8 % faster end to end**. So four is the
+right default for a laptop you are also using, and the reason is heat and responsiveness,
+not throughput. Do **not** reach for `taskpolicy -b` to run cool: E-cores measured
+**12.83 s/epoch against 1.96 on a P-core**, 6.5× slower, which turned a 60-training job
+into an estimated 4.4 hours.
+
+### N1d — measure, do not estimate
+
+Wall-clock predictions in this project were wrong seven times in four days, always
+optimistic. A single-training benchmark understates by roughly 50 % because it misses
+contention between shards, and a transfer rate sampled in the first minute is not the
+transfer rate. Related: a pipeline swallows exit codes — `curl ... | tail` returned 0 while
+`curl` had died at 8.78 of 14.68 GB. Verify long downloads against `Content-Length` and
+wrap them in a resume loop with `--speed-limit`/`--speed-time`; `--retry` alone does not
+cover a mid-transfer stall.
 
 ## N2 — Rebuild, never re-seed, after a failed Newton solve
 

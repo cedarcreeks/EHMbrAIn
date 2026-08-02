@@ -54,32 +54,37 @@ its display shunt out of scope; two snapshot conditions with ambient/power scatt
 mission mix; chronic labels correlate with age by nature; at most three acute episodes and one
 sensor drift family per engine; N1/N2 absolute labels approximate (generic component maps).
 
-<!-- ============== OPEN DEFECT D6 — THE TWO LIMITATIONS THAT MATTER MOST ============
-  A datasheet exists to state limitations, and this list is missing the two that between
-  them disabled the project's flagship test. Both were measured, both are now on record in
-  the report, and neither has reached the document a dataset user would read first.
+### Three properties that blocked experiments, with their numbers
 
-  (a) MISSION HOMOGENEITY, NOW QUANTIFIED. The line above says "not a full mission mix"
-      qualitatively. It now has a number: every engine flies a near-identical N1 profile,
-      so the per-engine Cramer-Rao bound varies only 1.15 % across the fleet (sec:f24-scale,
-      prereg-v27). That is below the 5 % gate F24 declared in advance, which is why the
-      within-direction magnitude test -- the powered route to validating the certificate --
-      could not be reported as evidence. This is the single most consequential property of
-      SynCFM56 and it belongs in this list with its number.
+These are not faults of v1.1, which is frozen and stays frozen. They are facts a user needs
+before choosing this dataset, because each one **disabled a specific test** in the study
+that generated it. They are stated with the number that disabled it.
 
-  (b) MECHANISM DEGENERACY. hot_section dominates 100 of 100 engines, which made the K3
-      line degenerate and forced its withdrawal. Already declared a SynCFM56 limitation in
-      docs/TODO.md; absent here.
+**1. Mission homogeneity — the fleet is too uniform to test a per-engine claim.**
+"Not a full mission mix" above is qualitative; the number is this. Every engine flies a
+near-identical N1 profile, so the per-engine Cramér–Rao bound varies only **1.15 %** across
+the fleet. F24 (`prereg-v27`) declared a 5 % variation gate *before* running, precisely so
+this could not be argued after the fact; the fleet failed it, and the powered route to
+validating the identifiability certificate — regressing certified precision against achieved
+error across engines — has no predictor to work with. **This is the single most consequential
+property of SynCFM56.** Anyone using it for per-engine identifiability, per-engine
+uncertainty calibration, or any claim that engines with different histories should behave
+differently, will hit this wall. It is exactly what a mission-diverse regeneration fixes.
 
-  Worth adding alongside them, since it is likewise a composition property rather than a
-  method failure: with ten health directions, a rank test needs rho ~ 0.55 to clear
-  significance, which is what caps the certificate's ranking statistic (sec:f23-decoupled).
+**2. Mechanism degeneracy — `hot_section` dominates 100 of 100 engines.**
+The degradation catalogue produces a hot-section-led signature in every engine, which made
+the planned per-mechanism KPI attribution (K3) degenerate: there is no contrast to attribute
+across. The line was withdrawn rather than reported. Users wanting mechanism-balanced fleets
+must change the catalogue, not the sampling.
 
-  These are not defects OF the dataset -- v1.1 is frozen and stays frozen. They are facts
-  a user must know before choosing it, and they are exactly what the mission-diverse
-  regeneration (TODO section 3, sec:future-c8) would change.
-  Tracked: docs/TODO.md section 0, defect D6.
-================================================================================= -->
+**3. Ten health directions — a hard ceiling on rank statistics.**
+With ten parameters, a Spearman test needs $\rho \approx 0.55$ to clear significance at
+$n = 10$, and more engines do not help because the ranking is *over directions*, not over
+engines. Any hypothesis phrased as "does X rank the ten directions correctly" is
+power-limited by construction here, independent of method quality (`sec:f23-decoupled`).
+
+Full treatment in the report: `sec:f23-decoupled` and `sec:f24-scale`; the settling
+experiment in `sec:future-c8`.
 
 ## Distribution & license
 

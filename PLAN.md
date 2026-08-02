@@ -1670,3 +1670,55 @@ Solo **D5 y D1 están mal**. D2, D3, D6 y D7 son **omisiones que engañan**: tra
 hecho bien, y luego no escrito donde lo buscaría quien lo necesita. D4 es una decisión
 abierta, no un defecto. Orden por gravedad, no por número: D5, D3, D1, D6, D2, D7. Unas
 2,5 h en total, y con eso el estudio queda cerrado con integridad.
+
+### Las siete D, cerradas (2026-08-02)
+
+Cerradas todas en una pasada, por orden de gravedad. Ningún resultado se movió; lo que
+cambió es si un lector puede comprobar que ninguno necesitaba moverse.
+
+**D5, el overclaim público.** El README anunciaba "prognosis 3–6×" en la portada del repo.
+Ahora hay una sección **What it found** con los números honestos contra la baseline
+avanzada, y con las derrotas al lado de las victorias: detección 0,130 → 0,478 con retraso
+6033 → 499 ciclos, RUL 1118 → 834 al 90 % de vida, conversión 15 % → 35 % neto; y enfrente,
+aislamiento 0,308 contra 0,308 idéntico, empate en RUL antes del 70 %, el certificado como
+feature empeorando −0,119, y la honestidad del certificado no medible en esta flota. Lista
+de estado extendida hasta F24, recuento de tests reconciliado (36 → 44), líneas de `make`
+corregidas.
+
+**D3, el preregistro.** `sec:safeguards` explica ahora el cambio de medio en v15 y defiende
+por qué fue mejora, con `sec:f24-scale` como caso: `MIN_CV = 0.05` commiteado antes de
+correr, la flota devolvió 1,15 %, y los p-valores significativos que salieron se rechazaron
+como evidencia en vez de discutirse después. Escrito `docs/prereg-v4.md`, explícito en que
+es un registro retroactivo: fabricar un fichero que *pareciera* congelado habría sido
+exactamente el fallo que veintisiete tags existen para impedir.
+
+**D1, la lista de contribuciones.** C8 reescrita: adquisición confirmada (45×, ratio entre
+configuraciones, intacto), honestidad descompuesta bajo cuatro controles, y la frase que
+faltaba —«no demostrado deshonesto, demostrado no medible en esta flota»— con puntero a
+`sec:future-c8`.
+
+**D6, el datasheet.** Tres propiedades añadidas, cada una con el número que deshabilitó un
+experimento concreto: homogeneidad de misión 1,15 %, `hot_section` 100/100, y el techo de
+diez direcciones. No son fallos de v1.1, que sigue congelada; son lo que un usuario necesita
+saber antes de elegirla.
+
+**D2, la replicación.** Targets `overcoming`, `f13` y `ncmapss`, con el orden que importa
+codificado: f13 antes de f23 y f24, f23 antes de f24, y F18 dos veces, `gru` y `lstm`. Tabla
+de catorce filas en la guía de replicación. Las dos frases falsas, acotadas.
+
+**D7, la norma N1.** Reescrita con lo medido: N1a shards por subproceso con el patrón que
+funciona, N1b MPS 1,43 contra 1,56 s/época —medir antes de asumir GPU—, N1c el recuento de
+shards es decisión térmica y no de velocidad, N1d medir y no estimar.
+
+**D4, el material OEM.** Los tres documentos llevan ahora la versión afilada. Con un
+escéptico, un experimento con nombre gana a una salvedad abierta.
+
+### Lo que enseñó la auditoría
+
+**Cinco de las siete eran omisiones, no errores.** Trabajo hecho bien y luego no escrito
+donde lo buscaría quien lo necesita. Eso es invisible para cualquier revisión que solo
+pregunte si lo afirmado es cierto — hay que preguntar además si lo cierto está donde toca.
+
+Report 146 → 147 pp, 0 referencias sin definir, 44 tests verdes, todos los PDF derivados
+reconstruidos. Queda pendiente **solo** el experimento de flota diversa (sección 3) y las
+líneas de estudio propio de la sección 4.

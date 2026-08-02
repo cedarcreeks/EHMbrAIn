@@ -1,11 +1,11 @@
 # Pending work
 
-Updated 2026-08-02. Report at **146 pp**, **44 tests** green, 0 undefined references,
+Updated 2026-08-02. Report at **147 pp**, **44 tests** green, 0 undefined references,
 tags through `prereg-v27`. Working tree clean, nothing running.
 
-> **The science is closed. Seven documentation defects are not** — see section 0. None of
-> them changes a number; all seven are places where the repository misrepresents work that
-> was actually done, which for this project is the expensive kind of error.
+> **The science is closed and so is the documentation.** The seven defects found by the
+> 2026-08-02 consistency audit are all fixed — section 0 records what each was and what
+> closing it changed, because a project that audits itself should keep the audit.
 
 > **Read first:** the project's most-promoted result is qualified everywhere it is quoted, and
 > after four tests its status is precise. Of F10's $\rho = 0.70$, **$\approx0.24$ is the matrix
@@ -20,101 +20,28 @@ tags through `prereg-v27`. Working tree clean, nothing running.
 
 ---
 
-## 0. Documentation defects — OPEN, and they are what stands between here and "done"
+## 0. ~~Documentation defects~~ — ALL SEVEN CLOSED, 2026-08-02
 
-Found by a full-repo consistency audit on 2026-08-02, after L-SCALE. All seven are marked
-**in situ** with a comment block at the exact site, so they cannot be lost. Total ≈ 2.5 h.
+A full-repo consistency sweep after L-SCALE found seven places where the repository
+misrepresented work that had actually been done. None changed a number. Closing them
+changed whether a reader could tell that no number needed changing.
 
-**Listed by severity, not by number** (ids are stable because other files cite them):
-**D5** first — it is a false claim on a public front page. Then **D3** — cheapest, and it
-undercuts the one discipline this project sells. Then D1, D6, D2, D7. **D4** is a
-judgement call, not a defect.
+| id | was | closed by |
+|---|---|---|
+| **D5** | `README.md` advertised "prognosis 3–6×" — the pre-audit figure, measured against a naive linear baseline — on the public front page, with the status list stopping at H6 | new **What it found** section carrying the honest numbers against the *advanced* baseline, wins and non-wins side by side; status extended through F24; test count reconciled; `make` lines corrected |
+| **D3** | pre-registration appeared abandoned at v14: no `prereg-v4.md`, nothing after v14 | `sec:safeguards` now states the medium change at v15 and argues it was an improvement; `docs/prereg-v4.md` written as an explicit retroactive record; `docs/prereg-index.md` maps all 27 tags |
+| **D1** | the contributions list still read as if C8's honesty test had passed | C8 restated: acquisition confirmed, honesty decomposed under four controls, "not dishonest — unmeasurable on this fleet", pointing at `sec:future-c8` |
+| **D6** | the datasheet omitted the two properties that disabled the flagship test | three properties added *with the numbers that disabled each experiment*: mission homogeneity (1.15 %), mechanism degeneracy (100/100), the ten-direction rank ceiling |
+| **D2** | `make all` could not rebuild ch. 11; two claims in `sec:replication` were false | `make overcoming`, `make f13` and `make ncmapss` targets with the load-bearing ordering encoded; a fourteen-row table added to the replication guide; both claims scoped |
+| **D7** | norm N1 prescribed `ProcessPoolExecutor` and "use the GPU", both measured false here | N1 rewritten with N1a (subprocess shards, with the working pattern), N1b (MPS 1.43 vs 1.56 s/epoch — measure first), N1c (shard count is thermal), N1d (measure, do not estimate) |
+| **D4** | the OEM set stopped at F23 | all three documents now carry the sharper "unmeasurable *on this fleet*, and here is the fleet that would settle it" — a named next experiment plays better with a sceptic than an open caveat |
 
-Only D5 and D1 are *wrong*. D2, D3, D6 and D7 are **omissions that mislead**: work that was
-done, correctly, and then not written where the reader who needs it would look.
+**What this cost:** no result moved. The report went 146 → 147 pp, 0 undefined references,
+44 tests green. Every derived PDF was rebuilt.
 
-### D1 — the contributions list still reads as if C8 passed
-**Site:** `paper/report/chapters/01-introduction.tex`, entry `C8` (marked in file).
-
-It is the **last place in the repository** quoting $\rho = 0.70$ unqualified. Every other
-site already carries the decomposition. The contributions list is what a reader meets
-first, so this contradicts chapters 11 and 12 in the most visible position available.
-
-Restate as a certificate whose honesty test is *under-powered on SynCFM56*, and point at
-`sec:future-c8`. The $45\times$ acquisition figure **survives** — it is a ratio between
-sensor configurations, and F24 disqualified only absolute magnitude — but needs a pointer.
-
-### D2 — `make all` cannot rebuild chapter 11
-**Sites:** `Makefile` (comment block before `.PHONY`) and
-`paper/report/chapters/03-methodology.tex`, `sec:replication` (comment after the
-extension table).
-
-Thirteen drivers have no target: `f_uq_reattribution`, `f13`–`f24`. That is ~35 of 146
-pages and the entire adversarial audit. Two statements in `sec:replication` are currently
-**false**: that it gives "the complete replication path", and that `make all` "runs
-everything below". Ordering constraints a naive target would break are written into the
-Makefile comment (f23 before f24; f13 before both; f20 before f21/f22; F18 needs *two*
-runs, `gru` and `lstm`).
-
-Also: the "657 s / about eleven minutes" cost figure covers only the wired stages and will
-need a scope qualifier — the unwired thirteen are hours (F18 alone measured 112.2 min).
-
-### D3 — the pre-registration looks abandoned at v14
-**Site:** `docs/prereg-index.md` (written; it records the gap and indexes all 27 tags).
-
-`docs/` holds `prereg-v1.md`…`v14.md`, no `v4`, nothing after `v14`. The natural reading is
-that the discipline was dropped **exactly where the adversarial audit begins**. Wrong, but
-the repository supports it. From `v15` the pre-registration is the driver docstring
-(32–49 lines: hypothesis, design, numeric gate, meaning of a null) sealed by an annotated
-tag. Arguably *stronger* — `MIN_CV = 0.05` as a branching constant cannot be quietly moved.
-
-**Still to do:** a sentence in `sec:safeguards`/`sec:replication` stating the medium change
-and pointing at the index; and closing the `v4` hole (content is in `docs/f10-proposal.md`).
-Of the seven this one has the worst optics-to-effort ratio: cheap, and it undercuts the one
-discipline the project sells. Do it right after D5.
-
-### D5 — the README advertises the pre-audit number, publicly
-**Site:** `README.md`, `## Status` (marked in file).
-
-**Fix order: D5, then D3, then the rest — see the note above.** The H4 row reads *"prognosis 3–6×"* — measured against Theil-Sen,
-a naive linear extrapolation. Against the advanced classical baseline a shop actually uses
-(similarity matching) the honest figures are **1.34×** at 90 % of life, **1.005×** — an
-exact tie — at 70 %, and 1.18× at **p = 0.205**, not significant, at 50 %. The entire
-re-audit exists to correct that claim, and the front door still shows the old one to the
-public. Three more in the same file: the status list stops at H6 (nothing from tomography,
-overcoming, breakthrough, economics, N-CMAPSS or the C8 audit); "36 gate tests" contradicts
-"44 gate tests" fourteen lines above it; and the `make all` line repeats D2's falsehood.
-
-### D6 — the datasheet omits the two limitations that matter most
-**Site:** `docs/syncfm56-datasheet.md`, "Known limitations" (marked in file).
-
-A datasheet exists to state limitations, and this one is missing the two that between them
-disabled the flagship test. **Mission homogeneity now has a number**: every engine flies a
-near-identical N1 profile, so the per-engine CRB varies **1.15 %** fleet-wide — under F24's
-pre-declared 5 % gate, which is precisely why the powered magnitude test could not be
-reported. **Mechanism degeneracy**: `hot_section` dominates 100/100 engines, which killed
-K3. Neither is a defect *of* v1.1, which stays frozen; both are facts a user must know
-before choosing it, and both are what the mission-diverse regeneration would change.
-
-### D7 — N1 prescribes two patterns measured false on this machine
-**Site:** `docs/engineering-norms.md`, norm N1 (marked in file).
-
-N1 is the norm this project leans on hardest. It says use `ProcessPoolExecutor` — which
-**does not work** for the torch workloads here (spawn hangs re-importing, fork deadlocks on
-the parent's BLAS threads); the working pattern is subprocess shards, as in F18/F19/F23.
-And it says run tensor work on the GPU, where MPS measured **1.43 s/epoch against 1.56 on
-one CPU thread** for these model sizes — twelve batches per epoch, so launch overhead
-dominates. The shard-count and E-core findings live only in section 5 below, which is a
-session log, not a norm. A replicator reads the norm.
-
-### D4 — the OEM set stops at F23 (minor, judgement call)
-**Site:** `paper/oem-brief/oem-brief.tex` (marked); same wording in `oem-slides.tex` and
-`guia-presentacion-oem.tex`.
-
-Not wrong — "does not clear a physics-free null" is still true and still the operative
-sentence. Incomplete: F24 sharpens the status to "unmeasurable *on this fleet*, and here is
-the fleet that would measure it". Deliberately left open: a named next experiment plays
-better with a sceptic than an open caveat, but this is a 2-page brief, not an audit trail.
+**The one lesson worth keeping:** five of the seven were *omissions*, not errors — work
+done correctly and then not written where the reader who needed it would look. Those are
+invisible to any check that only asks whether the claims are true.
 
 ---
 

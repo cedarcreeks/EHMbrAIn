@@ -298,6 +298,21 @@ plague the literature. Four safeguards are adopted:
     evaluation. This borrows a standard practice from medicine: you state what would convince
     you before looking at the answer, so you cannot move the goalposts afterwards. The frozen
     document also discloses every exploratory test-set exposure that preceded it.
+
+    \emph{The medium changed at \code{prereg-v15}, and the change was an improvement.} Tags
+    \code{v1}--\code{v14} freeze a prose document in \code{docs/}. From \code{v15} --- the
+    point at which this project turned its own instruments on its own headline results ---
+    the pre-registration is the \textbf{driver script's module docstring}, thirty to fifty
+    lines carrying the hypothesis, the design and why that design, the gate with its numeric
+    threshold, and what a null result would mean; the annotated git tag supplies the
+    timestamp and the seal. The gain is that a gate written as an executable constant, in the
+    file that branches on it, cannot be quietly moved the way a threshold in prose can.
+    \cref{sec:f24-scale} is the case in point: \code{MIN\_CV = 0.05} was committed before the
+    run, the fleet returned $1.15\,\%$, and the significant $p$-values the test then produced
+    were refused as evidence rather than argued about afterwards. Every tag
+    \code{prereg-v1}--\code{prereg-v27} is mapped to its pre-registration --- prose document
+    or docstring --- in \code{docs/prereg-index.md}, recoverable with
+    \code{git show prereg-vN}.
   \item[Symmetric tuning budget.] Every method has knobs. The traditional pipeline's
     (alert thresholds, regularization $\lambda$, Kalman $\mathbf{Q}$, smoothing windows) and
     each AI family's hyperparameters are tuned with the \emph{same number} of automated search
@@ -494,12 +509,17 @@ selection, autoencoder separation, GRU countdown learning).
 \label{sec:replication}
 
 This document and the repository are designed to be used together: every result chapter
-names the script that produced its evidence, and this section gives the complete replication
-path. \textbf{Reference machine for every wall-clock figure in this document}: an Apple M5
+names the script that produced its evidence, and this section maps all of them, in three
+groups --- the core pipeline (\code{make all}), the limitations program (\code{make f8}),
+and the adversarial audit (\code{make overcoming}, \code{make ncmapss}).
+\textbf{Reference machine for every wall-clock figure in this document}: an Apple M5
 desktop chip (10 cores, 16\,GB unified memory), with tensor training on its GPU through the
-torch MPS backend --- consumer hardware, deliberately. Total cost: about \textbf{11 minutes}
-end to end (\cref{tab:compute}; per-stage breakdown measured by
-\code{scripts/benchmark_pipeline.py}, norm N5).
+torch MPS backend --- consumer hardware, deliberately. The core pipeline costs about
+\textbf{11 minutes} end to end (\cref{tab:compute}; per-stage breakdown measured by
+\code{scripts/benchmark_pipeline.py}, norm N5). The audit group is a different order of
+magnitude --- hours, dominated by repeated sequence-model training, with \code{f18} alone
+measuring \SI{112}{\minute} --- which is why it is a separate target rather than part of
+the default path.
 
 \paragraph{Setup (once).}
 \begin{enumerate}
@@ -511,8 +531,9 @@ end to end (\cref{tab:compute}; per-stage breakdown measured by
     claim in this document.
 \end{enumerate}
 
-\paragraph{Pipeline (in order).} \code{make all} runs everything below and rebuilds this
-document (gate H6); the stage-by-stage mapping to report evidence is:
+\paragraph{Core pipeline (in order).} \code{make all} runs this first group and rebuilds
+the document (gate H6), reading the later groups' verdict artifacts from disk rather than
+regenerating them; the stage-by-stage mapping to report evidence is:
 
 \begin{center}\footnotesize
 \begin{tabular}{>{\raggedright\arraybackslash}p{0.34\textwidth}>{\raggedright\arraybackslash}p{0.27\textwidth}>{\raggedright\arraybackslash}p{0.30\textwidth}}
@@ -569,42 +590,44 @@ their own drivers, each writing a verdict artifact its figure or table reads:
   \bottomrule
 \end{tabular}
 \end{center}
-% ============================ OPEN DEFECT — INCOMPLETE GUIDE =========================
-% This table stops at f10/econ. THIRTEEN drivers are missing, and between them they
-% produce the whole of ch:overcoming. (f11_prognostic_floor.py IS wired, under the f8
-% target, but is likewise absent from this table — it feeds C9.)
-%   f_uq_reattribution.py        -> sec:f-uq       (the honest conformal re-attribution)
-%   f13_gate1_mechanism.py       -> sec:f13-mech   (L-MECH)
-%   f14_bilstm_replication.py    -> sec:f14-ext    (L-EXT)
-%   f15_h158_instrument_vs_engine.py -> sec:f15-instrument (L-INST)
-%   f16_gate_t_transient.py      -> sec:gate-t     (Gate T)
-%   f17_certificate_hybrid.py    -> sec:f17-hybrid (L-HYB)
-%   f18_bidirectionality.py      -> sec:f18-bidir + sec:f18-lstm
-%                                   (L-BIDIR; needs F18_CELL=gru AND F18_CELL=lstm,
-%                                    two runs, or the LSTM section has no data)
-%   f19_certificate_isolated.py  -> sec:f19-cert   (L-CERT)
-%   f20_ncmapss_icm.py           -> sec:f20-ncmapss (L-EXT2)
-%   f21_ncmapss_cert_floor.py    -> sec:f21-port   (L-CERT2)
-%   f22_f10_shuffle_control.py   -> sec:f21-port   (the control F10 never had)
-%   f23_decoupled_certificate.py -> sec:f23-decoupled (L-DECOUP)
-%   f24_crb_scale_magnitude.py   -> sec:f24-scale  (L-SCALE)
-%
-% Two claims on this page are therefore currently FALSE:
-%   1. "this section gives the complete replication path" — it does not;
-%   2. "make all runs everything below and rebuilds this document" — the Makefile has
-%      no target for any of the thirteen, so a clean clone cannot regenerate ch11,
-%      which is ~35 of 146 pages and holds the entire adversarial audit.
-%
-% Note f20/f21 additionally need the N-CMAPSS download (14.68 GB), so their row must
-% carry that precondition rather than implying a self-contained run.
-% Also: the 657 s / "about eleven minutes" figure below covers ONLY the wired stages.
-% The unwired thirteen are hours, not minutes (F18 alone measured 112.2 min), so the
-% cost sentence needs a scope qualifier once the target exists.
-%
-% Fix = add a `make overcoming` target with per-script wall-clock noted, extend this
-% table, and qualify both claims above.
-% Tracked: docs/TODO.md section 0, defect D2.
-% =====================================================================================
+\paragraph{The adversarial audit (\protect\code{make overcoming}).} The drivers behind
+\cref{ch:overcoming} are deliberately \emph{not} part of \code{make all}: they retrain every
+sequence model in the audit and cost hours rather than minutes, so \code{make all} rebuilds
+this document from the verdict artifacts they leave behind. Two ordering constraints are
+load-bearing --- \code{f13} writes the tuned parameters \code{f23} and \code{f24} both load,
+and \code{f23} writes the cached predictions \code{f24} reads --- and \code{f18} must be run
+\emph{twice}, once per cell type, or \cref{sec:f18-lstm} has no data.
+
+\begin{center}\footnotesize
+\begin{tabular}{>{\raggedright\arraybackslash}p{0.40\textwidth}>{\raggedright\arraybackslash}p{0.23\textwidth}>{\raggedright\arraybackslash}p{0.28\textwidth}}
+  \toprule
+  Command (\code{uv run python \ldots}) & Produces & Feeds \\
+  \midrule
+  \code{scripts/f11\_prognostic\_floor.py} & aleatoric RUL floor (C9) & \cref{sec:bt-prognostic-floor} \\
+  \code{scripts/f\_uq\_reattribution.py} & conformal re-attribution & \cref{sec:f-uq} \\
+  \code{scripts/f13\_gate1\_mechanism.py} & mechanism attribution (L-MECH) & \cref{sec:f13-mech} \\
+  \code{scripts/f\_uq\_reattribution.py}, \code{f8\_lrul\_advanced.py} & life-fraction sweep & \cref{sec:f8-lrul-sweep} \\
+  \code{scripts/f14\_bilstm\_replication.py} & published-result replication (L-EXT) & \cref{sec:f14-ext} \\
+  \code{scripts/f15\_h158\_instrument\_vs\_engine.py} & instrument vs engine (L-INST) & \cref{sec:f15-instrument} \\
+  \code{scripts/f16\_gate\_t\_transient.py} & transient gate (Gate T) & \cref{sec:gate-t} \\
+  \code{scripts/f17\_certificate\_hybrid.py} & certificate-gated hybrid (L-HYB) & \cref{sec:f17-hybrid} \\
+  \code{F18\_CELL=gru|lstm scripts/f18\_bidirectionality.py} & bidirectionality, both cells (L-BIDIR) & \cref{sec:f18-bidir,sec:f18-lstm} \\
+  \code{scripts/f19\_certificate\_isolated.py} & count-matched isolation (L-CERT) & \cref{sec:f19-cert} \\
+  \code{scripts/f20\_ncmapss\_icm.py} & external ICM (L-EXT2) & \cref{sec:f20-ncmapss} \\
+  \code{scripts/f21\_ncmapss\_cert\_floor.py} & external port (L-CERT2) & \cref{sec:f21-port} \\
+  \code{scripts/f22\_f10\_shuffle\_control.py} & the control F10 never had & \cref{sec:f21-port} \\
+  \code{scripts/f23\_decoupled\_certificate.py} & decoupled estimator (L-DECOUP) & \cref{sec:f23-decoupled} \\
+  \code{scripts/f24\_crb\_scale\_magnitude.py} & scale + magnitude (L-SCALE) & \cref{sec:f24-scale} \\
+  \bottomrule
+\end{tabular}
+\end{center}
+
+\code{make ncmapss} covers the last group but presumes the N-CMAPSS archive
+(\SI{14.7}{\giga\byte}) has been fetched; the others are self-contained. Sharded drivers
+honour \code{F18\_SHARDS} and \code{F23\_SHARDS}, default four --- which is the performance-core
+count on the reference machine and is chosen for thermal headroom, not throughput
+(\cref{ch:decisions} records the measurement that eight shards are marginally \emph{faster}
+and considerably hotter).
 
 Two platform notes a replicator needs (both learned the hard way, both in the decision
 register): torch-MPS training runs must execute in the \emph{foreground} on macOS
@@ -622,9 +645,12 @@ register): torch-MPS training runs must execute in the \emph{foreground} on macO
   \input{tables/table_compute}
 \end{table}
 
-The entire evidence base of this document regenerates in 657 seconds --- about eleven
-minutes --- on the Apple M5 reference machine, GPU stages included. This is the quantitative
-form of transferability rule 4: if it only ran on a cluster, it would not be adoptable.
+The core evidence base --- the main study, gates H0 through H6 --- regenerates in 657
+seconds, about eleven minutes, on the Apple M5 reference machine, GPU stages included. This
+is the quantitative form of transferability rule 4: if it only ran on a cluster, it would
+not be adoptable. The extension phases cost more, and the adversarial audit costs hours,
+but the claim that rule 4 protects is about the \emph{method} being adoptable on ordinary
+hardware, and each of those runs is a laptop run too --- just a longer one.
 
 \section{Comparison metrics}
 
